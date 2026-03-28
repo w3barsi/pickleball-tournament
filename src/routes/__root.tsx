@@ -1,25 +1,46 @@
-import { a11yDevtoolsPlugin } from "@tanstack/devtools-a11y/react";
-import { TanStackDevtools } from "@tanstack/react-devtools";
-import type { QueryClient } from "@tanstack/react-query";
-import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools";
-import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
+import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
+import type { ConvexQueryClient } from "@convex-dev/react-query";
+import { queryOptions, type QueryClient } from "@tanstack/react-query";
+import {
+  createRootRouteWithContext,
+  HeadContent,
+  Outlet,
+  Scripts,
+  useRouteContext,
+} from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
-import type { AuthQueryResult } from "@/lib/auth/queries";
+import { authClient } from "@/lib/auth/auth-client";
+import { getAuth } from "@/lib/auth/queries";
 
 import appCss from "@/styles.css?url";
 
+const authQueryOptions = queryOptions({
+  queryKey: ["auth"],
+  queryFn: getAuth,
+  staleTime: 5 * 60 * 1000, // 5 minutes
+});
+
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
-  user: AuthQueryResult;
+  convexQueryClient: ConvexQueryClient;
 }>()({
-  // Typically we don't need the user immediately in landing pages.
-  // For protected routes with loader data, see /_auth/route.tsx
-  // beforeLoad: ({ context }) => {
-  //   context.queryClient.prefetchQuery(authQueryOptions());
-  // },
+  beforeLoad: async (ctx) => {
+    const token = await ctx.context.queryClient.ensureQueryData(authQueryOptions);
+    // all queries, mutations and actions through TanStack Query will be
+    // authenticated during SSR if we have a valid token
+    if (token) {
+      // During SSR only (the only time serverHttpClient exists),
+      // set the auth token to make HTTP queries with.
+      ctx.context.convexQueryClient.serverHttpClient?.setAuth(token);
+    }
+    return {
+      isAuthenticated: !!token,
+      token,
+    };
+  },
   head: () => ({
     meta: [
       {
@@ -52,10 +73,17 @@ export const Route = createRootRouteWithContext<{
 });
 
 function RootComponent() {
+  const context = useRouteContext({ from: Route.id });
   return (
-    <RootDocument>
-      <Outlet />
-    </RootDocument>
+    <ConvexBetterAuthProvider
+      client={context.convexQueryClient.convexClient}
+      authClient={authClient}
+      initialToken={context.token}
+    >
+      <RootDocument>
+        <Outlet />
+      </RootDocument>
+    </ConvexBetterAuthProvider>
   );
 }
 
@@ -71,20 +99,6 @@ function RootDocument({ children }: { readonly children: React.ReactNode }) {
           {children}
           <Toaster richColors />
         </ThemeProvider>
-
-        <TanStackDevtools
-          plugins={[
-            {
-              name: "TanStack Query",
-              render: <ReactQueryDevtoolsPanel />,
-            },
-            {
-              name: "TanStack Router",
-              render: <TanStackRouterDevtoolsPanel />,
-            },
-            a11yDevtoolsPlugin(),
-          ]}
-        />
 
         <Scripts />
       </body>

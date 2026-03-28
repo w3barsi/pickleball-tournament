@@ -1,5 +1,6 @@
+import { convexQuery } from "@convex-dev/react-query";
 import { SiGithub } from "@icons-pack/react-simple-icons";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { CheckIcon, CopyIcon, ExternalLinkIcon, StarIcon, TerminalIcon } from "lucide-react";
 import { Suspense } from "react";
@@ -10,6 +11,8 @@ import { SignOutButton } from "@/components/sign-out-button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { useAuthSuspense } from "@/lib/auth/hooks";
+
+import { api } from "../../convex/_generated/api";
 
 /**
  * This is the intro component for TanStarter, which you may delete after creating the project.
@@ -98,9 +101,7 @@ export function IntroPageDeleteMe() {
           </div>
         </section>
 
-        <Suspense fallback={<div className="py-6">Loading session...</div>}>
-          <UserAction />
-        </Suspense>
+        <UserAction />
 
         <section className="mb-16 grid grid-cols-1 gap-x-12 gap-y-10 md:grid-cols-2">
           <Feature
@@ -173,7 +174,7 @@ export function IntroPageDeleteMe() {
 }
 
 function UserAction() {
-  const { user } = useAuthSuspense();
+  const { data: user } = useSuspenseQuery(convexQuery(api.auth.getCurrentUser, {}));
 
   return user ? (
     <section className="mb-20 flex flex-col items-center space-y-1.5">

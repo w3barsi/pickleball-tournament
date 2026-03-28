@@ -1,6 +1,5 @@
 import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
-import { devtools } from "@tanstack/devtools-vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact, { reactCompilerPreset } from "@vitejs/plugin-react";
 import { nitro } from "nitro/vite";
@@ -13,8 +12,10 @@ export default defineConfig({
   server: {
     port: 3000,
   },
+  ssr: {
+    noExternal: ["@convex-dev/better-auth"],
+  },
   plugins: [
-    devtools(),
     tanstackStart(),
     // https://tanstack.com/start/latest/docs/framework/react/guide/hosting
     nitro(),

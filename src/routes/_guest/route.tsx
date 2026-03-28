@@ -1,6 +1,7 @@
+import { convexQuery } from "@convex-dev/react-query";
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 
-import { authQueryOptions } from "@/lib/auth/queries";
+import { api } from "../../../convex/_generated/api";
 
 export const Route = createFileRoute("/_guest")({
   component: RouteComponent,
@@ -9,15 +10,14 @@ export const Route = createFileRoute("/_guest")({
     // or after successful login/signup
     const REDIRECT_URL = "/app";
 
-    const user = await context.queryClient.ensureQueryData({
-      ...authQueryOptions(),
-      revalidateIfStale: true,
-    });
-    if (user) {
-      throw redirect({
-        to: REDIRECT_URL,
-      });
-    }
+    // const user = await context.queryClient.ensureQueryData(
+    //   convexQuery(api.auth.getCurrentUser, {}),
+    // );
+    // if (user) {
+    //   throw redirect({
+    //     to: REDIRECT_URL,
+    //   });
+    // }
 
     return {
       redirectUrl: REDIRECT_URL,

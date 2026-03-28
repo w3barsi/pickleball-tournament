@@ -8,8 +8,7 @@ import { SignInSocialButton } from "@/components/sign-in-social-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import authClient from "@/lib/auth/auth-client";
-import { authQueryOptions } from "@/lib/auth/queries";
+import { authClient } from "@/lib/auth/auth-client";
 
 export const Route = createFileRoute("/_guest/signup")({
   component: SignupForm,
@@ -32,7 +31,7 @@ function SignupForm() {
             toast.error(error.message || "An error occurred while signing up.");
           },
           onSuccess: () => {
-            queryClient.removeQueries({ queryKey: authQueryOptions().queryKey });
+            queryClient.removeQueries({ queryKey: ["user"] });
             navigate({ to: redirectUrl });
           },
         },
