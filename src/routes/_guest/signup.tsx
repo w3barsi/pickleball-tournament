@@ -122,24 +122,6 @@ function SignupForm() {
               {isPending ? "Signing up..." : "Sign up"}
             </Button>
           </div>
-          <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
-            <span className="relative z-10 bg-background px-2 text-muted-foreground">Or</span>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <SignInSocialButton
-              provider="github"
-              callbackURL={redirectUrl}
-              disabled={isPending}
-              icon={<SiGithub className="size-4" />}
-            />
-            <SignInSocialButton
-              provider="google"
-              callbackURL={redirectUrl}
-              // disabled={isPending}
-              disabled={true} // TODO disabled just for the preview deployment at https://tanstarter.mugnavo.com
-              icon={<SiGoogle className="size-4" />}
-            />
-          </div>
         </div>
       </form>
 
