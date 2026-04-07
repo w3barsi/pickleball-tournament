@@ -24,12 +24,13 @@ export function getRouter() {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
-        refetchOnWindowFocus: false,
-        staleTime: 1000 * 60 * 2, // 2 minutes
         queryFn: convexQueryClient.queryFn(),
+        queryKeyHashFn: convexQueryClient.hashFn(),
       },
     },
   });
+
+  convexQueryClient.connect(queryClient);
 
   const router = createRouter({
     routeTree,
