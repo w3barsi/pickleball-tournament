@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useMutation } from "convex/react";
 import { RotateCcwIcon, TrophyIcon, UserIcon, HistoryIcon } from "lucide-react";
 import { useState, useCallback } from "react";
 

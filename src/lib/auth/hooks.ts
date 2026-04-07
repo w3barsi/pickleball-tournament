@@ -1,7 +1,6 @@
 import { convexQuery } from "@convex-dev/react-query";
+import { api } from "@convex/_generated/api.js";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
-
-import { api } from "../../../convex/_generated/api";
 
 // These hooks can be used in route components or any components.
 // They share the same deduped query as beforeLoad/loaders in __root and the _auth layout,

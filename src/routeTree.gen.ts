@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as OverlayRouteImport } from './routes/overlay'
 import { Route as GuestRouteRouteImport } from './routes/_guest/route'
 import { Route as AuthRouteRouteImport } from './routes/_auth/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -18,7 +19,14 @@ import { Route as AuthAppRouteRouteImport } from './routes/_auth/app/route'
 import { Route as AuthAppIndexRouteImport } from './routes/_auth/app/index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AuthAppScorerRouteImport } from './routes/_auth/app/scorer'
+import { Route as AuthAppGamesRouteImport } from './routes/_auth/app/games'
+import { Route as AuthAppGIdRouteImport } from './routes/_auth/app/g.$id'
 
+const OverlayRoute = OverlayRouteImport.update({
+  id: '/overlay',
+  path: '/overlay',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GuestRouteRoute = GuestRouteRouteImport.update({
   id: '/_guest',
   getParentRoute: () => rootRouteImport,
@@ -62,70 +70,112 @@ const AuthAppScorerRoute = AuthAppScorerRouteImport.update({
   path: '/scorer',
   getParentRoute: () => AuthAppRouteRoute,
 } as any)
+const AuthAppGamesRoute = AuthAppGamesRouteImport.update({
+  id: '/games',
+  path: '/games',
+  getParentRoute: () => AuthAppRouteRoute,
+} as any)
+const AuthAppGIdRoute = AuthAppGIdRouteImport.update({
+  id: '/g/$id',
+  path: '/g/$id',
+  getParentRoute: () => AuthAppRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/overlay': typeof OverlayRoute
   '/app': typeof AuthAppRouteRouteWithChildren
   '/login': typeof GuestLoginRoute
   '/signup': typeof GuestSignupRoute
+  '/app/games': typeof AuthAppGamesRoute
   '/app/scorer': typeof AuthAppScorerRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/app/': typeof AuthAppIndexRoute
+  '/app/g/$id': typeof AuthAppGIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/overlay': typeof OverlayRoute
   '/login': typeof GuestLoginRoute
   '/signup': typeof GuestSignupRoute
+  '/app/games': typeof AuthAppGamesRoute
   '/app/scorer': typeof AuthAppScorerRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/app': typeof AuthAppIndexRoute
+  '/app/g/$id': typeof AuthAppGIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_auth': typeof AuthRouteRouteWithChildren
   '/_guest': typeof GuestRouteRouteWithChildren
+  '/overlay': typeof OverlayRoute
   '/_auth/app': typeof AuthAppRouteRouteWithChildren
   '/_guest/login': typeof GuestLoginRoute
   '/_guest/signup': typeof GuestSignupRoute
+  '/_auth/app/games': typeof AuthAppGamesRoute
   '/_auth/app/scorer': typeof AuthAppScorerRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/_auth/app/': typeof AuthAppIndexRoute
+  '/_auth/app/g/$id': typeof AuthAppGIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/overlay'
     | '/app'
     | '/login'
     | '/signup'
+    | '/app/games'
     | '/app/scorer'
     | '/api/auth/$'
     | '/app/'
+    | '/app/g/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/signup' | '/app/scorer' | '/api/auth/$' | '/app'
+  to:
+    | '/'
+    | '/overlay'
+    | '/login'
+    | '/signup'
+    | '/app/games'
+    | '/app/scorer'
+    | '/api/auth/$'
+    | '/app'
+    | '/app/g/$id'
   id:
     | '__root__'
     | '/'
     | '/_auth'
     | '/_guest'
+    | '/overlay'
     | '/_auth/app'
     | '/_guest/login'
     | '/_guest/signup'
+    | '/_auth/app/games'
     | '/_auth/app/scorer'
     | '/api/auth/$'
     | '/_auth/app/'
+    | '/_auth/app/g/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRouteRoute: typeof AuthRouteRouteWithChildren
   GuestRouteRoute: typeof GuestRouteRouteWithChildren
+  OverlayRoute: typeof OverlayRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/overlay': {
+      id: '/overlay'
+      path: '/overlay'
+      fullPath: '/overlay'
+      preLoaderRoute: typeof OverlayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_guest': {
       id: '/_guest'
       path: ''
@@ -189,17 +239,35 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthAppScorerRouteImport
       parentRoute: typeof AuthAppRouteRoute
     }
+    '/_auth/app/games': {
+      id: '/_auth/app/games'
+      path: '/games'
+      fullPath: '/app/games'
+      preLoaderRoute: typeof AuthAppGamesRouteImport
+      parentRoute: typeof AuthAppRouteRoute
+    }
+    '/_auth/app/g/$id': {
+      id: '/_auth/app/g/$id'
+      path: '/g/$id'
+      fullPath: '/app/g/$id'
+      preLoaderRoute: typeof AuthAppGIdRouteImport
+      parentRoute: typeof AuthAppRouteRoute
+    }
   }
 }
 
 interface AuthAppRouteRouteChildren {
+  AuthAppGamesRoute: typeof AuthAppGamesRoute
   AuthAppScorerRoute: typeof AuthAppScorerRoute
   AuthAppIndexRoute: typeof AuthAppIndexRoute
+  AuthAppGIdRoute: typeof AuthAppGIdRoute
 }
 
 const AuthAppRouteRouteChildren: AuthAppRouteRouteChildren = {
+  AuthAppGamesRoute: AuthAppGamesRoute,
   AuthAppScorerRoute: AuthAppScorerRoute,
   AuthAppIndexRoute: AuthAppIndexRoute,
+  AuthAppGIdRoute: AuthAppGIdRoute,
 }
 
 const AuthAppRouteRouteWithChildren = AuthAppRouteRoute._addFileChildren(
@@ -236,6 +304,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRouteRoute: AuthRouteRouteWithChildren,
   GuestRouteRoute: GuestRouteRouteWithChildren,
+  OverlayRoute: OverlayRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport
