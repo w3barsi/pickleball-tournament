@@ -31,6 +31,7 @@
     ".output",
     ".wrangler",
     ".netlify",
-    "dist"
+    "dist",
+    "convex/_generated/"
   ]
 }
