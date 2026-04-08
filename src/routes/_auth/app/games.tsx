@@ -179,9 +179,9 @@ function GamesPage() {
               }`}
             >
               <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
+                <div className="flex items-center justify-between">
                   <div className="space-y-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-between gap-2">
                       <CardTitle className="text-base">
                         {game.team1Name} vs {game.team2Name}
                       </CardTitle>
@@ -191,6 +191,12 @@ function GamesPage() {
                       Target: {game.targetScore} points (win by 2)
                     </p>
                   </div>
+                  {game.isLive && game.status !== "completed" && (
+                    <div className="relative flex h-3 w-3">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span>
+                      <span className="relative inline-flex h-3 w-3 rounded-full bg-green-500"></span>
+                    </div>
+                  )}
                   {game.status === "completed" && (
                     <Button
                       variant="ghost"

@@ -22,6 +22,12 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_auth/app/g/$id")({
   component: GameDetailPage,
+  loader: async (ctx) => {
+    const gameId = ctx.params.id as Id<"pickleballGames">;
+    await ctx.context.queryClient.ensureQueryData(
+      convexQuery(api.scoring.getGameWithHistory, { gameId }),
+    );
+  },
 });
 
 function GameDetailPage() {
@@ -236,9 +242,9 @@ function GameDetailPage() {
             variant={game.isLive ? "default" : "outline"}
             size="sm"
             onClick={handleGoLive}
-            className="gap-1"
+            className="gap0"
           >
-            <RadioIcon className="size-4" />
+            <RadioIcon className="size-3" />
             {game.isLive ? "Live" : "Go Live"}
           </Button>
           <Button

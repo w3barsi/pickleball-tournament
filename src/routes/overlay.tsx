@@ -1,6 +1,8 @@
+import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@convex/_generated/api.js";
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery, ConvexProvider, ConvexReactClient } from "convex/react";
+import { ConvexProvider, ConvexReactClient } from "convex/react";
 
 // Get the Convex URL from environment
 const convexUrl = import.meta.env.VITE_CONVEX_URL;
@@ -10,6 +12,9 @@ const convexClient = new ConvexReactClient(convexUrl);
 
 export const Route = createFileRoute("/overlay")({
   component: OverlayPage,
+  loader: async (ctx) => {
+    await ctx.context.queryClient.ensureQueryData(convexQuery(api.scoring.getLiveGame));
+  },
 });
 
 function OverlayPage() {
@@ -22,7 +27,7 @@ function OverlayPage() {
 
 // The actual scoreboard component
 function Scoreboard() {
-  const game = useQuery(api.scoring.getLiveGame);
+  const { data: game } = useQuery(convexQuery(api.scoring.getLiveGame));
 
   if (!game) {
     return (
