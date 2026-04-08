@@ -1,12 +1,6 @@
-# [TanStarter](https://github.com/mugnavo/tanstarter)
+# Pickle Tournament
 
-<!-- scaffold:description -->
-
-A minimal starter template for 🏝️ TanStack Start. [→ Preview here](https://tanstarter.mugnavo.com/)
-
-```bash
-pnpm create mugnavo
-```
+## Technologies
 
 - [React 19](https://react.dev) + [React Compiler](https://react.dev/learn/react-compiler)
 - TanStack [Start](https://tanstack.com/start/latest) + [Router](https://tanstack.com/router/latest) + [Query](https://tanstack.com/query/latest)
@@ -16,29 +10,15 @@ pnpm create mugnavo
 - [Better Auth](https://www.better-auth.com/)
 - [Oxlint](https://oxc.rs/docs/guide/usage/linter.html) + [Oxfmt](https://oxc.rs/docs/guide/usage/formatter.html)
 
-> [!TIP]
-> This template is also available as a monorepo, powered by [Vite+](https://viteplus.dev/) and pnpm. See [mugnavo/tanstarter-plus](https://github.com/mugnavo/tanstarter-plus).
+## Credits
+
+This project was built using [TanStarter](https://github.com/mugnavo/tanstarter) by [mugnavo](https://github.com/mugnavo) — a minimal starter template for TanStack Start.
 
 ## Getting Started
 
-1. [Use this template](https://github.com/new?template_name=tanstarter&template_owner=mugnavo) or create a project using our CLI:
+1. Create a `.env` file based on [`.env.example`](./.env.example).
 
-   ```bash
-   pnpm create mugnavo
-   ```
-
-2. Create a `.env` file based on [`.env.example`](./.env.example).
-
-3. Generate the initial migration with drizzle-kit, then apply to your database:
-
-   ```sh
-   pnpm db generate
-   pnpm db migrate
-   ```
-
-   https://orm.drizzle.team/docs/migrations
-
-4. Run the development server:
+2. Run the development server:
 
    ```bash
    pnpm dev
@@ -48,17 +28,9 @@ pnpm create mugnavo
 
 ## Deploying to production
 
-[![Netlify Status](https://api.netlify.com/api/v1/badges/66acdee6-8e42-436f-9943-a67cad998f63/deploy-status)](https://app.netlify.com/projects/mugnavo-tanstarter/deploys)
-
-The [vite config](./vite.config.ts#L19-L20) is configured to use Nitro by default, which supports many [deployment presets](https://nitro.build/deploy) like Netlify, Vercel, Node.js, and more.
+The [vite config](./vite.config.ts) is configured to use Nitro by default, which supports many [deployment presets](https://nitro.build/deploy) like Netlify, Vercel, Node.js, and more.
 
 Refer to the [TanStack Start hosting docs](https://tanstack.com/start/latest/docs/framework/react/guide/hosting) for more information.
-
-## Issue watchlist
-
-- [Router/Start issues](https://github.com/TanStack/router/issues) - TanStack Start is in RC.
-- [Devtools releases](https://github.com/TanStack/devtools/releases) - TanStack Devtools is in alpha and may still have breaking changes.
-- [Nitro v3 beta](https://nitro.build/blog/v3-beta) - The template is configured with Nitro v3 beta by default.
 
 ## Goodies
 
@@ -81,12 +53,11 @@ We use **pnpm** by default, but you can modify these scripts in [package.json](.
 
 #### Utilities
 
-- [`auth/middleware.ts`](./src/lib/auth/middleware.ts) - Sample middleware for forcing authentication on server functions. (see [#5](https://github.com/mugnavo/tanstarter/issues/5#issuecomment-2615905686) and [#17](https://github.com/mugnavo/tanstarter/issues/17#issuecomment-2853482062))
-- [`theme-toggle.tsx`](./src/components/theme-toggle.tsx), [`theme-provider.tsx`](./src/components/theme-provider.tsx) - A theme toggle and provider for toggling between light and dark mode. ([#7](https://github.com/mugnavo/tanstarter/issues/7#issuecomment-3141530412))
+- [`theme-toggle.tsx`](./src/components/theme-toggle.tsx), [`theme-provider.tsx`](./src/components/theme-provider.tsx) - A theme toggle and provider for toggling between light and dark mode.
 
 ## License
 
-Code in this template is public domain via [Unlicense](./LICENSE). Feel free to remove or replace for your own project.
+[Unlicense](./LICENSE)
 
 ## Ecosystem
 
