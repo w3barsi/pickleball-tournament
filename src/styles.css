@@ -49,11 +49,17 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 
   --color-ballgreen: oklch(0.85 0.213 125.1);
+
+  /* Tournament colors */
+  --color-tournament-blue: var(--tournament-blue);
+  --color-tournament-lime: var(--tournament-lime);
 }
 
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
+  --tournament-blue: #1a599d;
+  --tournament-lime: #aee406;
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);

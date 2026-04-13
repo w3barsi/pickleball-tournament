@@ -35,7 +35,12 @@ export default defineSchema({
     targetScore: v.number(),
 
     // Game status
-    status: v.union(v.literal("in_progress"), v.literal("completed"), v.literal("abandoned")),
+    status: v.union(
+      v.literal("upcoming"),
+      v.literal("in_progress"),
+      v.literal("completed"),
+      v.literal("abandoned"),
+    ),
     winner: v.optional(v.union(v.literal(1), v.literal(2))),
 
     // Live status for display

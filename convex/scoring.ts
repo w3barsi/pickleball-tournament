@@ -4,7 +4,7 @@ import { query, mutation } from "./_generated/server";
 import { authComponent } from "./auth";
 
 // Types for internal use
-type GameStatus = "in_progress" | "completed" | "abandoned";
+type GameStatus = "upcoming" | "in_progress" | "completed" | "abandoned";
 type ServingTeam = 1 | 2;
 type ServerNumber = 1 | 2;
 
@@ -145,7 +145,7 @@ export const createGame = mutation({
       serverNumber: 2, // Start as server 2 (first serve rule)
       isFirstServe: true,
       targetScore: args.targetScore ?? 11,
-      status: "in_progress",
+      status: "upcoming",
       isLive: false,
       startedAt: now,
       lastUpdatedAt: now,
