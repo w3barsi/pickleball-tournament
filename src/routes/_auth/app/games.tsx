@@ -70,22 +70,22 @@ function GamesPage() {
     switch (status) {
       case "completed":
         return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
-            <TrophyIcon className="size-3" />
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500 px-3 py-1.5 text-xs font-bold tracking-wider text-white uppercase shadow-sm">
+            <TrophyIcon className="size-3.5" />
             Completed
           </span>
         );
       case "in_progress":
         return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
-            <PlayIcon className="size-3" />
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-600 px-3 py-1.5 text-xs font-bold tracking-wider text-white uppercase shadow-sm">
+            <PlayIcon className="size-3.5" />
             In Progress
           </span>
         );
       case "abandoned":
         return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
-            <XCircleIcon className="size-3" />
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-700 px-3 py-1.5 text-xs font-bold tracking-wider text-white uppercase shadow-sm">
+            <XCircleIcon className="size-3.5" />
             Abandoned
           </span>
         );
@@ -95,13 +95,18 @@ function GamesPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Games</h2>
+    <div className="space-y-8">
+      <div className="flex items-center justify-between border-b border-border pb-6">
+        <div>
+          <h2 className="text-3xl font-black tracking-tight text-foreground">Games</h2>
+          <p className="mt-1 text-sm font-medium text-muted-foreground">
+            Manage your pickleball matches
+          </p>
+        </div>
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger
             render={
-              <Button className="gap-2">
+              <Button className="gap-2 bg-foreground text-background hover:bg-foreground/90">
                 <PlusIcon className="size-4" />
                 New Game
               </Button>
@@ -154,54 +159,71 @@ function GamesPage() {
       </div>
 
       {games === undefined ? (
-        <div className="py-12 text-center text-muted-foreground">Loading games...</div>
+        <div className="py-16 text-center">
+          <div className="inline-flex h-12 w-12 animate-pulse items-center justify-center rounded-full bg-muted">
+            <PlayIcon className="size-6 text-muted-foreground" />
+          </div>
+          <p className="mt-4 text-lg font-semibold text-foreground">Loading games...</p>
+        </div>
       ) : games.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <p className="text-muted-foreground">No games yet</p>
-            <Button variant="outline" className="mt-4 gap-2" onClick={() => setIsCreateOpen(true)}>
+        <Card className="border-2 border-dashed border-border bg-muted/30">
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-background shadow-sm">
+              <TrophyIcon className="size-8 text-muted-foreground" />
+            </div>
+            <p className="mt-6 text-lg font-semibold text-foreground">No games yet</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Start tracking your pickleball matches
+            </p>
+            <Button
+              className="mt-6 gap-2 bg-foreground text-background hover:bg-foreground/90"
+              onClick={() => setIsCreateOpen(true)}
+            >
               <PlusIcon className="size-4" />
               Create your first game
             </Button>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4">
+        <div className="grid gap-5">
           {games.map((game) => (
             <Card
               key={game._id}
-              className={`transition-colors hover:bg-muted/50 ${
+              className={`overflow-hidden border-2 transition-all duration-200 hover:shadow-lg ${
                 game.status === "completed"
-                  ? "border-green-200 bg-green-50/50"
+                  ? "border-emerald-500/30 bg-emerald-50/30 dark:border-emerald-500/20 dark:bg-emerald-950/20"
                   : game.status === "in_progress"
-                    ? "border-blue-200"
-                    : ""
+                    ? "border-indigo-500/40 bg-indigo-50/20 shadow-md dark:border-indigo-500/30 dark:bg-indigo-950/20"
+                    : "border-border bg-card"
               }`}
             >
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <CardTitle className="text-base">
-                        {game.team1Name} vs {game.team2Name}
+              <CardHeader className="pb-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 space-y-2">
+                    <div className="flex items-center gap-3">
+                      <CardTitle className="text-lg font-bold tracking-tight">
+                        {game.team1Name} <span className="mx-1 text-muted-foreground">vs</span>{" "}
+                        {game.team2Name}
                       </CardTitle>
+                      {game.isLive && game.status !== "completed" && (
+                        <div className="relative flex h-3 w-3">
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75"></span>
+                          <span className="relative inline-flex h-3 w-3 rounded-full bg-red-600"></span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3">
                       {getStatusBadge(game.status)}
+                      <span className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                        Target: {game.targetScore} pts (win by 2)
+                      </span>
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      Target: {game.targetScore} points (win by 2)
-                    </p>
                   </div>
-                  {game.isLive && game.status !== "completed" && (
-                    <div className="relative flex h-3 w-3">
-                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span>
-                      <span className="relative inline-flex h-3 w-3 rounded-full bg-green-500"></span>
-                    </div>
-                  )}
                   {game.status === "completed" && (
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="text-destructive hover:text-destructive"
+                      className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                       onClick={() => setGameToDelete(game._id)}
                     >
                       <Trash2Icon className="size-4" />
@@ -209,33 +231,66 @@ function GamesPage() {
                   )}
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-0">
                 <Link
                   to="/app/g/$id"
                   params={{ id: game._id }}
-                  className="flex items-center justify-between rounded-lg border bg-background p-4 transition-colors hover:bg-muted"
+                  className="group flex items-center justify-between rounded-xl border-2 border-border bg-background p-5 transition-all duration-200 hover:border-foreground/20 hover:bg-muted"
                 >
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-6">
                     <div className="text-center">
-                      <div className="text-sm text-muted-foreground">{game.team1Name}</div>
-                      <div className="text-3xl font-bold">{game.team1Score}</div>
+                      <div className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
+                        {game.team1Name}
+                      </div>
+                      <div
+                        className={`mt-1 text-5xl font-black tracking-tight ${
+                          game.status === "completed" && game.winner === 1
+                            ? "text-emerald-600 dark:text-emerald-400"
+                            : "text-foreground"
+                        }`}
+                      >
+                        {game.team1Score}
+                      </div>
                     </div>
-                    <div className="text-xl text-muted-foreground">-</div>
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                      <span className="text-xl font-black text-muted-foreground">VS</span>
+                    </div>
                     <div className="text-center">
-                      <div className="text-sm text-muted-foreground">{game.team2Name}</div>
-                      <div className="text-3xl font-bold">{game.team2Score}</div>
+                      <div className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
+                        {game.team2Name}
+                      </div>
+                      <div
+                        className={`mt-1 text-5xl font-black tracking-tight ${
+                          game.status === "completed" && game.winner === 2
+                            ? "text-emerald-600 dark:text-emerald-400"
+                            : "text-foreground"
+                        }`}
+                      >
+                        {game.team2Score}
+                      </div>
                     </div>
                   </div>
-                  <div className="text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2 text-sm font-semibold">
                     {game.status === "completed" ? (
-                      <span className="flex items-center gap-1 text-green-600">
-                        <TrophyIcon className="size-4" />
-                        {game.winner === 1 ? game.team1Name : game.team2Name} won
+                      <span className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+                        <TrophyIcon className="size-5" />
+                        <span className="hidden sm:inline">
+                          {game.winner === 1 ? game.team1Name : game.team2Name} won
+                        </span>
+                        <span className="sm:hidden">Winner</span>
                       </span>
                     ) : game.status === "in_progress" ? (
-                      <span>Continue game →</span>
+                      <span className="flex items-center gap-1 text-indigo-600 dark:text-indigo-400">
+                        Continue
+                        <span className="transition-transform group-hover:translate-x-1">→</span>
+                      </span>
                     ) : (
-                      <span>View details →</span>
+                      <span className="text-muted-foreground">
+                        View details
+                        <span className="ml-1 transition-transform group-hover:translate-x-1">
+                          →
+                        </span>
+                      </span>
                     )}
                   </div>
                 </Link>
@@ -247,20 +302,25 @@ function GamesPage() {
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!gameToDelete} onOpenChange={() => setGameToDelete(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="border-2 border-destructive/20">
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Game</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="flex items-center gap-2 text-xl font-bold text-destructive">
+              <Trash2Icon className="size-5" />
+              Delete Game
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-base">
               Are you sure you want to delete this completed game? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setGameToDelete(null)}>Cancel</AlertDialogCancel>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel onClick={() => setGameToDelete(null)} className="font-semibold">
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              className="text-destructive-foreground bg-destructive hover:bg-destructive/90"
+              className="text-destructive-foreground bg-destructive font-bold hover:bg-destructive/90"
             >
-              Delete
+              Delete Game
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
