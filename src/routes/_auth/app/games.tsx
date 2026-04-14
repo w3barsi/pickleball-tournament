@@ -7,29 +7,10 @@ import { useMutation } from "convex/react";
 import { PlusIcon, Trash2Icon, TrophyIcon, PlayIcon, XCircleIcon } from "lucide-react";
 import { useState } from "react";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { CreateGameDialog } from "@/components/games/create-game-dialog";
+import { DeleteGameAlertDialog } from "@/components/games/delete-game-alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/_auth/app/games")({
   component: GamesPage,
@@ -44,17 +25,12 @@ function GamesPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [gameToDelete, setGameToDelete] = useState<Id<"pickleballGames"> | null>(null);
 
-  // Form state
-  const [team1Name, setTeam1Name] = useState("Team 1");
-  const [team2Name, setTeam2Name] = useState("Team 2");
-  const [targetScore, setTargetScore] = useState(11);
-
-  const handleCreate = async () => {
-    const gameId = await createGame({
-      team1Name: team1Name || "Team 1",
-      team2Name: team2Name || "Team 2",
-      targetScore: targetScore || 11,
-    });
+  const handleCreate = async (data: {
+    team1Name: string;
+    team2Name: string;
+    targetScore: number;
+  }) => {
+    const gameId = await createGame(data);
     setIsCreateOpen(false);
     navigate({ to: "/app/g/$id", params: { id: gameId } });
   };
@@ -73,13 +49,6 @@ function GamesPage() {
           <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-white bg-tournament-lime px-4 py-1.5 text-xs font-black tracking-wider text-tournament-blue uppercase">
             <TrophyIcon className="size-3.5" />
             COMPLETED
-          </span>
-        );
-      case "in_progress":
-        return (
-          <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-tournament-lime bg-white px-4 py-1.5 text-xs font-black tracking-wider text-tournament-blue uppercase">
-            <PlayIcon className="size-3.5" />
-            LIVE
           </span>
         );
       case "in_progress":
@@ -119,93 +88,17 @@ function GamesPage() {
               Pickleball Match Tracker
             </p>
           </div>
-          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-            <DialogTrigger
-              render={
-                <Button className="group gap-2 rounded-full border-4 border-white bg-tournament-lime px-8 py-6 text-lg font-black tracking-wide text-tournament-blue uppercase shadow-xl transition-all hover:scale-105 hover:shadow-2xl">
-                  <PlusIcon className="size-6 transition-transform group-hover:rotate-90" />
-                  NEW GAME
-                </Button>
-              }
-            />
-            <DialogContent className="border-4 border-tournament-blue sm:max-w-md">
-              <DialogHeader className="-mx-6 -mt-6 mb-4 bg-tournament-blue px-6 py-4">
-                <DialogTitle className="text-2xl font-black tracking-tight text-white uppercase italic">
-                  CREATE MATCH
-                </DialogTitle>
-                <DialogDescription className="text-sm font-semibold text-white/80">
-                  Set up your pickleball doubles game
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-5 py-2">
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="team1"
-                    className="text-sm font-bold tracking-wider text-tournament-blue uppercase"
-                  >
-                    Team 1 Name
-                  </Label>
-                  <Input
-                    id="team1"
-                    value={team1Name}
-                    onChange={(e) => setTeam1Name(e.target.value)}
-                    placeholder="Team 1"
-                    className="border-2 border-tournament-blue font-semibold"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="team2"
-                    className="text-sm font-bold tracking-wider text-tournament-blue uppercase"
-                  >
-                    Team 2 Name
-                  </Label>
-                  <Input
-                    id="team2"
-                    value={team2Name}
-                    onChange={(e) => setTeam2Name(e.target.value)}
-                    placeholder="Team 2"
-                    className="border-2 border-tournament-blue font-semibold"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="targetScore"
-                    className="text-sm font-bold tracking-wider text-tournament-blue uppercase"
-                  >
-                    Winning Score
-                  </Label>
-                  <Input
-                    id="targetScore"
-                    type="number"
-                    value={targetScore}
-                    onChange={(e) => setTargetScore(parseInt(e.target.value) || 11)}
-                    min={1}
-                    className="border-2 border-tournament-blue text-xl font-black"
-                  />
-                  <p className="text-xs font-bold tracking-wide text-muted-foreground uppercase">
-                    Win by 2 points
-                  </p>
-                </div>
-              </div>
-              <DialogFooter className="gap-3 pt-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsCreateOpen(false)}
-                  className="border-2 font-bold uppercase"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleCreate}
-                  className="gap-2 bg-tournament-lime font-black tracking-wide text-tournament-blue uppercase"
-                >
-                  <TrophyIcon className="size-4" />
-                  Create Game
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <CreateGameDialog
+            open={isCreateOpen}
+            onOpenChange={setIsCreateOpen}
+            onCreate={handleCreate}
+            trigger={
+              <Button className="group gap-2 rounded-full border-4 border-white bg-tournament-lime px-8 py-6 text-lg font-black tracking-wide text-tournament-blue uppercase shadow-xl transition-all hover:scale-105 hover:text-white hover:shadow-2xl">
+                <PlusIcon className="size-6 transition-transform group-hover:rotate-90" />
+                NEW GAME
+              </Button>
+            }
+          />
         </div>
       </div>
 
@@ -375,35 +268,11 @@ function GamesPage() {
       )}
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!gameToDelete} onOpenChange={() => setGameToDelete(null)}>
-        <AlertDialogContent
-          className="overflow-hidden border-4 p-0"
-          style={{ borderColor: "#dc2626" }}
-        >
-          <AlertDialogHeader className="bg-red-600 p-6">
-            <AlertDialogTitle className="flex items-center gap-3 text-2xl font-black text-white uppercase italic">
-              <Trash2Icon className="size-7" />
-              DELETE GAME
-            </AlertDialogTitle>
-          </AlertDialogHeader>
-          <div className="px-6 py-4">
-            <AlertDialogDescription className="text-base font-semibold text-slate-700">
-              Are you sure you want to delete this completed game? This action cannot be undone.
-            </AlertDialogDescription>
-          </div>
-          <AlertDialogFooter className="gap-3 px-6 pb-6">
-            <AlertDialogCancel className="border-2 border-slate-300 font-bold uppercase">
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-red-600 font-black tracking-wide uppercase hover:bg-red-700"
-            >
-              Delete Game
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteGameAlertDialog
+        open={!!gameToDelete}
+        onOpenChange={() => setGameToDelete(null)}
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }
