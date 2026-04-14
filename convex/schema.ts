@@ -2,11 +2,13 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
+  // ========== PLAYERS & PAIRS ==========
   player: defineTable({
     firstName: v.string(),
     lastName: v.string(),
     nickname: v.string(),
   }),
+
   playerPair: defineTable({
     teamName: v.string(),
     playerOne: v.id("player"),
@@ -15,63 +17,111 @@ export default defineSchema({
     losses: v.number(),
   }),
 
-  // Pickleball games - current state stored here
-  pickleballGames: defineTable({
-    // Ownership
-    ownerId: v.string(), // user's _id from better-auth
+  // ========== TOURNAMENT STRUCTURE ==========
+  tournaments: defineTable({
+    name: v.string(),
+    date: v.number(),
+    description: v.optional(v.string()),
+    organizerName: v.string(),
+    status: v.union(v.literal("upcoming"), v.literal("inProgress"), v.literal("completed")),
+    createdAt: v.number(),
+  }),
 
-    // Team names
-    team1Name: v.string(),
-    team2Name: v.string(),
+  categories: defineTable({
+    tournamentId: v.id("tournaments"),
+    name: v.string(),
+    type: v.union(v.literal("singles"), v.literal("doubles")),
+    format: v.union(v.literal("roundRobin"), v.literal("singleElimination")),
+    rating: v.union(v.literal("beginner"), v.literal("intermediate"), v.literal("advanced")),
+    category: v.union(
+      v.literal("womens"),
+      v.literal("mens"),
+      v.literal("mixed"),
+      v.literal("open"),
+    ),
+    maxParticipants: v.optional(v.number()),
+    createdAt: v.number(),
+  }).index("by_tournament", ["tournamentId"]),
 
-    // Current game state
+  // Players/Pairs register HERE at the category level
+  categoryParticipants: defineTable({
+    categoryId: v.id("categories"),
+    playerId: v.optional(v.id("player")),
+    pairId: v.optional(v.id("playerPair")),
+    status: v.union(v.literal("active"), v.literal("eliminated"), v.literal("withdrawn")),
+    wins: v.number(),
+    losses: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_category", ["categoryId"])
+    .index("by_player", ["playerId"])
+    .index("by_pair", ["pairId"]),
+
+  // Brackets = group stages within a category
+  brackets: defineTable({
+    categoryId: v.id("categories"),
+    name: v.string(),
+    stage: v.number(),
+    status: v.union(v.literal("upcoming"), v.literal("inProgress"), v.literal("completed")),
+    maxParticipants: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_category", ["categoryId"])
+    .index("by_category_stage", ["categoryId", "stage"]),
+
+  // Who advances to which bracket
+  bracketParticipants: defineTable({
+    bracketId: v.id("brackets"),
+    categoryParticipantId: v.id("categoryParticipants"),
+    status: v.union(v.literal("active"), v.literal("eliminated"), v.literal("withdrawn")),
+    createdAt: v.number(),
+  })
+    .index("by_bracket", ["bracketId"])
+    .index("by_category_participant", ["categoryParticipantId"]),
+
+  // ========== MATCHES ==========
+  matches: defineTable({
+    bracketId: v.id("brackets"),
+    categoryId: v.id("categories"),
+    participant1Id: v.id("categoryParticipants"),
+    participant2Id: v.id("categoryParticipants"),
     team1Score: v.number(),
     team2Score: v.number(),
     servingTeam: v.union(v.literal(1), v.literal(2)),
     serverNumber: v.union(v.literal(1), v.literal(2)),
     isFirstServe: v.boolean(),
-
-    // Game configuration
     targetScore: v.number(),
-
-    // Game status
     status: v.union(
-      v.literal("upcoming"),
-      v.literal("in_progress"),
+      v.literal("scheduled"),
+      v.literal("inProgress"),
       v.literal("completed"),
       v.literal("abandoned"),
     ),
-    winner: v.optional(v.union(v.literal(1), v.literal(2))),
-
-    // Live status for display
+    winnerParticipantId: v.optional(v.id("categoryParticipants")),
     isLive: v.optional(v.boolean()),
-
-    // Timestamps
     startedAt: v.number(),
     completedAt: v.optional(v.number()),
     lastUpdatedAt: v.number(),
   })
-    .index("by_owner", ["ownerId"])
+    .index("by_bracket", ["bracketId"])
+    .index("by_category", ["categoryId"])
     .index("by_status", ["status"])
-    .index("by_owner_and_status", ["ownerId", "status"])
-    .index("by_is_live", ["isLive"]),
+    .index("by_is_live", ["isLive"])
+    .index("by_participant", ["participant1Id"])
+    .index("by_participant2", ["participant2Id"]),
 
-  // Individual points - unbounded per game, stored separately
+  // ========== POINTS ==========
   pickleballPoints: defineTable({
-    gameId: v.id("pickleballGames"),
-
-    // State BEFORE this point was scored
+    matchId: v.id("matches"),
     team1Score: v.number(),
     team2Score: v.number(),
     servingTeam: v.union(v.literal(1), v.literal(2)),
     serverNumber: v.union(v.literal(1), v.literal(2)),
     isFirstServe: v.boolean(),
-
-    // What happened
     pointWinner: v.union(v.literal(1), v.literal(2)),
     sequenceNumber: v.number(),
     timestamp: v.number(),
   })
-    .index("by_game", ["gameId"])
-    .index("by_game_and_sequence", ["gameId", "sequenceNumber"]),
+    .index("by_match", ["matchId"])
+    .index("by_match_and_sequence", ["matchId", "sequenceNumber"]),
 });

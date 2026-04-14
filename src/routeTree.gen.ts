@@ -18,8 +18,10 @@ import { Route as GuestLoginRouteImport } from './routes/_guest/login'
 import { Route as AuthAppRouteRouteImport } from './routes/_auth/app/route'
 import { Route as AuthAppIndexRouteImport } from './routes/_auth/app/index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as AuthAppTournamentsRouteImport } from './routes/_auth/app/tournaments'
 import { Route as AuthAppScorerRouteImport } from './routes/_auth/app/scorer'
 import { Route as AuthAppGamesRouteImport } from './routes/_auth/app/games'
+import { Route as AuthAppTournamentsIdRouteImport } from './routes/_auth/app/tournaments/$id'
 import { Route as AuthAppGIdRouteImport } from './routes/_auth/app/g.$id'
 
 const OverlayRoute = OverlayRouteImport.update({
@@ -65,6 +67,11 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthAppTournamentsRoute = AuthAppTournamentsRouteImport.update({
+  id: '/tournaments',
+  path: '/tournaments',
+  getParentRoute: () => AuthAppRouteRoute,
+} as any)
 const AuthAppScorerRoute = AuthAppScorerRouteImport.update({
   id: '/scorer',
   path: '/scorer',
@@ -74,6 +81,11 @@ const AuthAppGamesRoute = AuthAppGamesRouteImport.update({
   id: '/games',
   path: '/games',
   getParentRoute: () => AuthAppRouteRoute,
+} as any)
+const AuthAppTournamentsIdRoute = AuthAppTournamentsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthAppTournamentsRoute,
 } as any)
 const AuthAppGIdRoute = AuthAppGIdRouteImport.update({
   id: '/g/$id',
@@ -89,9 +101,11 @@ export interface FileRoutesByFullPath {
   '/signup': typeof GuestSignupRoute
   '/app/games': typeof AuthAppGamesRoute
   '/app/scorer': typeof AuthAppScorerRoute
+  '/app/tournaments': typeof AuthAppTournamentsRouteWithChildren
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/app/': typeof AuthAppIndexRoute
   '/app/g/$id': typeof AuthAppGIdRoute
+  '/app/tournaments/$id': typeof AuthAppTournamentsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -100,9 +114,11 @@ export interface FileRoutesByTo {
   '/signup': typeof GuestSignupRoute
   '/app/games': typeof AuthAppGamesRoute
   '/app/scorer': typeof AuthAppScorerRoute
+  '/app/tournaments': typeof AuthAppTournamentsRouteWithChildren
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/app': typeof AuthAppIndexRoute
   '/app/g/$id': typeof AuthAppGIdRoute
+  '/app/tournaments/$id': typeof AuthAppTournamentsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -115,9 +131,11 @@ export interface FileRoutesById {
   '/_guest/signup': typeof GuestSignupRoute
   '/_auth/app/games': typeof AuthAppGamesRoute
   '/_auth/app/scorer': typeof AuthAppScorerRoute
+  '/_auth/app/tournaments': typeof AuthAppTournamentsRouteWithChildren
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/_auth/app/': typeof AuthAppIndexRoute
   '/_auth/app/g/$id': typeof AuthAppGIdRoute
+  '/_auth/app/tournaments/$id': typeof AuthAppTournamentsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -129,9 +147,11 @@ export interface FileRouteTypes {
     | '/signup'
     | '/app/games'
     | '/app/scorer'
+    | '/app/tournaments'
     | '/api/auth/$'
     | '/app/'
     | '/app/g/$id'
+    | '/app/tournaments/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -140,9 +160,11 @@ export interface FileRouteTypes {
     | '/signup'
     | '/app/games'
     | '/app/scorer'
+    | '/app/tournaments'
     | '/api/auth/$'
     | '/app'
     | '/app/g/$id'
+    | '/app/tournaments/$id'
   id:
     | '__root__'
     | '/'
@@ -154,9 +176,11 @@ export interface FileRouteTypes {
     | '/_guest/signup'
     | '/_auth/app/games'
     | '/_auth/app/scorer'
+    | '/_auth/app/tournaments'
     | '/api/auth/$'
     | '/_auth/app/'
     | '/_auth/app/g/$id'
+    | '/_auth/app/tournaments/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -232,6 +256,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_auth/app/tournaments': {
+      id: '/_auth/app/tournaments'
+      path: '/tournaments'
+      fullPath: '/app/tournaments'
+      preLoaderRoute: typeof AuthAppTournamentsRouteImport
+      parentRoute: typeof AuthAppRouteRoute
+    }
     '/_auth/app/scorer': {
       id: '/_auth/app/scorer'
       path: '/scorer'
@@ -246,6 +277,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthAppGamesRouteImport
       parentRoute: typeof AuthAppRouteRoute
     }
+    '/_auth/app/tournaments/$id': {
+      id: '/_auth/app/tournaments/$id'
+      path: '/$id'
+      fullPath: '/app/tournaments/$id'
+      preLoaderRoute: typeof AuthAppTournamentsIdRouteImport
+      parentRoute: typeof AuthAppTournamentsRoute
+    }
     '/_auth/app/g/$id': {
       id: '/_auth/app/g/$id'
       path: '/g/$id'
@@ -256,9 +294,21 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthAppTournamentsRouteChildren {
+  AuthAppTournamentsIdRoute: typeof AuthAppTournamentsIdRoute
+}
+
+const AuthAppTournamentsRouteChildren: AuthAppTournamentsRouteChildren = {
+  AuthAppTournamentsIdRoute: AuthAppTournamentsIdRoute,
+}
+
+const AuthAppTournamentsRouteWithChildren =
+  AuthAppTournamentsRoute._addFileChildren(AuthAppTournamentsRouteChildren)
+
 interface AuthAppRouteRouteChildren {
   AuthAppGamesRoute: typeof AuthAppGamesRoute
   AuthAppScorerRoute: typeof AuthAppScorerRoute
+  AuthAppTournamentsRoute: typeof AuthAppTournamentsRouteWithChildren
   AuthAppIndexRoute: typeof AuthAppIndexRoute
   AuthAppGIdRoute: typeof AuthAppGIdRoute
 }
@@ -266,6 +316,7 @@ interface AuthAppRouteRouteChildren {
 const AuthAppRouteRouteChildren: AuthAppRouteRouteChildren = {
   AuthAppGamesRoute: AuthAppGamesRoute,
   AuthAppScorerRoute: AuthAppScorerRoute,
+  AuthAppTournamentsRoute: AuthAppTournamentsRouteWithChildren,
   AuthAppIndexRoute: AuthAppIndexRoute,
   AuthAppGIdRoute: AuthAppGIdRoute,
 }

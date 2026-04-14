@@ -1,10 +1,9 @@
 import { v } from "convex/values";
 
 import { query, mutation } from "./_generated/server";
-import { authComponent } from "./auth";
 
 // Types for internal use
-type GameStatus = "upcoming" | "in_progress" | "completed" | "abandoned";
+type MatchStatus = "scheduled" | "inProgress" | "completed" | "abandoned";
 type ServingTeam = 1 | 2;
 type ServerNumber = 1 | 2;
 
@@ -19,7 +18,7 @@ function checkWinCondition(team1Score: number, team2Score: number, target: numbe
   return null;
 }
 
-// Helper to calculate next game state after a point
+// Helper to calculate next match state after a point
 function calculateNextState(
   current: {
     team1Score: number;
@@ -36,7 +35,7 @@ function calculateNextState(
   servingTeam: ServingTeam;
   serverNumber: ServerNumber;
   isFirstServe: boolean;
-  status: GameStatus;
+  status: MatchStatus;
   winner: 1 | 2 | undefined;
 } {
   let newState = {
@@ -45,7 +44,7 @@ function calculateNextState(
     servingTeam: current.servingTeam,
     serverNumber: current.serverNumber,
     isFirstServe: current.isFirstServe,
-    status: "in_progress" as GameStatus,
+    status: "inProgress" as MatchStatus,
     winner: undefined as 1 | 2 | undefined,
   };
 
@@ -89,86 +88,127 @@ function calculateNextState(
   return newState;
 }
 
-// List all games (paginated)
-export const listAllGames = query({
+// List all matches (paginated)
+export const listAllMatches = query({
   args: {},
   handler: async (ctx) => {
-    const games = await ctx.db.query("pickleballGames").order("desc").take(100);
-
-    return games;
+    const matches = await ctx.db.query("matches").order("desc").take(100);
+    return matches;
   },
 });
 
-// Get a single game with its full history
-export const getGameWithHistory = query({
+// Get matches by bracket
+export const getMatchesByBracket = query({
   args: {
-    gameId: v.id("pickleballGames"),
+    bracketId: v.id("brackets"),
   },
   handler: async (ctx, args) => {
-    const game = await ctx.db.get("pickleballGames", args.gameId);
-    if (!game) return null;
+    const matches = await ctx.db
+      .query("matches")
+      .withIndex("by_bracket", (q) => q.eq("bracketId", args.bracketId))
+      .order("desc")
+      .take(100);
+    return matches;
+  },
+});
+
+// Get a single match with its full history
+export const getMatchWithHistory = query({
+  args: {
+    matchId: v.id("matches"),
+  },
+  handler: async (ctx, args) => {
+    const match = await ctx.db.get(args.matchId);
+    if (!match) return null;
 
     const points = await ctx.db
       .query("pickleballPoints")
-      .withIndex("by_game_and_sequence", (q) => q.eq("gameId", args.gameId))
+      .withIndex("by_match_and_sequence", (q) => q.eq("matchId", args.matchId))
       .order("desc")
       .take(100);
 
     return {
-      game,
+      match,
       points,
     };
   },
 });
 
-// Create a new game
-export const createGame = mutation({
+// Create a new match (requires bracketId)
+export const createMatch = mutation({
   args: {
-    team1Name: v.optional(v.string()),
-    team2Name: v.optional(v.string()),
+    bracketId: v.id("brackets"),
+    participant1Id: v.id("categoryParticipants"),
+    participant2Id: v.id("categoryParticipants"),
     targetScore: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const user = await authComponent.safeGetAuthUser(ctx);
-    if (!user) {
-      throw new Error("Not authenticated");
+    // Get bracket to find category
+    const bracket = await ctx.db.get(args.bracketId);
+    if (!bracket) {
+      throw new Error("Bracket not found");
     }
 
     const now = Date.now();
-    const gameId = await ctx.db.insert("pickleballGames", {
-      ownerId: user._id,
-      team1Name: args.team1Name ?? "Team 1",
-      team2Name: args.team2Name ?? "Team 2",
+    const matchId = await ctx.db.insert("matches", {
+      bracketId: args.bracketId,
+      categoryId: bracket.categoryId,
+      participant1Id: args.participant1Id,
+      participant2Id: args.participant2Id,
       team1Score: 0,
       team2Score: 0,
       servingTeam: 1,
       serverNumber: 2, // Start as server 2 (first serve rule)
       isFirstServe: true,
       targetScore: args.targetScore ?? 11,
-      status: "upcoming",
+      status: "scheduled",
       isLive: false,
       startedAt: now,
       lastUpdatedAt: now,
     });
 
-    return gameId;
+    return matchId;
+  },
+});
+
+// Start a match (change status from scheduled to inProgress)
+export const startMatch = mutation({
+  args: {
+    matchId: v.id("matches"),
+  },
+  handler: async (ctx, args) => {
+    const match = await ctx.db.get(args.matchId);
+    if (!match) {
+      throw new Error("Match not found");
+    }
+
+    if (match.status !== "scheduled") {
+      throw new Error("Match has already started");
+    }
+
+    await ctx.db.patch(args.matchId, {
+      status: "inProgress",
+      lastUpdatedAt: Date.now(),
+    });
+
+    return { success: true };
   },
 });
 
 // Record a point
 export const recordPoint = mutation({
   args: {
-    gameId: v.id("pickleballGames"),
+    matchId: v.id("matches"),
     pointWinner: v.union(v.literal(1), v.literal(2)),
   },
   handler: async (ctx, args) => {
-    const game = await ctx.db.get(args.gameId);
-    if (!game) {
-      throw new Error("Game not found");
+    const match = await ctx.db.get(args.matchId);
+    if (!match) {
+      throw new Error("Match not found");
     }
 
-    if (game.status !== "in_progress") {
-      throw new Error("Game is not in progress");
+    if (match.status !== "inProgress") {
+      throw new Error("Match is not in progress");
     }
 
     const now = Date.now();
@@ -176,18 +216,18 @@ export const recordPoint = mutation({
     // Get current sequence number
     const existingPoints = await ctx.db
       .query("pickleballPoints")
-      .withIndex("by_game", (q) => q.eq("gameId", args.gameId))
+      .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
       .collect();
     const sequenceNumber = existingPoints.length;
 
     // Record the point (state BEFORE the point was scored)
     await ctx.db.insert("pickleballPoints", {
-      gameId: args.gameId,
-      team1Score: game.team1Score,
-      team2Score: game.team2Score,
-      servingTeam: game.servingTeam,
-      serverNumber: game.serverNumber,
-      isFirstServe: game.isFirstServe,
+      matchId: args.matchId,
+      team1Score: match.team1Score,
+      team2Score: match.team2Score,
+      servingTeam: match.servingTeam,
+      serverNumber: match.serverNumber,
+      isFirstServe: match.isFirstServe,
       pointWinner: args.pointWinner,
       sequenceNumber,
       timestamp: now,
@@ -196,28 +236,58 @@ export const recordPoint = mutation({
     // Calculate next state
     const newState = calculateNextState(
       {
-        team1Score: game.team1Score,
-        team2Score: game.team2Score,
-        servingTeam: game.servingTeam,
-        serverNumber: game.serverNumber,
-        isFirstServe: game.isFirstServe,
-        targetScore: game.targetScore,
+        team1Score: match.team1Score,
+        team2Score: match.team2Score,
+        servingTeam: match.servingTeam,
+        serverNumber: match.serverNumber,
+        isFirstServe: match.isFirstServe,
+        targetScore: match.targetScore,
       },
       args.pointWinner,
     );
 
-    // Update game
-    await ctx.db.patch(args.gameId, {
+    // Determine winner participant ID
+    let winnerParticipantId = undefined;
+    if (newState.winner === 1) {
+      winnerParticipantId = match.participant1Id;
+    } else if (newState.winner === 2) {
+      winnerParticipantId = match.participant2Id;
+    }
+
+    // Update match
+    await ctx.db.patch(args.matchId, {
       team1Score: newState.team1Score,
       team2Score: newState.team2Score,
       servingTeam: newState.servingTeam,
       serverNumber: newState.serverNumber,
       isFirstServe: newState.isFirstServe,
       status: newState.status,
-      winner: newState.winner,
+      winnerParticipantId,
       completedAt: newState.status === "completed" ? now : undefined,
       lastUpdatedAt: now,
     });
+
+    // If match completed, update participant win/loss records
+    if (newState.status === "completed" && winnerParticipantId) {
+      const loserParticipantId =
+        newState.winner === 1 ? match.participant2Id : match.participant1Id;
+
+      // Update winner's record
+      const winner = await ctx.db.get(winnerParticipantId);
+      if (winner) {
+        await ctx.db.patch(winnerParticipantId, {
+          wins: winner.wins + 1,
+        });
+      }
+
+      // Update loser's record
+      const loser = await ctx.db.get(loserParticipantId);
+      if (loser) {
+        await ctx.db.patch(loserParticipantId, {
+          losses: loser.losses + 1,
+        });
+      }
+    }
 
     return newState;
   },
@@ -226,18 +296,18 @@ export const recordPoint = mutation({
 // Undo last point
 export const undoLastPoint = mutation({
   args: {
-    gameId: v.id("pickleballGames"),
+    matchId: v.id("matches"),
   },
   handler: async (ctx, args) => {
-    const game = await ctx.db.get(args.gameId);
-    if (!game) {
-      throw new Error("Game not found");
+    const match = await ctx.db.get(args.matchId);
+    if (!match) {
+      throw new Error("Match not found");
     }
 
     // Get the last point
     const lastPoint = await ctx.db
       .query("pickleballPoints")
-      .withIndex("by_game_and_sequence", (q) => q.eq("gameId", args.gameId))
+      .withIndex("by_match_and_sequence", (q) => q.eq("matchId", args.matchId))
       .order("desc")
       .first();
 
@@ -245,19 +315,41 @@ export const undoLastPoint = mutation({
       throw new Error("No points to undo");
     }
 
+    // If match was completed, we need to revert win/loss records
+    if (match.status === "completed" && match.winnerParticipantId) {
+      const loserParticipantId =
+        match.winnerParticipantId === match.participant1Id
+          ? match.participant2Id
+          : match.participant1Id;
+
+      const winner = await ctx.db.get(match.winnerParticipantId);
+      if (winner && winner.wins > 0) {
+        await ctx.db.patch(match.winnerParticipantId, {
+          wins: winner.wins - 1,
+        });
+      }
+
+      const loser = await ctx.db.get(loserParticipantId);
+      if (loser && loser.losses > 0) {
+        await ctx.db.patch(loserParticipantId, {
+          losses: loser.losses - 1,
+        });
+      }
+    }
+
     // Delete the last point
     await ctx.db.delete(lastPoint._id);
 
-    // Restore game state from the deleted point (which had the BEFORE state)
+    // Restore match state from the deleted point (which had the BEFORE state)
     const now = Date.now();
-    await ctx.db.patch(args.gameId, {
+    await ctx.db.patch(args.matchId, {
       team1Score: lastPoint.team1Score,
       team2Score: lastPoint.team2Score,
       servingTeam: lastPoint.servingTeam,
       serverNumber: lastPoint.serverNumber,
       isFirstServe: lastPoint.isFirstServe,
-      status: "in_progress",
-      winner: undefined,
+      status: "inProgress",
+      winnerParticipantId: undefined,
       completedAt: undefined,
       lastUpdatedAt: now,
     });
@@ -266,52 +358,20 @@ export const undoLastPoint = mutation({
   },
 });
 
-// Update team names
-export const updateTeamNames = mutation({
+// Abandon a match
+export const abandonMatch = mutation({
   args: {
-    gameId: v.id("pickleballGames"),
-    team1Name: v.optional(v.string()),
-    team2Name: v.optional(v.string()),
+    matchId: v.id("matches"),
   },
   handler: async (ctx, args) => {
-    const game = await ctx.db.get(args.gameId);
-    if (!game) {
-      throw new Error("Game not found");
+    const match = await ctx.db.get(args.matchId);
+    if (!match) {
+      throw new Error("Match not found");
     }
 
-    const updates: Partial<{
-      team1Name: string;
-      team2Name: string;
-      lastUpdatedAt: number;
-    }> = {
-      lastUpdatedAt: Date.now(),
-    };
-
-    if (args.team1Name !== undefined) {
-      updates.team1Name = args.team1Name;
-    }
-    if (args.team2Name !== undefined) {
-      updates.team2Name = args.team2Name;
-    }
-
-    await ctx.db.patch(args.gameId, updates);
-    return { success: true };
-  },
-});
-
-// Abandon a game
-export const abandonGame = mutation({
-  args: {
-    gameId: v.id("pickleballGames"),
-  },
-  handler: async (ctx, args) => {
-    const game = await ctx.db.get(args.gameId);
-    if (!game) {
-      throw new Error("Game not found");
-    }
-
-    await ctx.db.patch(args.gameId, {
+    await ctx.db.patch(args.matchId, {
       status: "abandoned",
+      isLive: false,
       lastUpdatedAt: Date.now(),
     });
 
@@ -319,33 +379,29 @@ export const abandonGame = mutation({
   },
 });
 
-// Delete a completed game and all its points
-export const deleteGame = mutation({
+// Delete a completed match and all its points
+export const deleteMatch = mutation({
   args: {
-    gameId: v.id("pickleballGames"),
+    matchId: v.id("matches"),
   },
   handler: async (ctx, args) => {
-    const game = await ctx.db.get(args.gameId);
-    if (!game) {
-      throw new Error("Game not found");
+    const match = await ctx.db.get(args.matchId);
+    if (!match) {
+      throw new Error("Match not found");
     }
 
-    if (game.status !== "completed") {
-      throw new Error("Only completed games can be deleted");
-    }
-
-    // Delete all points for this game
+    // Delete all points for this match
     const points = await ctx.db
       .query("pickleballPoints")
-      .withIndex("by_game", (q) => q.eq("gameId", args.gameId))
+      .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
       .take(1000);
 
     for (const point of points) {
       await ctx.db.delete(point._id);
     }
 
-    // Delete the game
-    await ctx.db.delete(args.gameId);
+    // Delete the match
+    await ctx.db.delete(args.matchId);
 
     return { success: true };
   },
@@ -354,33 +410,57 @@ export const deleteGame = mutation({
 // Update target score
 export const updateTargetScore = mutation({
   args: {
-    gameId: v.id("pickleballGames"),
+    matchId: v.id("matches"),
     targetScore: v.number(),
   },
   handler: async (ctx, args) => {
-    const game = await ctx.db.get(args.gameId);
-    if (!game) {
-      throw new Error("Game not found");
+    const match = await ctx.db.get(args.matchId);
+    if (!match) {
+      throw new Error("Match not found");
     }
 
-    if (game.status !== "in_progress") {
-      throw new Error("Cannot change target score after game is finished");
+    if (match.status === "completed" || match.status === "abandoned") {
+      throw new Error("Cannot change target score after match is finished");
     }
 
-    // Check if the new target score would immediately end the game
-    const winner = checkWinCondition(game.team1Score, game.team2Score, args.targetScore);
+    // Check if the new target score would immediately end the match
+    const winner = checkWinCondition(match.team1Score, match.team2Score, args.targetScore);
     const now = Date.now();
 
-    if (winner) {
-      await ctx.db.patch(args.gameId, {
+    let winnerParticipantId = undefined;
+    if (winner === 1) {
+      winnerParticipantId = match.participant1Id;
+    } else if (winner === 2) {
+      winnerParticipantId = match.participant2Id;
+    }
+
+    if (winner && winnerParticipantId) {
+      // Update winner and loser records
+      const loserParticipantId = winner === 1 ? match.participant2Id : match.participant1Id;
+
+      const winnerParticipant = await ctx.db.get(winnerParticipantId);
+      if (winnerParticipant) {
+        await ctx.db.patch(winnerParticipantId, {
+          wins: winnerParticipant.wins + 1,
+        });
+      }
+
+      const loserParticipant = await ctx.db.get(loserParticipantId);
+      if (loserParticipant) {
+        await ctx.db.patch(loserParticipantId, {
+          losses: loserParticipant.losses + 1,
+        });
+      }
+
+      await ctx.db.patch(args.matchId, {
         targetScore: args.targetScore,
         status: "completed",
-        winner,
+        winnerParticipantId,
         completedAt: now,
         lastUpdatedAt: now,
       });
     } else {
-      await ctx.db.patch(args.gameId, {
+      await ctx.db.patch(args.matchId, {
         targetScore: args.targetScore,
         lastUpdatedAt: now,
       });
@@ -390,35 +470,35 @@ export const updateTargetScore = mutation({
   },
 });
 
-// Set a game as live (unset all other live games first)
-export const setGameLive = mutation({
+// Set a match as live (unset all other live matches first)
+export const setMatchLive = mutation({
   args: {
-    gameId: v.id("pickleballGames"),
+    matchId: v.id("matches"),
   },
   handler: async (ctx, args) => {
-    const game = await ctx.db.get(args.gameId);
-    if (!game) {
-      throw new Error("Game not found");
+    const match = await ctx.db.get(args.matchId);
+    if (!match) {
+      throw new Error("Match not found");
     }
 
-    // Get all currently live games and set them to not live
-    const liveGames = await ctx.db
-      .query("pickleballGames")
+    // Get all currently live matches and set them to not live
+    const liveMatches = await ctx.db
+      .query("matches")
       .withIndex("by_is_live", (q) => q.eq("isLive", true))
       .collect();
 
-    for (const liveGame of liveGames) {
-      // Skip the current game - we'll set it to live at the end
-      if (liveGame._id === args.gameId) continue;
+    for (const liveMatch of liveMatches) {
+      // Skip the current match - we'll set it to live at the end
+      if (liveMatch._id === args.matchId) continue;
 
-      await ctx.db.patch(liveGame._id, {
+      await ctx.db.patch(liveMatch._id, {
         isLive: false,
         lastUpdatedAt: Date.now(),
       });
     }
 
-    // Set the current game to live
-    await ctx.db.patch(args.gameId, {
+    // Set the current match to live
+    await ctx.db.patch(args.matchId, {
       isLive: true,
       lastUpdatedAt: Date.now(),
     });
@@ -427,15 +507,15 @@ export const setGameLive = mutation({
   },
 });
 
-// Get the currently live game (public, no auth required)
-export const getLiveGame = query({
+// Get the currently live match (public, no auth required)
+export const getLiveMatch = query({
   args: {},
   handler: async (ctx) => {
-    const liveGame = await ctx.db
-      .query("pickleballGames")
+    const liveMatch = await ctx.db
+      .query("matches")
       .withIndex("by_is_live", (q) => q.eq("isLive", true))
       .first();
 
-    return liveGame;
+    return liveMatch;
   },
 });

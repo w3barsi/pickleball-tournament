@@ -27,7 +27,7 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 // https://github.com/pacocoursey/next-themes/blob/main/next-themes/src/index.tsx
 export function ThemeProvider({
   children,
-  defaultTheme = "system",
+  defaultTheme = "light",
   storageKey = "theme",
   ...props
 }: ThemeProviderProps) {

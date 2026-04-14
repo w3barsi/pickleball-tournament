@@ -7,38 +7,39 @@ import { useMutation } from "convex/react";
 import { PlusIcon, Trash2Icon, TrophyIcon, PlayIcon, XCircleIcon } from "lucide-react";
 import { useState } from "react";
 
-import { CreateGameDialog } from "@/components/games/create-game-dialog";
-import { DeleteGameAlertDialog } from "@/components/games/delete-game-alert-dialog";
+import { CreateMatchDialog } from "@/components/games/create-match-dialog";
+import { DeleteMatchAlertDialog } from "@/components/games/delete-match-alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 export const Route = createFileRoute("/_auth/app/games")({
-  component: GamesPage,
+  component: MatchesPage,
 });
 
-function GamesPage() {
-  const { data: games } = useQuery(convexQuery(api.scoring.listAllGames, {}));
-  const createGame = useMutation(api.scoring.createGame);
-  const deleteGame = useMutation(api.scoring.deleteGame);
+function MatchesPage() {
+  const { data: matches } = useQuery(convexQuery(api.scoring.listAllMatches, {}));
+  const createMatch = useMutation(api.scoring.createMatch);
+  const deleteMatch = useMutation(api.scoring.deleteMatch);
   const navigate = useNavigate();
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [gameToDelete, setGameToDelete] = useState<Id<"pickleballGames"> | null>(null);
+  const [matchToDelete, setMatchToDelete] = useState<Id<"matches"> | null>(null);
 
   const handleCreate = async (data: {
-    team1Name: string;
-    team2Name: string;
+    bracketId: Id<"brackets">;
+    participant1Id: Id<"categoryParticipants">;
+    participant2Id: Id<"categoryParticipants">;
     targetScore: number;
   }) => {
-    const gameId = await createGame(data);
+    const matchId = await createMatch(data);
     setIsCreateOpen(false);
-    navigate({ to: "/app/g/$id", params: { id: gameId } });
+    navigate({ to: "/app/g/$id", params: { id: matchId } });
   };
 
   const handleDelete = async () => {
-    if (gameToDelete) {
-      await deleteGame({ gameId: gameToDelete });
-      setGameToDelete(null);
+    if (matchToDelete) {
+      await deleteMatch({ matchId: matchToDelete });
+      setMatchToDelete(null);
     }
   };
 
@@ -51,7 +52,7 @@ function GamesPage() {
             COMPLETED
           </span>
         );
-      case "in_progress":
+      case "inProgress":
         return (
           <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-tournament-lime bg-white px-4 py-1.5 text-xs font-black tracking-wider text-tournament-blue uppercase">
             <PlayIcon className="size-3.5" />
@@ -65,9 +66,32 @@ function GamesPage() {
             ABANDONED
           </span>
         );
+      case "scheduled":
+        return (
+          <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-slate-300 bg-slate-100 px-4 py-1.5 text-xs font-black tracking-wider text-slate-600 uppercase">
+            SCHEDULED
+          </span>
+        );
       default:
         return null;
     }
+  };
+
+  const getTeamDisplay = (
+    match: typeof matches extends (infer T)[] ? T : never,
+    teamNum: 1 | 2,
+  ) => {
+    // For now, just show participant IDs shortened
+    // In the future, this should fetch participant names from the categoryParticipants table
+    const participantId = teamNum === 1 ? match.participant1Id : match.participant2Id;
+    return `Team ${teamNum}`;
+  };
+
+  const isWinner = (match: typeof matches extends (infer T)[] ? T : never, teamNum: 1 | 2) => {
+    if (!match.winnerParticipantId) return false;
+    return teamNum === 1
+      ? match.winnerParticipantId === match.participant1Id
+      : match.winnerParticipantId === match.participant2Id;
   };
 
   return (
@@ -82,44 +106,38 @@ function GamesPage() {
         <div className="relative z-10 flex flex-col items-center justify-between gap-6 sm:flex-row">
           <div className="text-center sm:text-left">
             <h1 className="text-5xl leading-none font-black tracking-tight text-tournament-lime uppercase italic [text-shadow:3px_3px_0px_rgba(0,0,0,0.25)] sm:text-6xl lg:text-7xl">
-              GAMES
+              MATCHES
             </h1>
             <p className="mt-3 text-sm font-bold tracking-[0.2em] text-white/90 uppercase">
               Pickleball Match Tracker
             </p>
           </div>
-          <CreateGameDialog
+          <CreateMatchDialog
             open={isCreateOpen}
             onOpenChange={setIsCreateOpen}
             onCreate={handleCreate}
-            trigger={
-              <Button className="group gap-2 rounded-full border-4 border-white bg-tournament-lime px-8 py-6 text-lg font-black tracking-wide text-tournament-blue uppercase shadow-xl transition-all hover:scale-105 hover:text-white hover:shadow-2xl">
-                <PlusIcon className="size-6 transition-transform group-hover:rotate-90" />
-                NEW GAME
-              </Button>
-            }
           />
         </div>
       </div>
 
-      {/* Games List */}
-      {games === undefined ? (
+      {/* Matches List */}
+      {matches === undefined ? (
         <div className="py-16 text-center">
           <div className="mx-auto flex h-20 w-20 animate-pulse items-center justify-center rounded-full bg-tournament-blue/20">
             <PlayIcon className="size-10 text-tournament-blue" />
           </div>
           <p className="mt-6 text-xl font-black tracking-wide text-tournament-blue uppercase">
-            Loading Games...
+            Loading Matches...
           </p>
         </div>
-      ) : games.length === 0 ? (
+      ) : matches.length === 0 ? (
         <Card className="overflow-hidden border-4 border-dashed border-tournament-blue/40">
           <CardContent className="flex flex-col items-center justify-center py-16">
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-tournament-blue">
               <TrophyIcon className="size-10 text-tournament-lime" />
             </div>
             <p className="mt-6 text-2xl font-black tracking-tight text-tournament-blue uppercase">
-              No Games Yet
+              No Matches Yet
             </p>
             <p className="mt-2 text-sm font-semibold text-muted-foreground">
               Start tracking your pickleball matches
@@ -129,19 +147,19 @@ function GamesPage() {
               onClick={() => setIsCreateOpen(true)}
             >
               <PlusIcon className="size-5" />
-              Create First Game
+              Create First Match
             </Button>
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-6">
-          {games.map((game) => (
+          {matches.map((match) => (
             <Card
-              key={game._id}
+              key={match._id}
               className={`overflow-hidden border-4 py-0 transition-all duration-300 hover:shadow-2xl ${
-                game.status === "completed"
+                match.status === "completed"
                   ? "border-tournament-lime"
-                  : game.status === "in_progress"
+                  : match.status === "inProgress"
                     ? "border-tournament-blue"
                     : "border-slate-200"
               }`}
@@ -149,28 +167,28 @@ function GamesPage() {
               {/* Card Header Bar */}
               <div
                 className={`flex items-center justify-between px-5 py-3 ${
-                  game.status === "completed"
+                  match.status === "completed"
                     ? "bg-tournament-lime"
-                    : game.status === "in_progress"
+                    : match.status === "inProgress"
                       ? "bg-tournament-blue"
                       : "bg-slate-100"
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  {getStatusBadge(game.status)}
-                  {game.isLive && game.status !== "completed" && (
+                  {getStatusBadge(match.status)}
+                  {match.isLive && match.status !== "completed" && (
                     <div className="relative flex h-3 w-3">
                       <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-tournament-lime opacity-75" />
                       <span className="relative inline-flex h-3 w-3 rounded-full bg-red-600" />
                     </div>
                   )}
                 </div>
-                {game.status === "completed" && (
+                {match.status === "completed" && (
                   <Button
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 rounded-full hover:bg-red-500 hover:text-white"
-                    onClick={() => setGameToDelete(game._id)}
+                    onClick={() => setMatchToDelete(match._id)}
                   >
                     <Trash2Icon className="size-4" />
                   </Button>
@@ -178,16 +196,16 @@ function GamesPage() {
               </div>
 
               <CardContent className="p-5">
-                <Link to="/app/g/$id" params={{ id: game._id }} className="group block">
+                <Link to="/app/g/$id" params={{ id: match._id }} className="group block">
                   {/* Match Title */}
                   <div className="mb-4 text-center">
                     <h3 className="text-lg font-bold tracking-wide text-slate-700 uppercase">
-                      {game.team1Name}{" "}
+                      {getTeamDisplay(match, 1)}{" "}
                       <span className="mx-2 font-black text-tournament-blue">VS</span>{" "}
-                      {game.team2Name}
+                      {getTeamDisplay(match, 2)}
                     </h3>
                     <p className="mt-1 text-xs font-bold tracking-wider text-muted-foreground uppercase">
-                      Target: {game.targetScore} points (win by 2)
+                      Target: {match.targetScore} points (win by 2)
                     </p>
                   </div>
 
@@ -197,19 +215,17 @@ function GamesPage() {
                     <div className="text-center">
                       <div
                         className={`rounded-xl px-6 py-4 ${
-                          game.status === "completed" && game.winner === 1
+                          isWinner(match, 1)
                             ? "border-tournament-blue bg-tournament-lime"
                             : "border-slate-200 bg-white"
                         } border-3`}
                       >
                         <span
                           className={`block text-6xl leading-none font-black ${
-                            game.status === "completed" && game.winner === 1
-                              ? "text-tournament-blue"
-                              : "text-slate-800"
+                            isWinner(match, 1) ? "text-tournament-blue" : "text-slate-800"
                           }`}
                         >
-                          {game.team1Score}
+                          {match.team1Score}
                         </span>
                       </div>
                     </div>
@@ -223,19 +239,17 @@ function GamesPage() {
                     <div className="text-center">
                       <div
                         className={`rounded-xl px-6 py-4 ${
-                          game.status === "completed" && game.winner === 2
+                          isWinner(match, 2)
                             ? "border-tournament-blue bg-tournament-lime"
                             : "border-slate-200 bg-white"
                         } border-3`}
                       >
                         <span
                           className={`block text-6xl leading-none font-black ${
-                            game.status === "completed" && game.winner === 2
-                              ? "text-tournament-blue"
-                              : "text-slate-800"
+                            isWinner(match, 2) ? "text-tournament-blue" : "text-slate-800"
                           }`}
                         >
-                          {game.team2Score}
+                          {match.team2Score}
                         </span>
                       </div>
                     </div>
@@ -243,12 +257,15 @@ function GamesPage() {
 
                   {/* Action Hint */}
                   <div className="mt-4 flex items-center justify-center gap-2 text-center">
-                    {game.status === "completed" ? (
+                    {match.status === "completed" ? (
                       <span className="flex items-center gap-2 text-lg font-black text-tournament-blue uppercase">
                         <TrophyIcon className="size-5 text-tournament-lime" />
-                        {game.winner === 1 ? game.team1Name : game.team2Name} WINS
+                        {isWinner(match, 1)
+                          ? getTeamDisplay(match, 1)
+                          : getTeamDisplay(match, 2)}{" "}
+                        WINS
                       </span>
-                    ) : game.status === "in_progress" ? (
+                    ) : match.status === "inProgress" ? (
                       <span className="flex items-center gap-2 text-lg font-black text-tournament-blue uppercase">
                         CONTINUE MATCH
                         <span className="transition-transform group-hover:translate-x-2">→</span>
@@ -268,9 +285,9 @@ function GamesPage() {
       )}
 
       {/* Delete Confirmation Dialog */}
-      <DeleteGameAlertDialog
-        open={!!gameToDelete}
-        onOpenChange={() => setGameToDelete(null)}
+      <DeleteMatchAlertDialog
+        open={!!matchToDelete}
+        onOpenChange={() => setMatchToDelete(null)}
         onConfirm={handleDelete}
       />
     </div>

@@ -11,6 +11,7 @@ import {
   HistoryIcon,
   ArrowLeftIcon,
   RadioIcon,
+  PlayIcon,
 } from "lucide-react";
 import { useState, useCallback } from "react";
 
@@ -21,56 +22,50 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_auth/app/g/$id")({
-  component: GameDetailPage,
+  component: MatchDetailPage,
   loader: async (ctx) => {
-    const gameId = ctx.params.id as Id<"pickleballGames">;
+    const matchId = ctx.params.id as Id<"matches">;
     await ctx.context.queryClient.ensureQueryData(
-      convexQuery(api.scoring.getGameWithHistory, { gameId }),
+      convexQuery(api.scoring.getMatchWithHistory, { matchId }),
     );
   },
 });
 
-function GameDetailPage() {
+function MatchDetailPage() {
   const { id } = Route.useParams();
-  const gameId = id as Id<"pickleballGames">;
+  const matchId = id as Id<"matches">;
   const navigate = useNavigate();
 
-  const gameData = useQuery(convexQuery(api.scoring.getGameWithHistory, { gameId }));
+  const matchData = useQuery(convexQuery(api.scoring.getMatchWithHistory, { matchId }));
 
   const recordPointMutation = useMutation(api.scoring.recordPoint);
   const undoPointMutation = useMutation(api.scoring.undoLastPoint);
-  const updateTeamNamesMutation = useMutation(api.scoring.updateTeamNames);
   const updateTargetScoreMutation = useMutation(api.scoring.updateTargetScore);
-  const setGameLiveMutation = useMutation(api.scoring.setGameLive);
+  const setMatchLiveMutation = useMutation(api.scoring.setMatchLive);
+  const startMatchMutation = useMutation(api.scoring.startMatch);
 
   const [showHistory, setShowHistory] = useState(false);
 
-  // Local state for team names (optimistic)
-  const [localTeam1Name, setLocalTeam1Name] = useState("");
-  const [localTeam2Name, setLocalTeam2Name] = useState("");
+  // Local state for team names (display only for now)
+  const [localTeam1Name, setLocalTeam1Name] = useState("Team 1");
+  const [localTeam2Name, setLocalTeam2Name] = useState("Team 2");
 
   // Sync local state with server data
-  const game = gameData.data?.game;
-  const points = gameData.data?.points ?? [];
-
-  // Update local names when data loads
-  if (game && !localTeam1Name && !localTeam2Name) {
-    setLocalTeam1Name(game.team1Name);
-    setLocalTeam2Name(game.team2Name);
-  }
+  const match = matchData.data?.match;
+  const points = matchData.data?.points ?? [];
 
   const recordPoint = recordPointMutation.withOptimisticUpdate((localStore, args) => {
-    const current = localStore.getQuery(api.scoring.getGameWithHistory, { gameId });
-    if (!current?.game) return;
+    const current = localStore.getQuery(api.scoring.getMatchWithHistory, { matchId });
+    if (!current?.match) return;
 
-    const game = current.game;
+    const match = current.match;
     const pointWinner = args.pointWinner as 1 | 2;
 
     // Calculate new state
-    let newState = { ...game };
+    let newState = { ...match };
 
-    if (pointWinner === game.servingTeam) {
-      if (game.servingTeam === 1) {
+    if (pointWinner === match.servingTeam) {
+      if (match.servingTeam === 1) {
         newState.team1Score += 1;
       } else {
         newState.team2Score += 1;
@@ -82,62 +77,62 @@ function GameDetailPage() {
         newState.team1Score >= newState.team2Score + 2
       ) {
         newState.status = "completed";
-        newState.winner = 1;
+        newState.winnerParticipantId = match.participant1Id;
       } else if (
         newState.team2Score >= newState.targetScore &&
         newState.team2Score >= newState.team1Score + 2
       ) {
         newState.status = "completed";
-        newState.winner = 2;
+        newState.winnerParticipantId = match.participant2Id;
       }
 
       newState.isFirstServe = false;
     } else {
-      if (game.isFirstServe) {
-        newState.servingTeam = game.servingTeam === 1 ? 2 : 1;
+      if (match.isFirstServe) {
+        newState.servingTeam = match.servingTeam === 1 ? 2 : 1;
         newState.serverNumber = 2;
         newState.isFirstServe = false;
       } else {
-        if (game.serverNumber === 1) {
+        if (match.serverNumber === 1) {
           newState.serverNumber = 2;
         } else {
-          newState.servingTeam = game.servingTeam === 1 ? 2 : 1;
+          newState.servingTeam = match.servingTeam === 1 ? 2 : 1;
           newState.serverNumber = 1;
         }
       }
     }
 
     localStore.setQuery(
-      api.scoring.getGameWithHistory,
-      { gameId },
+      api.scoring.getMatchWithHistory,
+      { matchId },
       {
         ...current,
-        game: newState,
+        match: newState,
       },
     );
   });
 
   const undoPoint = undoPointMutation.withOptimisticUpdate((localStore) => {
-    const current = localStore.getQuery(api.scoring.getGameWithHistory, { gameId });
-    if (!current?.game || current.points.length === 0) return;
+    const current = localStore.getQuery(api.scoring.getMatchWithHistory, { matchId });
+    if (!current?.match || current.points.length === 0) return;
 
     const lastPoint = current.points[0];
     const newState = {
-      ...current.game,
+      ...current.match,
       team1Score: lastPoint.team1Score,
       team2Score: lastPoint.team2Score,
       servingTeam: lastPoint.servingTeam,
       serverNumber: lastPoint.serverNumber,
       isFirstServe: lastPoint.isFirstServe,
-      status: "in_progress" as const,
-      winner: undefined,
+      status: "inProgress" as const,
+      winnerParticipantId: undefined,
     };
 
     localStore.setQuery(
-      api.scoring.getGameWithHistory,
-      { gameId },
+      api.scoring.getMatchWithHistory,
+      { matchId },
       {
-        game: newState,
+        match: newState,
         points: current.points.slice(1),
       },
     );
@@ -145,67 +140,53 @@ function GameDetailPage() {
 
   const handlePoint = useCallback(
     async (winningTeam: 1 | 2) => {
-      if (game?.status !== "in_progress") return;
-      await recordPoint({ gameId, pointWinner: winningTeam });
+      if (match?.status !== "inProgress") return;
+      await recordPoint({ matchId, pointWinner: winningTeam });
     },
-    [gameId, game?.status, recordPoint],
+    [matchId, match?.status, recordPoint],
   );
 
   const handleUndo = useCallback(async () => {
     if (points.length === 0) return;
-    await undoPoint({ gameId });
-  }, [gameId, points.length, undoPoint]);
-
-  const handleTeam1NameChange = useCallback(
-    (value: string) => {
-      setLocalTeam1Name(value);
-      // Debounced save
-      const timeoutId = setTimeout(() => {
-        updateTeamNamesMutation({ gameId, team1Name: value });
-      }, 500);
-      return () => clearTimeout(timeoutId);
-    },
-    [gameId, updateTeamNamesMutation],
-  );
-
-  const handleTeam2NameChange = useCallback(
-    (value: string) => {
-      setLocalTeam2Name(value);
-      const timeoutId = setTimeout(() => {
-        updateTeamNamesMutation({ gameId, team2Name: value });
-      }, 500);
-      return () => clearTimeout(timeoutId);
-    },
-    [gameId, updateTeamNamesMutation],
-  );
+    await undoPoint({ matchId });
+  }, [matchId, points.length, undoPoint]);
 
   const handleTargetScoreChange = useCallback(
     (value: string) => {
       const num = parseInt(value, 10);
       if (!isNaN(num) && num >= 1) {
-        updateTargetScoreMutation({ gameId, targetScore: num });
+        updateTargetScoreMutation({ matchId, targetScore: num });
       }
     },
-    [gameId, updateTargetScoreMutation],
+    [matchId, updateTargetScoreMutation],
   );
 
   const getScoreAnnouncement = useCallback(() => {
-    if (!game) return "";
-    const servingScore = game.servingTeam === 1 ? game.team1Score : game.team2Score;
-    const receivingScore = game.servingTeam === 1 ? game.team2Score : game.team1Score;
-    return `${servingScore}-${receivingScore}-${game.serverNumber}`;
-  }, [game]);
+    if (!match) return "";
+    const servingScore = match.servingTeam === 1 ? match.team1Score : match.team2Score;
+    const receivingScore = match.servingTeam === 1 ? match.team2Score : match.team1Score;
+    return `${servingScore}-${receivingScore}-${match.serverNumber}`;
+  }, [match]);
 
-  if (!game) {
-    return <div className="py-12 text-center text-muted-foreground">Loading game...</div>;
+  const handleStartMatch = useCallback(async () => {
+    await startMatchMutation({ matchId });
+  }, [matchId, startMatchMutation]);
+
+  if (!match) {
+    return <div className="py-12 text-center text-muted-foreground">Loading match...</div>;
   }
 
-  const isGameOver = game.status === "completed";
-  const isInProgress = game.status === "in_progress";
+  const isGameOver = match.status === "completed";
+  const isInProgress = match.status === "inProgress";
+  const isScheduled = match.status === "scheduled";
 
   const handleGoLive = useCallback(async () => {
-    await setGameLiveMutation({ gameId });
-  }, [gameId, setGameLiveMutation]);
+    await setMatchLiveMutation({ matchId });
+  }, [matchId, setMatchLiveMutation]);
+
+  // Determine winner for display
+  const team1Wins = match.winnerParticipantId === match.participant1Id;
+  const team2Wins = match.winnerParticipantId === match.participant2Id;
 
   return (
     <div className="mx-auto space-y-4">
@@ -217,7 +198,7 @@ function GameDetailPage() {
           className="gap-1"
         >
           <ArrowLeftIcon className="size-4" />
-          Back to Games
+          Back to Matches
         </Button>
       </div>
 
@@ -239,13 +220,13 @@ function GameDetailPage() {
             </Button>
           )}
           <Button
-            variant={game.isLive ? "default" : "outline"}
+            variant={match.isLive ? "default" : "outline"}
             size="sm"
             onClick={handleGoLive}
-            className="gap0"
+            className="gap-1"
           >
             <RadioIcon className="size-3" />
-            {game.isLive ? "Live" : "Go Live"}
+            {match.isLive ? "Live" : "Go Live"}
           </Button>
           <Button
             variant="outline"
@@ -259,17 +240,30 @@ function GameDetailPage() {
         </div>
       </div>
 
+      {isScheduled && (
+        <Card className="border-4 border-dashed border-tournament-blue/40 bg-slate-50">
+          <CardContent className="flex flex-col items-center justify-center py-8">
+            <p className="text-lg font-bold text-tournament-blue uppercase">Match Scheduled</p>
+            <p className="text-sm text-muted-foreground">Start the match to begin scoring</p>
+            <Button className="mt-4 gap-2" onClick={handleStartMatch}>
+              <PlayIcon className="size-4" />
+              Start Match
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       <Card
         className={cn(
           "text-primary-foreground",
-          game.servingTeam === 1 ? "bg-orange-400" : "bg-blue-400",
+          match.servingTeam === 1 ? "bg-orange-400" : "bg-blue-400",
         )}
       >
         <CardContent className="flex flex-col items-center justify-center py-8">
           <div className="text-sm opacity-80">Score Call</div>
           <div className="text-5xl font-bold tracking-wider">{getScoreAnnouncement()}</div>
           <div className="mt-2 text-sm opacity-80">
-            {game.servingTeam === 1 ? localTeam1Name : localTeam2Name} serving
+            {match.servingTeam === 1 ? localTeam1Name : localTeam2Name} serving
           </div>
         </CardContent>
       </Card>
@@ -278,34 +272,29 @@ function GameDetailPage() {
         <Card
           className={cn(
             "relative overflow-hidden border-2 border-transparent transition-all",
-            game.winner === 1
+            team1Wins
               ? "border-4 border-green-400"
-              : game.servingTeam === 1
+              : match.servingTeam === 1
                 ? "border-primary"
                 : "",
           )}
         >
           <CardHeader className="pb-2">
             <div className="flex items-center gap-2">
-              {game.servingTeam === 1 && (
+              {match.servingTeam === 1 && (
                 <div className="flex size-10 shrink-0 items-center justify-center rounded-full border-green-800/10 bg-ballgreen text-xs font-bold">
-                  {game.serverNumber}
+                  {match.serverNumber}
                 </div>
               )}
-              <Input
-                value={localTeam1Name}
-                onChange={(e) => handleTeam1NameChange(e.target.value)}
-                disabled={!isInProgress}
-                className="h-8 border-0 bg-transparent p-0 text-lg font-semibold focus-visible:ring-0"
-              />
+              <span className="text-lg font-semibold">{localTeam1Name}</span>
             </div>
           </CardHeader>
           <CardContent>
             <div className="text-center">
-              <div className="text-7xl font-bold">{game.team1Score}</div>
+              <div className="text-7xl font-bold">{match.team1Score}</div>
             </div>
           </CardContent>
-          {game.winner === 1 && (
+          {team1Wins && (
             <div className="absolute top-2 right-2">
               <TrophyIcon className="size-8 text-green-400" />
             </div>
@@ -315,34 +304,29 @@ function GameDetailPage() {
         <Card
           className={cn(
             "relative overflow-hidden border-2 border-transparent transition-all",
-            game.winner === 2
+            team2Wins
               ? "border-4 border-green-400"
-              : game.servingTeam === 2
+              : match.servingTeam === 2
                 ? "border-primary"
                 : "",
           )}
         >
           <CardHeader className="pb-2">
             <div className="flex items-center gap-2">
-              {game.servingTeam === 2 && (
+              {match.servingTeam === 2 && (
                 <div className="flex size-10 shrink-0 items-center justify-center rounded-full border-green-800/10 bg-ballgreen text-xs font-bold">
-                  {game.serverNumber}
+                  {match.serverNumber}
                 </div>
               )}
-              <Input
-                value={localTeam2Name}
-                onChange={(e) => handleTeam2NameChange(e.target.value)}
-                disabled={!isInProgress}
-                className="h-8 border-0 bg-transparent p-0 text-lg font-semibold focus-visible:ring-0"
-              />
+              <span className="text-lg font-semibold">{localTeam2Name}</span>
             </div>
           </CardHeader>
           <CardContent>
             <div className="text-center">
-              <div className="text-7xl font-bold">{game.team2Score}</div>
+              <div className="text-7xl font-bold">{match.team2Score}</div>
             </div>
           </CardContent>
-          {game.winner === 2 && (
+          {team2Wins && (
             <div className="absolute top-2 right-2">
               <TrophyIcon className="size-8 text-yellow-400" />
             </div>
@@ -356,22 +340,22 @@ function GameDetailPage() {
             size="lg"
             className="h-24 text-xl"
             onClick={() => handlePoint(1)}
-            variant={game.servingTeam === 1 ? "default" : "outline"}
+            variant={match.servingTeam === 1 ? "default" : "outline"}
           >
             <div className="flex flex-col items-center gap-1">
               <span>{localTeam1Name} Wins Point</span>
-              {game.servingTeam === 1 && <span className="text-xs opacity-80">+1 point</span>}
+              {match.servingTeam === 1 && <span className="text-xs opacity-80">+1 point</span>}
             </div>
           </Button>
           <Button
             size="lg"
             className="h-24 text-xl"
             onClick={() => handlePoint(2)}
-            variant={game.servingTeam === 2 ? "default" : "outline"}
+            variant={match.servingTeam === 2 ? "default" : "outline"}
           >
             <div className="flex flex-col items-center gap-1">
               <span>{localTeam2Name} Wins Point</span>
-              {game.servingTeam === 2 && <span className="text-xs opacity-80">+1 point</span>}
+              {match.servingTeam === 2 && <span className="text-xs opacity-80">+1 point</span>}
             </div>
           </Button>
         </div>
@@ -382,26 +366,26 @@ function GameDetailPage() {
           <CardContent className="flex flex-col items-center justify-center py-8">
             <TrophyIcon className="mb-2 size-12 text-green-500" />
             <div className="text-2xl font-bold text-primary-foreground">
-              {game.winner === 1 ? localTeam1Name : localTeam2Name} Wins!
+              {team1Wins ? localTeam1Name : localTeam2Name} Wins!
             </div>
             <div className="text-primary-foreground">
-              Final Score: {game.team1Score} - {game.team2Score}
+              Final Score: {match.team1Score} - {match.team2Score}
             </div>
             <Button
               className="mt-4"
               variant="secondary"
               onClick={() => navigate({ to: "/app/games" })}
             >
-              Back to Games
+              Back to Matches
             </Button>
           </CardContent>
         </Card>
       )}
 
-      {isInProgress && (
+      {(isInProgress || isScheduled) && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Game Settings</CardTitle>
+            <CardTitle className="text-base">Match Settings</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-4">
@@ -409,10 +393,11 @@ function GameDetailPage() {
               <Input
                 id="targetScore"
                 type="number"
-                value={game.targetScore}
+                value={match.targetScore}
                 onChange={(e) => handleTargetScoreChange(e.target.value)}
                 className="w-20"
                 min={1}
+                disabled={isGameOver}
               />
               <span className="text-sm text-muted-foreground">(Win by 2)</span>
             </div>

@@ -13,7 +13,7 @@ const convexClient = new ConvexReactClient(convexUrl);
 export const Route = createFileRoute("/overlay")({
   component: OverlayPage,
   loader: async (ctx) => {
-    await ctx.context.queryClient.ensureQueryData(convexQuery(api.scoring.getLiveGame));
+    await ctx.context.queryClient.ensureQueryData(convexQuery(api.scoring.getLiveMatch));
   },
 });
 
@@ -27,9 +27,9 @@ function OverlayPage() {
 
 // The actual scoreboard component
 function Scoreboard() {
-  const { data: game } = useQuery(convexQuery(api.scoring.getLiveGame));
+  const { data: match } = useQuery(convexQuery(api.scoring.getLiveMatch));
 
-  if (!game) {
+  if (!match) {
     return (
       <div
         style={{
@@ -42,13 +42,13 @@ function Scoreboard() {
           display: "inline-block",
         }}
       >
-        No live game
+        No live match
       </div>
     );
   }
 
-  const team1Serving = game.servingTeam === 1;
-  const team2Serving = game.servingTeam === 2;
+  const team1Serving = match.servingTeam === 1;
+  const team2Serving = match.servingTeam === 2;
 
   // Generate serve indicators (x marks)
   const getServeIndicator = (isServing: boolean, serverNumber: number) => {
@@ -56,8 +56,12 @@ function Scoreboard() {
     return "x".repeat(serverNumber);
   };
 
-  const team1ServeIndicator = getServeIndicator(team1Serving, game.serverNumber);
-  const team2ServeIndicator = getServeIndicator(team2Serving, game.serverNumber);
+  const team1ServeIndicator = getServeIndicator(team1Serving, match.serverNumber);
+  const team2ServeIndicator = getServeIndicator(team2Serving, match.serverNumber);
+
+  // Simple team names for overlay (would ideally come from participant data)
+  const team1Name = "Team 1";
+  const team2Name = "Team 2";
 
   return (
     <div
@@ -89,7 +93,7 @@ function Scoreboard() {
             flex: "1 1 auto",
           }}
         >
-          {game.team1Name}
+          {team1Name}
         </span>
         <span
           style={{
@@ -113,7 +117,7 @@ function Scoreboard() {
             flexShrink: 0,
           }}
         >
-          {game.team1Score}
+          {match.team1Score}
         </span>
       </div>
 
@@ -135,7 +139,7 @@ function Scoreboard() {
             flex: "1 1 auto",
           }}
         >
-          {game.team2Name}
+          {team2Name}
         </span>
         <span
           style={{
@@ -159,7 +163,7 @@ function Scoreboard() {
             flexShrink: 0,
           }}
         >
-          {game.team2Score}
+          {match.team2Score}
         </span>
       </div>
     </div>
