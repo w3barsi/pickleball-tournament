@@ -47,12 +47,10 @@ export function CreateGameDialog({ open, onOpenChange, onCreate, trigger }: Crea
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       {trigger && <DialogTrigger render={trigger} />}
-      <DialogContent className="border-4 border-tournament-blue sm:max-w-md">
-        <DialogHeader className="-mx-6 -mt-6 mb-4 bg-tournament-blue px-6 py-4">
-          <DialogTitle className="text-2xl font-black tracking-tight text-white uppercase italic">
-            CREATE MATCH
-          </DialogTitle>
-          <DialogDescription className="text-sm font-semibold text-white/80">
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader className="">
+          <DialogTitle className="">CREATE MATCH</DialogTitle>
+          <DialogDescription className="font-semibold text-white/80">
             Set up your pickleball doubles game
           </DialogDescription>
         </DialogHeader>
