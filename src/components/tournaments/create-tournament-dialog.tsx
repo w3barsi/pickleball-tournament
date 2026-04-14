@@ -87,11 +87,7 @@ export function CreateTournamentDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form
-          id="create-tournament"
-          onSubmit={handleSubmit}
-          className="-mx-4 -my-4 flex flex-col gap-5 bg-white p-4"
-        >
+        <form id="create-tournament" onSubmit={handleSubmit}>
           <div className="space-y-2">
             <Label
               htmlFor="name"
