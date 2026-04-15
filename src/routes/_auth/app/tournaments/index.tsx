@@ -19,7 +19,7 @@ import { DeleteTournamentAlertDialog } from "@/components/tournaments/delete-tou
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
-export const Route = createFileRoute("/_auth/app/tournaments")({
+export const Route = createFileRoute("/_auth/app/tournaments/")({
   component: TournamentsPage,
 });
 
@@ -36,12 +36,23 @@ function TournamentsPage() {
 
   const handleCreate = async (data: {
     name: string;
+    slug: string;
     date: number;
     description?: string;
     organizerName: string;
   }) => {
-    await createTournament(data);
-    setIsCreateOpen(false);
+    try {
+      await createTournament(data);
+      return {};
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      if (message.includes("already exists")) {
+        return {
+          error: "A tournament with this slug already exists. Please choose a different slug.",
+        };
+      }
+      return { error: `Failed to create tournament: ${message}` };
+    }
   };
 
   const handleDelete = async () => {
@@ -172,7 +183,11 @@ function TournamentsPage() {
               </div>
 
               <CardContent className="p-5">
-                <Link to="/app/tournaments/$id" params={{ id: tournament._id }} className="block">
+                <Link
+                  to="/app/tournaments/$slug"
+                  params={{ slug: tournament.slug }}
+                  className="block"
+                >
                   {/* Tournament Name */}
                   <h3 className="mb-3 text-xl font-black tracking-tight text-tournament-blue uppercase transition-colors group-hover:text-tournament-blue/80">
                     {tournament.name}

@@ -21,6 +21,19 @@ export const get = query({
   },
 });
 
+// Get a single tournament by slug
+export const getBySlug = query({
+  args: {
+    slug: v.string(),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("tournaments")
+      .withIndex("by_slug", (q) => q.eq("slug", args.slug))
+      .unique();
+  },
+});
+
 // Create a new tournament
 export const create = mutation({
   args: {
@@ -28,8 +41,19 @@ export const create = mutation({
     date: v.number(),
     description: v.optional(v.string()),
     organizerName: v.string(),
+    slug: v.string(),
   },
   handler: async (ctx, args) => {
+    // Check if a tournament with this slug already exists
+    const existing = await ctx.db
+      .query("tournaments")
+      .withIndex("by_slug", (q) => q.eq("slug", args.slug))
+      .unique();
+
+    if (existing !== null) {
+      throw new Error(`A tournament with slug "${args.slug}" already exists`);
+    }
+
     const now = Date.now();
     const tournamentId = await ctx.db.insert("tournaments", {
       name: args.name,
@@ -38,6 +62,7 @@ export const create = mutation({
       organizerName: args.organizerName,
       status: "upcoming",
       createdAt: now,
+      slug: args.slug,
     });
     return tournamentId;
   },
