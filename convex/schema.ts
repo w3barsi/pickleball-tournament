@@ -13,19 +13,21 @@ export default defineSchema({
     teamName: v.string(),
     playerOne: v.id("player"),
     playerTwo: v.id("player"),
+    pairKey: v.string(), // Sorted player IDs, e.g., "playerA:playerB" where A < B
     wins: v.number(),
     losses: v.number(),
-  }),
+  }).index("by_pair_key", ["pairKey"]),
 
   // ========== TOURNAMENT STRUCTURE ==========
   tournaments: defineTable({
     name: v.string(),
+    slug: v.string(),
     date: v.number(),
     description: v.optional(v.string()),
     organizerName: v.string(),
     status: v.union(v.literal("upcoming"), v.literal("inProgress"), v.literal("completed")),
     createdAt: v.number(),
-  }),
+  }).index("by_slug", ["slug"]),
 
   categories: defineTable({
     tournamentId: v.id("tournaments"),
