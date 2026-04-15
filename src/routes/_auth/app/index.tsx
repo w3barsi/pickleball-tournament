@@ -113,8 +113,8 @@ function AppIndex() {
                 {upcomingTournaments.slice(0, 3).map((tournament) => (
                   <Link
                     key={tournament._id}
-                    to="/app/tournaments/$id"
-                    params={{ id: tournament._id }}
+                    to="/app/tournaments/$slug"
+                    params={{ slug: tournament.slug }}
                     className="group flex items-center justify-between rounded-xl border-2 border-slate-100 bg-slate-50 p-3 transition-all hover:border-tournament-lime"
                   >
                     <div>

@@ -18,10 +18,12 @@ import { Route as GuestLoginRouteImport } from './routes/_guest/login'
 import { Route as AuthAppRouteRouteImport } from './routes/_auth/app/route'
 import { Route as AuthAppIndexRouteImport } from './routes/_auth/app/index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
-import { Route as AuthAppTournamentsRouteImport } from './routes/_auth/app/tournaments'
 import { Route as AuthAppScorerRouteImport } from './routes/_auth/app/scorer'
+import { Route as AuthAppPlayersRouteImport } from './routes/_auth/app/players'
+import { Route as AuthAppPlayerPairsRouteImport } from './routes/_auth/app/playerPairs'
 import { Route as AuthAppGamesRouteImport } from './routes/_auth/app/games'
-import { Route as AuthAppTournamentsIdRouteImport } from './routes/_auth/app/tournaments/$id'
+import { Route as AuthAppTournamentsIndexRouteImport } from './routes/_auth/app/tournaments/index'
+import { Route as AuthAppTournamentsSlugRouteImport } from './routes/_auth/app/tournaments/$slug'
 import { Route as AuthAppGIdRouteImport } from './routes/_auth/app/g.$id'
 
 const OverlayRoute = OverlayRouteImport.update({
@@ -67,14 +69,19 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthAppTournamentsRoute = AuthAppTournamentsRouteImport.update({
-  id: '/tournaments',
-  path: '/tournaments',
-  getParentRoute: () => AuthAppRouteRoute,
-} as any)
 const AuthAppScorerRoute = AuthAppScorerRouteImport.update({
   id: '/scorer',
   path: '/scorer',
+  getParentRoute: () => AuthAppRouteRoute,
+} as any)
+const AuthAppPlayersRoute = AuthAppPlayersRouteImport.update({
+  id: '/players',
+  path: '/players',
+  getParentRoute: () => AuthAppRouteRoute,
+} as any)
+const AuthAppPlayerPairsRoute = AuthAppPlayerPairsRouteImport.update({
+  id: '/playerPairs',
+  path: '/playerPairs',
   getParentRoute: () => AuthAppRouteRoute,
 } as any)
 const AuthAppGamesRoute = AuthAppGamesRouteImport.update({
@@ -82,10 +89,15 @@ const AuthAppGamesRoute = AuthAppGamesRouteImport.update({
   path: '/games',
   getParentRoute: () => AuthAppRouteRoute,
 } as any)
-const AuthAppTournamentsIdRoute = AuthAppTournamentsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => AuthAppTournamentsRoute,
+const AuthAppTournamentsIndexRoute = AuthAppTournamentsIndexRouteImport.update({
+  id: '/tournaments/',
+  path: '/tournaments/',
+  getParentRoute: () => AuthAppRouteRoute,
+} as any)
+const AuthAppTournamentsSlugRoute = AuthAppTournamentsSlugRouteImport.update({
+  id: '/tournaments/$slug',
+  path: '/tournaments/$slug',
+  getParentRoute: () => AuthAppRouteRoute,
 } as any)
 const AuthAppGIdRoute = AuthAppGIdRouteImport.update({
   id: '/g/$id',
@@ -100,12 +112,14 @@ export interface FileRoutesByFullPath {
   '/login': typeof GuestLoginRoute
   '/signup': typeof GuestSignupRoute
   '/app/games': typeof AuthAppGamesRoute
+  '/app/playerPairs': typeof AuthAppPlayerPairsRoute
+  '/app/players': typeof AuthAppPlayersRoute
   '/app/scorer': typeof AuthAppScorerRoute
-  '/app/tournaments': typeof AuthAppTournamentsRouteWithChildren
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/app/': typeof AuthAppIndexRoute
   '/app/g/$id': typeof AuthAppGIdRoute
-  '/app/tournaments/$id': typeof AuthAppTournamentsIdRoute
+  '/app/tournaments/$slug': typeof AuthAppTournamentsSlugRoute
+  '/app/tournaments/': typeof AuthAppTournamentsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -113,12 +127,14 @@ export interface FileRoutesByTo {
   '/login': typeof GuestLoginRoute
   '/signup': typeof GuestSignupRoute
   '/app/games': typeof AuthAppGamesRoute
+  '/app/playerPairs': typeof AuthAppPlayerPairsRoute
+  '/app/players': typeof AuthAppPlayersRoute
   '/app/scorer': typeof AuthAppScorerRoute
-  '/app/tournaments': typeof AuthAppTournamentsRouteWithChildren
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/app': typeof AuthAppIndexRoute
   '/app/g/$id': typeof AuthAppGIdRoute
-  '/app/tournaments/$id': typeof AuthAppTournamentsIdRoute
+  '/app/tournaments/$slug': typeof AuthAppTournamentsSlugRoute
+  '/app/tournaments': typeof AuthAppTournamentsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -130,12 +146,14 @@ export interface FileRoutesById {
   '/_guest/login': typeof GuestLoginRoute
   '/_guest/signup': typeof GuestSignupRoute
   '/_auth/app/games': typeof AuthAppGamesRoute
+  '/_auth/app/playerPairs': typeof AuthAppPlayerPairsRoute
+  '/_auth/app/players': typeof AuthAppPlayersRoute
   '/_auth/app/scorer': typeof AuthAppScorerRoute
-  '/_auth/app/tournaments': typeof AuthAppTournamentsRouteWithChildren
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/_auth/app/': typeof AuthAppIndexRoute
   '/_auth/app/g/$id': typeof AuthAppGIdRoute
-  '/_auth/app/tournaments/$id': typeof AuthAppTournamentsIdRoute
+  '/_auth/app/tournaments/$slug': typeof AuthAppTournamentsSlugRoute
+  '/_auth/app/tournaments/': typeof AuthAppTournamentsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -146,12 +164,14 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/app/games'
+    | '/app/playerPairs'
+    | '/app/players'
     | '/app/scorer'
-    | '/app/tournaments'
     | '/api/auth/$'
     | '/app/'
     | '/app/g/$id'
-    | '/app/tournaments/$id'
+    | '/app/tournaments/$slug'
+    | '/app/tournaments/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -159,12 +179,14 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/app/games'
+    | '/app/playerPairs'
+    | '/app/players'
     | '/app/scorer'
-    | '/app/tournaments'
     | '/api/auth/$'
     | '/app'
     | '/app/g/$id'
-    | '/app/tournaments/$id'
+    | '/app/tournaments/$slug'
+    | '/app/tournaments'
   id:
     | '__root__'
     | '/'
@@ -175,12 +197,14 @@ export interface FileRouteTypes {
     | '/_guest/login'
     | '/_guest/signup'
     | '/_auth/app/games'
+    | '/_auth/app/playerPairs'
+    | '/_auth/app/players'
     | '/_auth/app/scorer'
-    | '/_auth/app/tournaments'
     | '/api/auth/$'
     | '/_auth/app/'
     | '/_auth/app/g/$id'
-    | '/_auth/app/tournaments/$id'
+    | '/_auth/app/tournaments/$slug'
+    | '/_auth/app/tournaments/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -256,18 +280,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_auth/app/tournaments': {
-      id: '/_auth/app/tournaments'
-      path: '/tournaments'
-      fullPath: '/app/tournaments'
-      preLoaderRoute: typeof AuthAppTournamentsRouteImport
-      parentRoute: typeof AuthAppRouteRoute
-    }
     '/_auth/app/scorer': {
       id: '/_auth/app/scorer'
       path: '/scorer'
       fullPath: '/app/scorer'
       preLoaderRoute: typeof AuthAppScorerRouteImport
+      parentRoute: typeof AuthAppRouteRoute
+    }
+    '/_auth/app/players': {
+      id: '/_auth/app/players'
+      path: '/players'
+      fullPath: '/app/players'
+      preLoaderRoute: typeof AuthAppPlayersRouteImport
+      parentRoute: typeof AuthAppRouteRoute
+    }
+    '/_auth/app/playerPairs': {
+      id: '/_auth/app/playerPairs'
+      path: '/playerPairs'
+      fullPath: '/app/playerPairs'
+      preLoaderRoute: typeof AuthAppPlayerPairsRouteImport
       parentRoute: typeof AuthAppRouteRoute
     }
     '/_auth/app/games': {
@@ -277,12 +308,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthAppGamesRouteImport
       parentRoute: typeof AuthAppRouteRoute
     }
-    '/_auth/app/tournaments/$id': {
-      id: '/_auth/app/tournaments/$id'
-      path: '/$id'
-      fullPath: '/app/tournaments/$id'
-      preLoaderRoute: typeof AuthAppTournamentsIdRouteImport
-      parentRoute: typeof AuthAppTournamentsRoute
+    '/_auth/app/tournaments/': {
+      id: '/_auth/app/tournaments/'
+      path: '/tournaments'
+      fullPath: '/app/tournaments/'
+      preLoaderRoute: typeof AuthAppTournamentsIndexRouteImport
+      parentRoute: typeof AuthAppRouteRoute
+    }
+    '/_auth/app/tournaments/$slug': {
+      id: '/_auth/app/tournaments/$slug'
+      path: '/tournaments/$slug'
+      fullPath: '/app/tournaments/$slug'
+      preLoaderRoute: typeof AuthAppTournamentsSlugRouteImport
+      parentRoute: typeof AuthAppRouteRoute
     }
     '/_auth/app/g/$id': {
       id: '/_auth/app/g/$id'
@@ -294,31 +332,26 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface AuthAppTournamentsRouteChildren {
-  AuthAppTournamentsIdRoute: typeof AuthAppTournamentsIdRoute
-}
-
-const AuthAppTournamentsRouteChildren: AuthAppTournamentsRouteChildren = {
-  AuthAppTournamentsIdRoute: AuthAppTournamentsIdRoute,
-}
-
-const AuthAppTournamentsRouteWithChildren =
-  AuthAppTournamentsRoute._addFileChildren(AuthAppTournamentsRouteChildren)
-
 interface AuthAppRouteRouteChildren {
   AuthAppGamesRoute: typeof AuthAppGamesRoute
+  AuthAppPlayerPairsRoute: typeof AuthAppPlayerPairsRoute
+  AuthAppPlayersRoute: typeof AuthAppPlayersRoute
   AuthAppScorerRoute: typeof AuthAppScorerRoute
-  AuthAppTournamentsRoute: typeof AuthAppTournamentsRouteWithChildren
   AuthAppIndexRoute: typeof AuthAppIndexRoute
   AuthAppGIdRoute: typeof AuthAppGIdRoute
+  AuthAppTournamentsSlugRoute: typeof AuthAppTournamentsSlugRoute
+  AuthAppTournamentsIndexRoute: typeof AuthAppTournamentsIndexRoute
 }
 
 const AuthAppRouteRouteChildren: AuthAppRouteRouteChildren = {
   AuthAppGamesRoute: AuthAppGamesRoute,
+  AuthAppPlayerPairsRoute: AuthAppPlayerPairsRoute,
+  AuthAppPlayersRoute: AuthAppPlayersRoute,
   AuthAppScorerRoute: AuthAppScorerRoute,
-  AuthAppTournamentsRoute: AuthAppTournamentsRouteWithChildren,
   AuthAppIndexRoute: AuthAppIndexRoute,
   AuthAppGIdRoute: AuthAppGIdRoute,
+  AuthAppTournamentsSlugRoute: AuthAppTournamentsSlugRoute,
+  AuthAppTournamentsIndexRoute: AuthAppTournamentsIndexRoute,
 }
 
 const AuthAppRouteRouteWithChildren = AuthAppRouteRoute._addFileChildren(
