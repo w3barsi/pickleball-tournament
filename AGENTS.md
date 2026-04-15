@@ -2,11 +2,22 @@
 
 ## Essentials
 
-- Stack: TypeScript + React (TanStack Start), with Convex DB, shadcn/ui, and Better Auth.
+- Stack: TypeScript + React (TanStack Start), with Convex DB, shadcn/ui with base-ui NOT radix, and Better Auth.
 - Use shadcn CLI (`pnpm ui add <component>`) for adding new UI components & primitives.
 - Use `lucide-react` for UI icons (use `Icon` suffix, e.g. `import { Loader2Icon } from "lucide-react"`); for brand icons use `@icons-pack/react-simple-icons` (e.g. `SiGithub`).
 - For TanStack libraries, consult latest docs via `pnpm tanstack <command>` (see [Workflow](.agents/workflow.md#tanstack-cli)).
 - Don't build after every little change. If `pnpm lint` passes; assume changes work.
+
+## Convex
+
+- **Queries**: Use `@convex-dev/react-query` with `convexQuery` helper and `useQuery` from `@tanstack/react-query` for read operations.
+- **Mutations**: Always use `useMutation` from `convex/react` (NOT from `@tanstack/react-query`) for Convex mutations.
+  - Example: `const create = useMutation(api.players.create)` then call `create({ firstName: "John" })`.
+
+## UI Components
+
+- All UI components use **base-ui** (NOT Radix). Refer to existing components in `src/components/ui/` for prop patterns and usage.
+- Dialogs, popovers, and other overlay components are built on `@base-ui/react` primitives.
 
 ## Topic-specific Guidelines
 
