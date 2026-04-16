@@ -100,7 +100,6 @@ export function CreatePlayerDialog() {
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
                   placeholder="Enter first name"
-                  className="border-2 focus-visible:ring-tournament-blue"
                 />
                 {field.state.meta.errors.length > 0 && (
                   <p className="text-sm text-red-500">{field.state.meta.errors[0]}</p>

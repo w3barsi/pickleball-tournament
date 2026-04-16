@@ -109,7 +109,7 @@ export function CreateTournamentDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger
         render={
-          <Button className="group gap-2 rounded-full border-4 border-white bg-tournament-lime px-8 py-6 text-lg font-black tracking-wide text-tournament-blue uppercase shadow-xl transition-all hover:scale-105 hover:text-white hover:shadow-2xl">
+          <Button variant="big" size="big">
             <PlusIcon className="size-6 transition-transform group-hover:rotate-90" />
             NEW TOURNAMENT
           </Button>
