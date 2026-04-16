@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
+import { HeaderCard } from "@/components/header-card";
+import { Heading } from "@/components/heading";
 import { CreateTournamentDialog } from "@/components/tournaments/create-tournament-dialog";
 import { DeleteTournamentAlertDialog } from "@/components/tournaments/delete-tournament-alert-dialog";
 import { Button } from "@/components/ui/button";
@@ -103,17 +105,11 @@ function TournamentsPage() {
   return (
     <div className="space-y-8">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-3xl bg-tournament-blue px-6 py-10 sm:px-10 sm:py-12">
-        {/* Decorative circles */}
-        <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-tournament-lime opacity-20" />
-        <div className="pointer-events-none absolute -bottom-8 -left-8 h-24 w-24 rounded-full bg-white opacity-15" />
-        <div className="pointer-events-none absolute right-20 bottom-10 h-16 w-16 rounded-full bg-tournament-lime opacity-10" />
 
-        <div className="relative z-10 flex flex-col items-center justify-between gap-6 sm:flex-row">
+      <HeaderCard>
+        <div className="relative z-10 flex w-full flex-col items-center justify-between gap-6 md:flex-row">
           <div className="text-center sm:text-left">
-            <h1 className="text-5xl leading-none font-black tracking-tight text-tournament-lime uppercase italic [text-shadow:3px_3px_0px_rgba(0,0,0,0.25)] sm:text-4xl lg:text-5xl">
-              TOURNAMENTS
-            </h1>
+            <Heading>TOURNAMENTS</Heading>
             <p className="mt-3 text-sm font-bold tracking-[0.2em] text-white/90 uppercase">
               Manage Your Pickleball Events
             </p>
@@ -124,7 +120,7 @@ function TournamentsPage() {
             onCreate={handleCreate}
           />
         </div>
-      </div>
+      </HeaderCard>
 
       {/* Tournaments List */}
       {tournaments === undefined ? (

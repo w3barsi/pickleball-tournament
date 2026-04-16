@@ -11,6 +11,9 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 export const Route = createFileRoute("/_auth/app/players")({
   component: PlayersPage,
+  loader: async (ctx) => {
+    await ctx.context.queryClient.ensureQueryData(convexQuery(api.players.listAll, {}));
+  },
 });
 
 function PlayersPage() {
@@ -38,7 +41,6 @@ function PlayersPage() {
         </div>
         <CreatePlayerDialog />
       </div>
-
       {/* Players Grid */}
       <Card className="overflow-hidden border-4 border-tournament-blue py-0">
         <CardHeader className="border-b-4 border-tournament-blue bg-tournament-blue px-5 py-4">

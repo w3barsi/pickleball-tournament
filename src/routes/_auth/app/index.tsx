@@ -11,6 +11,10 @@ import {
   UsersIcon,
 } from "lucide-react";
 
+import { BigButton } from "@/components/big-button";
+import { BigButtons } from "@/components/big-buttons";
+import { HeaderCard } from "@/components/header-card";
+import { Heading } from "@/components/heading";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
@@ -36,24 +40,19 @@ function AppIndex() {
   return (
     <div className="space-y-8">
       {/* Hero Welcome */}
-      <div className="relative overflow-hidden rounded-3xl bg-tournament-blue px-6 py-12 sm:px-10 sm:py-16">
-        {/* Decorative circles */}
-        <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-tournament-lime opacity-20" />
-        <div className="pointer-events-none absolute -bottom-8 -left-8 h-24 w-24 rounded-full bg-white opacity-15" />
+      <HeaderCard>
+        <div className="relative z-10 flex w-full flex-col items-center justify-between gap-6 md:flex-row">
+          <div>
+            <Heading>PICKLEBALL TOURNAMENT</Heading>
+            <p className="mt-4 text-base font-bold tracking-[0.15em] text-white/90 uppercase sm:text-lg">
+              Manage tournaments, track matches, and score games in real-time
+            </p>
+          </div>
 
-        <div className="relative z-10 text-center sm:text-left">
-          <h1 className="text-4xl leading-none font-black tracking-tight text-tournament-lime uppercase italic [text-shadow:3px_3px_0px_rgba(0,0,0,0.25)] sm:text-5xl lg:text-6xl">
-            PICKLEBALL
-            <br />
-            TOURNAMENT
-          </h1>
-          <p className="mt-4 text-base font-bold tracking-[0.15em] text-white/90 uppercase sm:text-lg">
-            Manage tournaments, track matches, and score games in real-time
-          </p>
-
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <div className="flex flex-col gap-3 px-4">
             <Button
-              className="group gap-2 rounded-full border-4 border-white bg-tournament-lime px-6 py-5 text-base font-black tracking-wide text-tournament-blue uppercase shadow-xl transition-all hover:scale-105 hover:text-white"
+              size="big"
+              variant="big"
               render={
                 <Link to="/app/tournaments">
                   <TrophyIcon className="size-5" />
@@ -62,6 +61,18 @@ function AppIndex() {
                 </Link>
               }
             />
+            <Button
+              size="big"
+              variant="big-outline"
+              render={
+                <Link to="/app/tournaments">
+                  <GamepadIcon className="size-5" />
+                  VIEW MATCHES
+                  <ChevronRightIcon className="size-4 transition-transform group-hover:translate-x-1" />
+                </Link>
+              }
+            />
+
             <Button
               variant="outline"
               className="gap-2 rounded-full border-4 border-white bg-transparent px-6 py-5 text-base font-black tracking-wide text-white uppercase hover:bg-white hover:text-tournament-blue"
@@ -74,7 +85,7 @@ function AppIndex() {
             />
           </div>
         </div>
-      </div>
+      </HeaderCard>
 
       {/* Quick Stats / Overview */}
       <div className="grid gap-6 md:grid-cols-2">

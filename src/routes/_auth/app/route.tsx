@@ -20,9 +20,7 @@ function AppLayout() {
 
         {/* Main Content */}
 
-        <Container>
-          <Outlet />
-        </Container>
+        <Outlet />
       </SidebarInset>
     </SidebarProvider>
   );
