@@ -11,8 +11,6 @@ import {
   UsersIcon,
 } from "lucide-react";
 
-import { BigButton } from "@/components/big-button";
-import { BigButtons } from "@/components/big-buttons";
 import { HeaderCard } from "@/components/header-card";
 import { Heading } from "@/components/heading";
 import { Button } from "@/components/ui/button";
