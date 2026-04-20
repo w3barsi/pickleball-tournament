@@ -109,7 +109,7 @@ export function CreateTournamentDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger
         render={
-          <Button variant="big" size="big">
+          <Button size="lg" variant="outline">
             <PlusIcon className="size-6 transition-transform group-hover:rotate-90" />
             NEW TOURNAMENT
           </Button>
@@ -126,29 +126,20 @@ export function CreateTournamentDialog({
         <form id="create-tournament" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label
-                htmlFor="name"
-                className="text-xs font-black tracking-wider text-tournament-blue uppercase"
-              >
-                Tournament Name *
-              </Label>
+              <Label htmlFor="name">Tournament Name *</Label>
               <Input
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g., Summer Pickleball Championships 2026"
-                className="border-2 border-slate-200 focus:border-tournament-lime"
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label
-                htmlFor="slug"
-                className="text-xs font-black tracking-wider text-tournament-blue uppercase"
-              >
+              <Label htmlFor="slug">
                 URL Slug *
-                <span className="ml-1 font-normal text-slate-500 normal-case">
+                <span className="ml-1 text-xs font-light text-neutral-500 normal-case">
                   (auto-generated, can customize)
                 </span>
               </Label>
@@ -157,63 +148,45 @@ export function CreateTournamentDialog({
                 value={slug}
                 onChange={handleSlugChange}
                 placeholder="e.g., summer-pickleball-championships-2026"
-                className="border-2 border-slate-200 focus:border-tournament-lime"
                 required
               />
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-neutral-500">
                 Will be used in the URL: /app/tournaments/{slug || "your-slug"}
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label
-                htmlFor="date"
-                className="text-xs font-black tracking-wider text-tournament-blue uppercase"
-              >
-                Date *
-              </Label>
+              <Label htmlFor="date">Date *</Label>
               <div className="relative">
                 <Input
                   id="date"
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="border-2 border-slate-200 focus:border-tournament-lime"
                   required
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label
-                htmlFor="organizer"
-                className="text-xs font-black tracking-wider text-tournament-blue uppercase"
-              >
-                Organizer Name *
-              </Label>
+              <Label htmlFor="organizer">Organizer Name *</Label>
               <Input
                 id="organizer"
                 value={organizerName}
                 onChange={(e) => setOrganizerName(e.target.value)}
                 placeholder="e.g., John Smith"
-                className="border-2 border-slate-200 focus:border-tournament-lime"
+                className="focus:border-tournament-lime border-2 border-slate-200"
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label
-                htmlFor="description"
-                className="text-xs font-black tracking-wider text-tournament-blue uppercase"
-              >
-                Description
-              </Label>
+              <Label htmlFor="description">Description</Label>
               <Input
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Optional tournament description..."
-                className="border-2 border-slate-200 focus:border-tournament-lime"
               />
             </div>
 
@@ -225,12 +198,7 @@ export function CreateTournamentDialog({
           </div>
         </form>
         <DialogFooter>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => handleOpenChange(false)}
-            className="border-2 border-slate-200 font-bold"
-          >
+          <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
             Cancel
           </Button>
           <Button
@@ -239,7 +207,6 @@ export function CreateTournamentDialog({
             disabled={
               isSubmitting || !name.trim() || !date || !organizerName.trim() || !slug.trim()
             }
-            className="gap-2 bg-tournament-lime font-black tracking-wide text-tournament-blue uppercase hover:bg-tournament-lime/90"
           >
             {isSubmitting ? (
               <>

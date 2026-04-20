@@ -11,8 +11,7 @@ import {
   UsersIcon,
 } from "lucide-react";
 
-import { HeaderCard } from "@/components/header-card";
-import { Heading } from "@/components/heading";
+import { HeaderCard, HeaderCardDescription, HeaderCardHeading } from "@/components/header-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
@@ -39,76 +38,59 @@ function AppIndex() {
     <div className="space-y-8">
       {/* Hero Welcome */}
       <HeaderCard>
-        <div className="relative z-10 flex w-full flex-col items-center justify-between gap-6 md:flex-row">
-          <div>
-            <Heading>PICKLEBALL TOURNAMENT</Heading>
-            <p className="mt-4 text-base font-bold tracking-[0.15em] text-white/90 uppercase sm:text-lg">
-              Manage tournaments, track matches, and score games in real-time
-            </p>
-          </div>
+        <div>
+          <HeaderCardHeading>PICKLEBALL TOURNAMENT</HeaderCardHeading>
+          <HeaderCardDescription>
+            Manage tournaments, track matches, and score games in real-time
+          </HeaderCardDescription>
+        </div>
 
-          <div className="flex flex-col gap-3 px-4">
-            <Button
-              size="big"
-              variant="big"
-              render={
-                <Link to="/app/tournaments">
-                  <TrophyIcon className="size-5" />
-                  VIEW TOURNAMENTS
-                  <ChevronRightIcon className="size-4 transition-transform group-hover:translate-x-1" />
-                </Link>
-              }
-            />
-            <Button
-              size="big"
-              variant="big-outline"
-              render={
-                <Link to="/app/tournaments">
-                  <GamepadIcon className="size-5" />
-                  VIEW MATCHES
-                  <ChevronRightIcon className="size-4 transition-transform group-hover:translate-x-1" />
-                </Link>
-              }
-            />
+        <div className="flex flex-col gap-3 px-4">
+          <Button
+            size="lg"
+            render={
+              <Link to="/app/tournaments">
+                <TrophyIcon />
+                VIEW TOURNAMENTS
+              </Link>
+            }
+          />
 
-            <Button
-              variant="outline"
-              className="gap-2 rounded-full border-4 border-white bg-transparent px-6 py-5 text-base font-black tracking-wide text-white uppercase hover:bg-white hover:text-tournament-blue"
-              render={
-                <Link to="/app/games">
-                  <GamepadIcon className="size-5" />
-                  VIEW MATCHES
-                </Link>
-              }
-            />
-          </div>
+          <Button
+            variant="outline"
+            size="lg"
+            render={
+              <Link to="/app/games">
+                <GamepadIcon className="size-5" />
+                VIEW MATCHES
+              </Link>
+            }
+          />
         </div>
       </HeaderCard>
 
       {/* Quick Stats / Overview */}
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-2 md:grid-cols-2">
         {/* Tournaments Card */}
-        <Card className="overflow-hidden border-4 border-tournament-blue py-0">
-          <CardHeader className="border-b-4 border-tournament-blue bg-tournament-blue px-5 py-4">
+        <Card>
+          <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <TrophyIcon className="size-5 text-tournament-lime" />
-                <h2 className="text-lg font-black tracking-wide text-white uppercase">
-                  Tournaments
-                </h2>
+                <TrophyIcon className="size-5" />
+                <h2 className="text-lg font-semibold">Tournaments</h2>
               </div>
-              <span className="rounded-full bg-tournament-lime px-3 py-1 text-xs font-black text-tournament-blue">
+              <span className="rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground">
                 {tournaments?.length || 0} Total
               </span>
             </div>
           </CardHeader>
-          <CardContent className="p-5">
+          <CardContent>
             {upcomingTournaments.length === 0 ? (
               <div className="py-6 text-center">
                 <p className="text-sm text-muted-foreground">No upcoming tournaments</p>
                 <Button
                   variant="outline"
-                  className="mt-3 gap-2 border-2 border-tournament-blue font-bold"
+                  className="mt-3"
                   render={
                     <Link to="/app/tournaments">
                       <PlusIcon className="size-4" />
@@ -124,28 +106,28 @@ function AppIndex() {
                     key={tournament._id}
                     to="/app/tournaments/$slug"
                     params={{ slug: tournament.slug }}
-                    className="group flex items-center justify-between rounded-xl border-2 border-slate-100 bg-slate-50 p-3 transition-all hover:border-tournament-lime"
+                    className="group flex items-center justify-between rounded-xl border bg-muted/50 p-3 transition-colors hover:bg-muted"
                   >
                     <div>
-                      <p className="font-bold text-tournament-blue">{tournament.name}</p>
-                      <div className="flex items-center gap-3 text-xs text-slate-500">
-                        <span className="flex items-center gap-1">
+                      <p className="">{tournament.name}</p>
+                      <div className="items-center gap-3 text-muted-foreground">
+                        <span className="flex items-center gap-2">
                           <CalendarIcon className="size-3" />
                           {formatDate(tournament.date)}
                         </span>
-                        <span className="flex items-center gap-1">
+                        <span className="flex items-center gap-2">
                           <UsersIcon className="size-3" />
                           {tournament.organizerName}
                         </span>
                       </div>
                     </div>
-                    <ChevronRightIcon className="size-4 text-slate-300 transition-colors group-hover:text-tournament-lime" />
+                    <ChevronRightIcon className="size-4 text-muted-foreground transition-colors group-hover:text-foreground" />
                   </Link>
                 ))}
                 {upcomingTournaments.length > 3 && (
                   <Button
                     variant="ghost"
-                    className="w-full font-bold text-tournament-blue"
+                    className="w-full"
                     render={
                       <Link to="/app/tournaments">
                         View All {upcomingTournaments.length} Upcoming
@@ -159,27 +141,25 @@ function AppIndex() {
         </Card>
 
         {/* Live Matches Card */}
-        <Card className="overflow-hidden border-4 border-tournament-lime py-0">
-          <CardHeader className="border-b-4 border-tournament-lime bg-tournament-lime px-5 py-4">
+        <Card>
+          <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <GamepadIcon className="size-5 text-tournament-blue" />
-                <h2 className="text-lg font-black tracking-wide text-tournament-blue uppercase">
-                  Live Matches
-                </h2>
+                <GamepadIcon className="size-5" />
+                <h2 className="text-lg font-semibold">Live Matches</h2>
               </div>
-              <span className="rounded-full bg-tournament-blue px-3 py-1 text-xs font-black text-white">
+              <span className="rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground">
                 {liveMatches.length} Live
               </span>
             </div>
           </CardHeader>
-          <CardContent className="p-5">
+          <CardContent>
             {liveMatches.length === 0 ? (
               <div className="py-6 text-center">
                 <p className="text-sm text-muted-foreground">No matches in progress</p>
                 <Button
                   variant="outline"
-                  className="mt-3 gap-2 border-2 border-tournament-lime font-bold"
+                  className="mt-3"
                   render={
                     <Link to="/app/games">
                       <PlusIcon className="size-4" />
@@ -195,7 +175,7 @@ function AppIndex() {
                     key={match._id}
                     to="/app/g/$id"
                     params={{ id: match._id }}
-                    className="group flex items-center justify-between rounded-xl border-2 border-slate-100 bg-slate-50 p-3 transition-all hover:border-tournament-blue"
+                    className="group flex items-center justify-between rounded-xl border bg-muted/50 p-3 transition-colors hover:bg-muted"
                   >
                     <div>
                       <div className="flex items-center gap-2">
@@ -203,19 +183,19 @@ function AppIndex() {
                           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
                           <span className="relative inline-flex h-2 w-2 rounded-full bg-red-600" />
                         </span>
-                        <p className="font-bold text-tournament-blue">Match in Progress</p>
+                        <p className="font-medium">Match in Progress</p>
                       </div>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-muted-foreground">
                         Score: {match.team1Score} - {match.team2Score}
                       </p>
                     </div>
-                    <ChevronRightIcon className="size-4 text-slate-300 transition-colors group-hover:text-tournament-blue" />
+                    <ChevronRightIcon className="size-4 text-muted-foreground transition-colors group-hover:text-foreground" />
                   </Link>
                 ))}
                 {liveMatches.length > 3 && (
                   <Button
                     variant="ghost"
-                    className="w-full font-bold text-tournament-blue"
+                    className="w-full"
                     render={<Link to="/app/games">View All {liveMatches.length} Live Matches</Link>}
                   />
                 )}

@@ -6,6 +6,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import { UserIcon, Trash2Icon, UsersIcon } from "lucide-react";
 
+import { HeaderCard, HeaderCardDescription, HeaderCardHeading } from "@/components/header-card";
+import { Heading } from "@/components/heading";
 import { CreatePlayerDialog } from "@/components/players/create-player-dialog";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
@@ -32,24 +34,25 @@ function PlayersPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <HeaderCard>
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-tournament-blue uppercase italic">
-            Players
-          </h1>
-          <p className="text-sm text-muted-foreground">Manage players and view their stats</p>
+          <HeaderCardHeading>Players</HeaderCardHeading>
+          <HeaderCardDescription>
+            Manage tournaments, track matches, and score games in real-time
+          </HeaderCardDescription>
         </div>
+
         <CreatePlayerDialog />
-      </div>
+      </HeaderCard>
       {/* Players Grid */}
-      <Card className="overflow-hidden border-4 border-tournament-blue py-0">
-        <CardHeader className="border-b-4 border-tournament-blue bg-tournament-blue px-5 py-4">
+      <Card className="border-tournament-blue overflow-hidden border-4 py-0">
+        <CardHeader className="border-tournament-blue bg-tournament-blue border-b-4 px-5 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <UsersIcon className="size-5 text-tournament-lime" />
+              <UsersIcon className="text-tournament-lime size-5" />
               <h2 className="text-lg font-black tracking-wide text-white uppercase">All Players</h2>
             </div>
-            <span className="rounded-full bg-tournament-lime px-3 py-1 text-xs font-black text-tournament-blue">
+            <span className="bg-tournament-lime text-tournament-blue rounded-full px-3 py-1 text-xs font-black">
               {players?.length || 0} Total
             </span>
           </div>
@@ -71,16 +74,16 @@ function PlayersPage() {
               {players.map((player) => (
                 <div
                   key={player._id}
-                  className="group relative flex items-center gap-4 rounded-xl border-2 border-slate-100 bg-slate-50 p-4 transition-all hover:border-tournament-blue hover:shadow-md"
+                  className="group hover:border-tournament-blue relative flex items-center gap-4 rounded-xl border-2 border-slate-100 bg-slate-50 p-4 transition-all hover:shadow-md"
                 >
                   {/* Avatar */}
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-tournament-blue text-lg font-black text-white">
+                  <div className="bg-tournament-blue flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg font-black text-white">
                     {getInitials(player.firstName, player.lastName)}
                   </div>
 
                   {/* Info */}
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-bold text-tournament-blue">
+                    <p className="text-tournament-blue truncate font-bold">
                       {player.firstName} {player.lastName}
                     </p>
                     {player.nickname && (

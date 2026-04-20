@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
-import { HeaderCard } from "@/components/header-card";
+import { HeaderCard, HeaderCardDescription, HeaderCardHeading } from "@/components/header-card";
 import { Heading } from "@/components/heading";
 import { CreateTournamentDialog } from "@/components/tournaments/create-tournament-dialog";
 import { DeleteTournamentAlertDialog } from "@/components/tournaments/delete-tournament-alert-dialog";
@@ -75,10 +75,10 @@ function TournamentsPage() {
         );
       case "inProgress":
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-tournament-lime bg-tournament-lime px-3 py-1 text-xs font-black tracking-wider text-tournament-blue uppercase">
+          <span className="border-tournament-lime bg-tournament-lime text-tournament-blue inline-flex items-center gap-1.5 rounded-full border-2 px-3 py-1 text-xs font-black tracking-wider uppercase">
             <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-tournament-blue opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-tournament-blue" />
+              <span className="bg-tournament-blue absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" />
+              <span className="bg-tournament-blue relative inline-flex h-2 w-2 rounded-full" />
             </span>
             In Progress
           </span>
@@ -107,45 +107,41 @@ function TournamentsPage() {
       {/* Hero Header */}
 
       <HeaderCard>
-        <div className="relative z-10 flex w-full flex-col items-center justify-between gap-6 md:flex-row">
-          <div className="text-center sm:text-left">
-            <Heading>TOURNAMENTS</Heading>
-            <p className="mt-3 text-sm font-bold tracking-[0.2em] text-white/90 uppercase">
-              Manage Your Pickleball Events
-            </p>
-          </div>
-          <CreateTournamentDialog
-            open={isCreateOpen}
-            onOpenChange={setIsCreateOpen}
-            onCreate={handleCreate}
-          />
+        <div className="text-center sm:text-left">
+          <HeaderCardHeading>TOURNAMENTS</HeaderCardHeading>
+          <HeaderCardDescription>Manage Your Pickleball Events</HeaderCardDescription>
         </div>
+        <CreateTournamentDialog
+          open={isCreateOpen}
+          onOpenChange={setIsCreateOpen}
+          onCreate={handleCreate}
+        />
       </HeaderCard>
 
       {/* Tournaments List */}
       {tournaments === undefined ? (
         <div className="py-16 text-center">
-          <div className="mx-auto flex h-20 w-20 animate-pulse items-center justify-center rounded-full bg-tournament-blue/20">
-            <TrophyIcon className="size-10 text-tournament-blue" />
+          <div className="bg-tournament-blue/20 mx-auto flex h-20 w-20 animate-pulse items-center justify-center rounded-full">
+            <TrophyIcon className="text-tournament-blue size-10" />
           </div>
-          <p className="mt-6 text-xl font-black tracking-wide text-tournament-blue uppercase">
+          <p className="text-tournament-blue mt-6 text-xl font-black tracking-wide uppercase">
             Loading Tournaments...
           </p>
         </div>
       ) : tournaments.length === 0 ? (
-        <Card className="overflow-hidden border-4 border-dashed border-tournament-blue/40">
+        <Card className="overflow-hidden">
           <CardContent className="flex flex-col items-center justify-center py-16">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-tournament-blue">
-              <TrophyIcon className="size-10 text-tournament-lime" />
+            <div className="bg-tournament-blue flex h-20 w-20 items-center justify-center rounded-full">
+              <TrophyIcon className="text-tournament-lime size-10" />
             </div>
-            <p className="mt-6 text-2xl font-black tracking-tight text-tournament-blue uppercase">
+            <p className="text-tournament-blue mt-6 text-2xl font-black tracking-tight uppercase">
               No Tournaments Yet
             </p>
             <p className="mt-2 text-sm font-semibold text-muted-foreground">
               Create your first pickleball tournament to get started
             </p>
             <Button
-              className="mt-6 gap-2 rounded-full border-4 border-tournament-blue bg-tournament-lime px-6 py-5 font-black tracking-wide text-tournament-blue uppercase"
+              className="border-tournament-blue bg-tournament-lime text-tournament-blue mt-6 gap-2 rounded-full border-4 px-6 py-5 font-black tracking-wide uppercase"
               onClick={() => setIsCreateOpen(true)}
             >
               <PlusIcon className="size-5" />
@@ -158,15 +154,15 @@ function TournamentsPage() {
           {tournaments.map((tournament) => (
             <Card
               key={tournament._id}
-              className="group overflow-hidden border-4 border-slate-200 py-0 transition-all duration-300 hover:border-tournament-lime hover:shadow-xl"
+              className="group overflow-hidden transition-all duration-300 hover:shadow-xl"
             >
               {/* Card Header Bar */}
-              <div className="flex items-center justify-between bg-tournament-blue px-5 py-3">
+              <div className="bg-tournament-blue flex items-center justify-between px-5 py-3">
                 {getStatusBadge(tournament.status)}
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 rounded-full text-white hover:bg-red-500 hover:text-white"
+                  className="rounded-full hover:bg-red-500 hover:text-white"
                   onClick={() =>
                     setTournamentToDelete({
                       id: tournament._id,
@@ -185,18 +181,18 @@ function TournamentsPage() {
                   className="block"
                 >
                   {/* Tournament Name */}
-                  <h3 className="mb-3 text-xl font-black tracking-tight text-tournament-blue uppercase transition-colors group-hover:text-tournament-blue/80">
+                  <h3 className="text-tournament-blue group-hover:text-tournament-blue/80 mb-3 text-xl font-black tracking-tight uppercase transition-colors">
                     {tournament.name}
                   </h3>
 
                   {/* Details */}
                   <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2 text-slate-600">
-                      <CalendarIcon className="size-4 text-tournament-lime" />
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <CalendarIcon className="text-tournament-lime size-4" />
                       <span className="font-semibold">{formatDate(tournament.date)}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-slate-600">
-                      <UsersIcon className="size-4 text-tournament-lime" />
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <UsersIcon className="text-tournament-lime size-4" />
                       <span className="font-semibold">Organizer: {tournament.organizerName}</span>
                     </div>
                   </div>
@@ -208,7 +204,7 @@ function TournamentsPage() {
                   )}
 
                   {/* Action Hint */}
-                  <div className="mt-5 flex items-center gap-2 text-sm font-black tracking-wide text-tournament-blue uppercase">
+                  <div className="text-tournament-blue mt-5 flex items-center gap-2 text-sm font-black tracking-wide uppercase">
                     VIEW DETAILS
                     <ChevronRightIcon className="size-4 transition-transform group-hover:translate-x-1" />
                   </div>

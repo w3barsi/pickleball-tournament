@@ -1,10 +1,7 @@
-import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
-import { TrophyIcon, GamepadIcon, HomeIcon } from "lucide-react";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { Container } from "@/components/container";
-import { SignOutButton } from "@/components/sign-out-button";
-import { Button } from "@/components/ui/button";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 export const Route = createFileRoute("/_auth/app")({
@@ -20,7 +17,9 @@ function AppLayout() {
 
         {/* Main Content */}
 
-        <Outlet />
+        <Container parentClassName="w-full">
+          <Outlet />
+        </Container>
       </SidebarInset>
     </SidebarProvider>
   );
