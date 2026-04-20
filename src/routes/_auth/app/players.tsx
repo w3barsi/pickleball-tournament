@@ -7,7 +7,6 @@ import { useMutation } from "convex/react";
 import { UserIcon, Trash2Icon, UsersIcon } from "lucide-react";
 
 import { HeaderCard, HeaderCardDescription, HeaderCardHeading } from "@/components/header-card";
-import { Heading } from "@/components/heading";
 import { CreatePlayerDialog } from "@/components/players/create-player-dialog";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
@@ -45,63 +44,60 @@ function PlayersPage() {
         <CreatePlayerDialog />
       </HeaderCard>
       {/* Players Grid */}
-      <Card className="border-tournament-blue overflow-hidden border-4 py-0">
-        <CardHeader className="border-tournament-blue bg-tournament-blue border-b-4 px-5 py-4">
+      <Card className="overflow-hidden">
+        <CardHeader className="border-b px-5 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <UsersIcon className="text-tournament-lime size-5" />
-              <h2 className="text-lg font-black tracking-wide text-white uppercase">All Players</h2>
+              <UsersIcon className="size-5" />
+              <h2 className="text-lg font-semibold tracking-wide">All Players</h2>
             </div>
-            <span className="bg-tournament-lime text-tournament-blue rounded-full px-3 py-1 text-xs font-black">
+            <span className="rounded-full px-3 py-1 text-xs font-medium">
               {players?.length || 0} Total
             </span>
           </div>
         </CardHeader>
-        <CardContent className="p-5">
+        <CardContent className="">
           {!players || players.length === 0 ? (
             <div className="py-12 text-center">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
-                <UserIcon className="size-8 text-slate-400" />
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                <UserIcon className="size-8" />
               </div>
-              <p className="text-lg font-bold text-slate-700">No players yet</p>
+              <p className="text-lg font-bold">No players yet</p>
               <p className="text-sm text-muted-foreground">
                 Create your first player to get started
               </p>
               <CreatePlayerDialog />
             </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4">
               {players.map((player) => (
-                <div
+                <Card
                   key={player._id}
-                  className="group hover:border-tournament-blue relative flex items-center gap-4 rounded-xl border-2 border-slate-100 bg-slate-50 p-4 transition-all hover:shadow-md"
+                  className="group overflow-hidden py-0 transition-all hover:shadow-md"
                 >
-                  {/* Avatar */}
-                  <div className="bg-tournament-blue flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg font-black text-white">
-                    {getInitials(player.firstName, player.lastName)}
-                  </div>
+                  <CardContent className="flex items-center gap-4 p-4">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-muted text-lg font-black text-muted-foreground">
+                      {getInitials(player.firstName, player.lastName)}
+                    </div>
 
-                  {/* Info */}
-                  <div className="min-w-0 flex-1">
-                    <p className="text-tournament-blue truncate font-bold">
-                      {player.firstName} {player.lastName}
-                    </p>
-                    {player.nickname && (
-                      <p className="truncate text-sm text-slate-500">
-                        &ldquo;{player.nickname}&rdquo;
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold">
+                        {player.firstName} {player.lastName}
                       </p>
-                    )}
-                  </div>
+                      {player.nickname && (
+                        <p className="truncate text-sm">&ldquo;{player.nickname}&rdquo;</p>
+                      )}
+                    </div>
 
-                  {/* Delete button */}
-                  <button
-                    onClick={() => handleDelete(player._id)}
-                    className="opacity-0 transition-opacity group-hover:opacity-100"
-                    title="Delete player"
-                  >
-                    <Trash2Icon className="size-4 text-slate-400 hover:text-red-500" />
-                  </button>
-                </div>
+                    <button
+                      onClick={() => handleDelete(player._id)}
+                      className="opacity-0 transition-opacity group-hover:opacity-100"
+                      title="Delete player"
+                    >
+                      <Trash2Icon className="size-4 text-slate-400 hover:text-red-500" />
+                    </button>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           )}
