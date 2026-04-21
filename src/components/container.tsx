@@ -1,21 +1,10 @@
-import type { ClassValue } from "clsx";
 import type { ComponentProps } from "react";
 
 import { cn } from "@/lib/utils";
 
 /**
- * -------------------------------------------------------------------------------------
- * `container mx-auto p-2 md:p-4`.
- * -------------------------------------------------------------------------------------
+ * Container with responsive max-width and padding.
  */
-export function Container({
-  children,
-  className,
-  parentClassName,
-}: ComponentProps<"div"> & { parentClassName?: ClassValue }) {
-  return (
-    <div className={cn("flex w-full", parentClassName)}>
-      <div className={cn("w-full gap-2 p-2 md:gap-4 md:p-4", className)}>{children}</div>
-    </div>
-  );
+export function Container({ className, ...props }: ComponentProps<"div">) {
+  return <div className={cn("mx-auto w-full max-w-7xl p-2 md:p-6", className)} {...props} />;
 }
