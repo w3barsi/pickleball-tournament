@@ -10,7 +10,7 @@ export default defineSchema({
   }),
 
   playerPair: defineTable({
-    teamName: v.string(),
+    teamName: v.optional(v.string()),
     playerOne: v.id("player"),
     playerTwo: v.id("player"),
     pairKey: v.string(), // Sorted player IDs, e.g., "playerA:playerB" where A < B

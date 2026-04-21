@@ -10,6 +10,7 @@
 
 import type * as auth from "../auth.js";
 import type * as http from "../http.js";
+import type * as playerPairs from "../playerPairs.js";
 import type * as players from "../players.js";
 import type * as scoring from "../scoring.js";
 import type * as tournaments from "../tournaments.js";
@@ -23,6 +24,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   http: typeof http;
+  playerPairs: typeof playerPairs;
   players: typeof players;
   scoring: typeof scoring;
   tournaments: typeof tournaments;

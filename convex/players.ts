@@ -60,3 +60,16 @@ export const remove = mutation({
     return { success: true };
   },
 });
+
+// Search players by full name
+export const search = query({
+  args: {
+    query: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const q = args.query.trim().toLowerCase();
+    const players = await ctx.db.query("player").order("desc").take(100);
+    if (!q) return players.slice(0, 10);
+    return players.filter((p) => p.fullName.toLowerCase().includes(q)).slice(0, 10);
+  },
+});
