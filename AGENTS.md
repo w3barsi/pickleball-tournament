@@ -12,7 +12,7 @@
 
 - **Queries**: Use `@convex-dev/react-query` with `convexQuery` helper and `useQuery` from `@tanstack/react-query` for read operations.
 - **Mutations**: Always use `useMutation` from `convex/react` (NOT from `@tanstack/react-query`) for Convex mutations.
-  - Example: `const create = useMutation(api.players.create)` then call `create({ firstName: "John" })`.
+  - Example: `const create = useMutation(api.players.create)` then call `create({ fullName: "John Doe" })`.
 
 ## UI Components
 
