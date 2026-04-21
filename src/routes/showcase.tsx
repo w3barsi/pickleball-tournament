@@ -146,85 +146,88 @@ function ShowcasePage() {
           <p className="text-muted-foreground">All components available in the design system.</p>
         </div>
 
-        {/* Text Buttons Section */}
-        <section className="space-y-6">
-          <h2 className="text-2xl font-bold text-foreground">Text Buttons</h2>
-          <div className="space-y-8">
-            {variants.map((variant) => (
-              <div key={variant} className="space-y-3">
-                <h3 className="text-sm font-medium tracking-wider text-muted-foreground uppercase">
-                  {variant}
-                </h3>
-                <div className="flex flex-wrap items-center gap-4">
-                  {textSizes.map((size) => (
-                    <Button key={size} variant={variant} size={size}>
-                      {size === "default" ? variant : size}
-                    </Button>
-                  ))}
+        {/* Buttons Grid */}
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+          {/* Text Buttons Section */}
+          <section className="space-y-6">
+            <h2 className="text-2xl font-bold text-foreground">Text Buttons</h2>
+            <div className="space-y-4">
+              {variants.map((variant) => (
+                <div key={variant} className="space-y-2">
+                  <h3 className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                    {variant}
+                  </h3>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {textSizes.map((size) => (
+                      <Button key={size} variant={variant} size={size}>
+                        {size === "default" ? variant : size}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </section>
+              ))}
+            </div>
+          </section>
 
-        {/* Icon Buttons Section */}
-        <section className="space-y-6">
-          <h2 className="text-2xl font-bold text-foreground">Icon Buttons</h2>
-          <div className="space-y-8">
-            {variants.map((variant) => (
-              <div key={variant} className="space-y-3">
-                <h3 className="text-sm font-medium tracking-wider text-muted-foreground uppercase">
-                  {variant}
-                </h3>
-                <div className="flex flex-wrap items-center gap-4">
-                  {iconSizes.map((size) => (
-                    <Button
-                      key={size}
-                      variant={variant}
-                      size={size}
-                      aria-label={`${variant} ${size}`}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
+          {/* Icon Buttons Section */}
+          <section className="space-y-6">
+            <h2 className="text-2xl font-bold text-foreground">Icon Buttons</h2>
+            <div className="space-y-4">
+              {variants.map((variant) => (
+                <div key={variant} className="space-y-2">
+                  <h3 className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                    {variant}
+                  </h3>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {iconSizes.map((size) => (
+                      <Button
+                        key={size}
+                        variant={variant}
+                        size={size}
+                        aria-label={`${variant} ${size}`}
                       >
-                        <circle cx="12" cy="12" r="10" />
-                        <path d="m9 12 2 2 4-4" />
-                      </svg>
-                    </Button>
-                  ))}
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <circle cx="12" cy="12" r="10" />
+                          <path d="m9 12 2 2 4-4" />
+                        </svg>
+                      </Button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </section>
+              ))}
+            </div>
+          </section>
 
-        {/* Disabled State Section */}
-        <section className="space-y-6">
-          <h2 className="text-2xl font-bold text-foreground">Disabled States</h2>
-          <div className="space-y-8">
-            {variants.map((variant) => (
-              <div key={variant} className="space-y-3">
-                <h3 className="text-sm font-medium tracking-wider text-muted-foreground uppercase">
-                  {variant}
-                </h3>
-                <div className="flex flex-wrap items-center gap-4">
-                  <Button variant={variant} size="default" disabled>
-                    Disabled
-                  </Button>
-                  <Button variant={variant} size="sm" disabled>
-                    Small Disabled
-                  </Button>
+          {/* Disabled State Section */}
+          <section className="space-y-6">
+            <h2 className="text-2xl font-bold text-foreground">Disabled States</h2>
+            <div className="space-y-4">
+              {variants.map((variant) => (
+                <div key={variant} className="space-y-2">
+                  <h3 className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                    {variant}
+                  </h3>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button variant={variant} size="default" disabled>
+                      Disabled
+                    </Button>
+                    <Button variant={variant} size="sm" disabled>
+                      Small
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </section>
+              ))}
+            </div>
+          </section>
+        </div>
 
         {/* Full Width Section */}
         <section className="space-y-6">
@@ -271,15 +274,15 @@ function AutocompleteShowcase() {
   }, [groupValue, contains]);
 
   return (
-    <section className="space-y-8">
+    <section className="space-y-6">
       <h2 className="text-2xl font-bold text-foreground">Autocomplete</h2>
 
-      {/* Basic Autocomplete */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-medium tracking-wider text-muted-foreground uppercase">
-          Basic
-        </h3>
-        <div className="max-w-sm">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {/* Basic Autocomplete */}
+        <div className="space-y-2">
+          <h3 className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+            Basic
+          </h3>
           <Autocomplete
             items={programmingLanguages}
             value={selectedLanguage}
@@ -299,14 +302,12 @@ function AutocompleteShowcase() {
             </AutocompleteContent>
           </Autocomplete>
         </div>
-      </div>
 
-      {/* With Clear Button */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-medium tracking-wider text-muted-foreground uppercase">
-          With Clear Button
-        </h3>
-        <div className="max-w-sm">
+        {/* With Clear Button */}
+        <div className="space-y-2">
+          <h3 className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+            With Clear Button
+          </h3>
           <Autocomplete
             items={programmingLanguages}
             value={selectedLanguage}
@@ -330,14 +331,12 @@ function AutocompleteShowcase() {
             </AutocompleteContent>
           </Autocomplete>
         </div>
-      </div>
 
-      {/* With Trigger Button */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-medium tracking-wider text-muted-foreground uppercase">
-          With Trigger Button
-        </h3>
-        <div className="max-w-sm">
+        {/* With Trigger Button */}
+        <div className="space-y-2">
+          <h3 className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+            With Trigger Button
+          </h3>
           <Autocomplete
             items={programmingLanguages}
             value={selectedLanguage}
@@ -361,14 +360,109 @@ function AutocompleteShowcase() {
             </AutocompleteContent>
           </Autocomplete>
         </div>
+
+        {/* With Custom Item Rendering */}
+        <div className="space-y-2">
+          <h3 className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+            Custom Item Rendering
+          </h3>
+          <Autocomplete
+            items={countries}
+            value={selectedCountry}
+            onValueChange={setSelectedCountry}
+          >
+            <AutocompleteInput
+              placeholder="Search countries..."
+              showClear
+              showTrigger
+              className="w-full"
+            />
+            <AutocompleteContent>
+              <AutocompleteList>
+                <AutocompleteEmpty>No countries found</AutocompleteEmpty>
+                <AutocompleteCollection>
+                  {(item: Country) => (
+                    <AutocompleteItem key={item.code} value={item.name}>
+                      <span className="mr-2">{getCountryFlag(item.code)}</span>
+                      <span className="flex-1">{item.name}</span>
+                      <span className="text-xs text-muted-foreground">{item.region}</span>
+                    </AutocompleteItem>
+                  )}
+                </AutocompleteCollection>
+              </AutocompleteList>
+            </AutocompleteContent>
+          </Autocomplete>
+        </div>
+
+        {/* Grouped Options */}
+        <div className="space-y-2">
+          <h3 className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+            Grouped Options
+          </h3>
+          <Autocomplete
+            items={filteredGroups}
+            value={groupValue}
+            onValueChange={setGroupValue}
+            filter={null}
+            autoHighlight
+          >
+            <AutocompleteInput
+              placeholder="Search countries by region..."
+              showClear
+              showTrigger
+              className="w-full"
+            />
+            <AutocompleteContent>
+              <AutocompleteList>
+                <AutocompleteEmpty>No countries found</AutocompleteEmpty>
+                <AutocompleteCollection>
+                  {(group: CountryGroup) => (
+                    <AutocompleteGroup items={group.items}>
+                      <AutocompleteGroupLabel>{group.region}</AutocompleteGroupLabel>
+                      <AutocompleteCollection>
+                        {(item: Country) => (
+                          <AutocompleteItem key={item.code} value={item.name}>
+                            <span className="mr-2">{getCountryFlag(item.code)}</span>
+                            {item.name}
+                          </AutocompleteItem>
+                        )}
+                      </AutocompleteCollection>
+                    </AutocompleteGroup>
+                  )}
+                </AutocompleteCollection>
+              </AutocompleteList>
+            </AutocompleteContent>
+          </Autocomplete>
+        </div>
+
+        {/* Disabled State */}
+        <div className="space-y-2">
+          <h3 className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+            Disabled
+          </h3>
+          <Autocomplete items={tags.map((t) => t.value)} disabled>
+            <AutocompleteInput placeholder="Disabled autocomplete..." disabled className="w-full" />
+            <AutocompleteContent>
+              <AutocompleteList>
+                <AutocompleteCollection>
+                  {(item: string) => (
+                    <AutocompleteItem key={item} value={item}>
+                      {item}
+                    </AutocompleteItem>
+                  )}
+                </AutocompleteCollection>
+              </AutocompleteList>
+            </AutocompleteContent>
+          </Autocomplete>
+        </div>
       </div>
 
-      {/* Different Sizes */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-medium tracking-wider text-muted-foreground uppercase">
+      {/* Different Sizes - Full Width */}
+      <div className="space-y-2">
+        <h3 className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
           Sizes
         </h3>
-        <div className="flex max-w-sm flex-col gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <Autocomplete
             items={tags.map((t) => t.value)}
             value={selectedTag}
@@ -418,106 +512,6 @@ function AutocompleteShowcase() {
             onValueChange={setSelectedTag}
           >
             <AutocompleteInput size="lg" placeholder="Large size..." showClear className="w-full" />
-            <AutocompleteContent>
-              <AutocompleteList>
-                <AutocompleteCollection>
-                  {(item: string) => (
-                    <AutocompleteItem key={item} value={item}>
-                      {item}
-                    </AutocompleteItem>
-                  )}
-                </AutocompleteCollection>
-              </AutocompleteList>
-            </AutocompleteContent>
-          </Autocomplete>
-        </div>
-      </div>
-
-      {/* With Custom Item Rendering */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-medium tracking-wider text-muted-foreground uppercase">
-          Custom Item Rendering
-        </h3>
-        <div className="max-w-sm">
-          <Autocomplete
-            items={countries}
-            value={selectedCountry}
-            onValueChange={setSelectedCountry}
-          >
-            <AutocompleteInput
-              placeholder="Search countries..."
-              showClear
-              showTrigger
-              className="w-full"
-            />
-            <AutocompleteContent>
-              <AutocompleteList>
-                <AutocompleteEmpty>No countries found</AutocompleteEmpty>
-                <AutocompleteCollection>
-                  {(item: Country) => (
-                    <AutocompleteItem key={item.code} value={item.name}>
-                      <span className="mr-2">{getCountryFlag(item.code)}</span>
-                      <span className="flex-1">{item.name}</span>
-                      <span className="text-xs text-muted-foreground">{item.region}</span>
-                    </AutocompleteItem>
-                  )}
-                </AutocompleteCollection>
-              </AutocompleteList>
-            </AutocompleteContent>
-          </Autocomplete>
-        </div>
-      </div>
-
-      {/* Grouped Options */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-medium tracking-wider text-muted-foreground uppercase">
-          Grouped Options
-        </h3>
-        <div className="max-w-sm">
-          <Autocomplete
-            items={filteredGroups}
-            value={groupValue}
-            onValueChange={setGroupValue}
-            filter={null}
-          >
-            <AutocompleteInput
-              placeholder="Search countries by region..."
-              showClear
-              showTrigger
-              className="w-full"
-            />
-            <AutocompleteContent>
-              <AutocompleteList>
-                <AutocompleteEmpty>No countries found</AutocompleteEmpty>
-                <AutocompleteCollection>
-                  {(group: CountryGroup) => (
-                    <AutocompleteGroup items={group.items}>
-                      <AutocompleteGroupLabel>{group.region}</AutocompleteGroupLabel>
-                      <AutocompleteCollection>
-                        {(item: Country) => (
-                          <AutocompleteItem key={item.code} value={item.name}>
-                            <span className="mr-2">{getCountryFlag(item.code)}</span>
-                            {item.name}
-                          </AutocompleteItem>
-                        )}
-                      </AutocompleteCollection>
-                    </AutocompleteGroup>
-                  )}
-                </AutocompleteCollection>
-              </AutocompleteList>
-            </AutocompleteContent>
-          </Autocomplete>
-        </div>
-      </div>
-
-      {/* Disabled State */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-medium tracking-wider text-muted-foreground uppercase">
-          Disabled
-        </h3>
-        <div className="max-w-sm">
-          <Autocomplete items={tags.map((t) => t.value)} disabled>
-            <AutocompleteInput placeholder="Disabled autocomplete..." disabled className="w-full" />
             <AutocompleteContent>
               <AutocompleteList>
                 <AutocompleteCollection>
