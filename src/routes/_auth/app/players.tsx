@@ -5,10 +5,30 @@ import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import { UserIcon, Trash2Icon, UsersIcon } from "lucide-react";
+import { useState } from "react";
 
 import { HeaderCard, HeaderCardDescription, HeaderCardHeading } from "@/components/header-card";
 import { CreatePlayerDialog } from "@/components/players/create-player-dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export const Route = createFileRoute("/_auth/app/players")({
   component: PlayersPage,
@@ -20,14 +40,18 @@ export const Route = createFileRoute("/_auth/app/players")({
 function PlayersPage() {
   const { data: players } = useQuery(convexQuery(api.players.listAll, {}));
   const deletePlayer = useMutation(api.players.remove);
+  const [playerToDelete, setPlayerToDelete] = useState<Id<"player"> | null>(null);
 
-  const handleDelete = async (playerId: Id<"player">) => {
-    if (!confirm("Are you sure you want to delete this player?")) return;
-    await deletePlayer({ playerId });
+  const handleDelete = async () => {
+    if (!playerToDelete) return;
+    await deletePlayer({ playerId: playerToDelete });
+    setPlayerToDelete(null);
   };
 
-  const getInitials = (firstName: string, lastName: string) => {
-    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+  const getInitials = (fullName: string) => {
+    const parts = fullName.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    return `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(0)}`.toUpperCase();
   };
 
   return (
@@ -45,7 +69,7 @@ function PlayersPage() {
       </HeaderCard>
       {/* Players Grid */}
       <Card className="overflow-hidden">
-        <CardHeader className="border-b px-5 py-4">
+        <CardHeader className="">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <UsersIcon className="size-5" />
@@ -69,40 +93,67 @@ function PlayersPage() {
               <CreatePlayerDialog />
             </div>
           ) : (
-            <div className="grid gap-4">
-              {players.map((player) => (
-                <Card
-                  key={player._id}
-                  className="group overflow-hidden py-0 transition-all hover:shadow-md"
-                >
-                  <CardContent className="flex items-center gap-4 p-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-muted text-lg font-black text-muted-foreground">
-                      {getInitials(player.firstName, player.lastName)}
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-semibold">
-                        {player.firstName} {player.lastName}
-                      </p>
-                      {player.nickname && (
-                        <p className="truncate text-sm">&ldquo;{player.nickname}&rdquo;</p>
-                      )}
-                    </div>
-
-                    <button
-                      onClick={() => handleDelete(player._id)}
-                      className="opacity-0 transition-opacity group-hover:opacity-100"
-                      title="Delete player"
-                    >
-                      <Trash2Icon className="size-4 text-slate-400 hover:text-red-500" />
-                    </button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-15"></TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Nickname</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead className="w-15"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {players.map((player) => (
+                  <TableRow key={player._id}>
+                    <TableCell>
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-sm font-bold text-muted-foreground">
+                        {getInitials(player.fullName)}
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-medium">{player.fullName}</TableCell>
+                    <TableCell>{player.nickname ? `"${player.nickname}"` : "—"}</TableCell>
+                    <TableCell>
+                      {new Date(player._creationTime).toLocaleDateString(undefined, {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        onClick={() => setPlayerToDelete(player._id)}
+                        variant="ghost"
+                        size="icon-lg"
+                        title="Delete player"
+                      >
+                        <Trash2Icon />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           )}
         </CardContent>
       </Card>
+
+      <AlertDialog open={!!playerToDelete} onOpenChange={() => setPlayerToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Player</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this player? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={handleDelete}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
