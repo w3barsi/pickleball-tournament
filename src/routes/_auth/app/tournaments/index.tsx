@@ -15,7 +15,6 @@ import {
 import { useState } from "react";
 
 import { HeaderCard, HeaderCardDescription, HeaderCardHeading } from "@/components/header-card";
-import { Heading } from "@/components/heading";
 import { CreateTournamentDialog } from "@/components/tournaments/create-tournament-dialog";
 import { DeleteTournamentAlertDialog } from "@/components/tournaments/delete-tournament-alert-dialog";
 import { Button } from "@/components/ui/button";

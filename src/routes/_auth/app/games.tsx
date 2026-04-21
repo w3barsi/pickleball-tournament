@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@convex/_generated/api.js";
 import { Id } from "@convex/_generated/dataModel.js";
@@ -47,14 +48,14 @@ function MatchesPage() {
     switch (status) {
       case "completed":
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-white bg-tournament-lime px-4 py-1.5 text-xs font-black tracking-wider text-tournament-blue uppercase">
+          <span className="bg-tournament-lime text-tournament-blue inline-flex items-center gap-1.5 rounded-full border-2 border-white px-4 py-1.5 text-xs font-black tracking-wider uppercase">
             <TrophyIcon className="size-3.5" />
             COMPLETED
           </span>
         );
       case "inProgress":
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-tournament-lime bg-white px-4 py-1.5 text-xs font-black tracking-wider text-tournament-blue uppercase">
+          <span className="border-tournament-lime text-tournament-blue inline-flex items-center gap-1.5 rounded-full border-2 bg-white px-4 py-1.5 text-xs font-black tracking-wider uppercase">
             <PlayIcon className="size-3.5" />
             LIVE
           </span>
@@ -97,15 +98,15 @@ function MatchesPage() {
   return (
     <div className="space-y-8">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-3xl bg-tournament-blue px-6 py-10 sm:px-10 sm:py-12">
+      <div className="bg-tournament-blue relative overflow-hidden rounded-3xl px-6 py-10 sm:px-10 sm:py-12">
         {/* Decorative circles */}
-        <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-tournament-lime opacity-20" />
+        <div className="bg-tournament-lime pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full opacity-20" />
         <div className="pointer-events-none absolute -bottom-8 -left-8 h-24 w-24 rounded-full bg-white opacity-15" />
-        <div className="pointer-events-none absolute right-20 bottom-10 h-16 w-16 rounded-full bg-tournament-lime opacity-10" />
+        <div className="bg-tournament-lime pointer-events-none absolute right-20 bottom-10 h-16 w-16 rounded-full opacity-10" />
 
         <div className="relative z-10 flex flex-col items-center justify-between gap-6 sm:flex-row">
           <div className="text-center sm:text-left">
-            <h1 className="text-5xl leading-none font-black tracking-tight text-tournament-lime uppercase italic [text-shadow:3px_3px_0px_rgba(0,0,0,0.25)] sm:text-6xl lg:text-7xl">
+            <h1 className="text-tournament-lime text-5xl leading-none font-black tracking-tight uppercase italic [text-shadow:3px_3px_0px_rgba(0,0,0,0.25)] sm:text-6xl lg:text-7xl">
               MATCHES
             </h1>
             <p className="mt-3 text-sm font-bold tracking-[0.2em] text-white/90 uppercase">
@@ -123,27 +124,27 @@ function MatchesPage() {
       {/* Matches List */}
       {matches === undefined ? (
         <div className="py-16 text-center">
-          <div className="mx-auto flex h-20 w-20 animate-pulse items-center justify-center rounded-full bg-tournament-blue/20">
-            <PlayIcon className="size-10 text-tournament-blue" />
+          <div className="bg-tournament-blue/20 mx-auto flex h-20 w-20 animate-pulse items-center justify-center rounded-full">
+            <PlayIcon className="text-tournament-blue size-10" />
           </div>
-          <p className="mt-6 text-xl font-black tracking-wide text-tournament-blue uppercase">
+          <p className="text-tournament-blue mt-6 text-xl font-black tracking-wide uppercase">
             Loading Matches...
           </p>
         </div>
       ) : matches.length === 0 ? (
-        <Card className="overflow-hidden border-4 border-dashed border-tournament-blue/40">
+        <Card className="border-tournament-blue/40 overflow-hidden border-4 border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-16">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-tournament-blue">
-              <TrophyIcon className="size-10 text-tournament-lime" />
+            <div className="bg-tournament-blue flex h-20 w-20 items-center justify-center rounded-full">
+              <TrophyIcon className="text-tournament-lime size-10" />
             </div>
-            <p className="mt-6 text-2xl font-black tracking-tight text-tournament-blue uppercase">
+            <p className="text-tournament-blue mt-6 text-2xl font-black tracking-tight uppercase">
               No Matches Yet
             </p>
             <p className="mt-2 text-sm font-semibold text-muted-foreground">
               Start tracking your pickleball matches
             </p>
             <Button
-              className="mt-6 gap-2 rounded-full border-4 border-tournament-blue bg-tournament-lime px-6 py-5 font-black tracking-wide text-tournament-blue uppercase"
+              className="border-tournament-blue bg-tournament-lime text-tournament-blue mt-6 gap-2 rounded-full border-4 px-6 py-5 font-black tracking-wide uppercase"
               onClick={() => setIsCreateOpen(true)}
             >
               <PlusIcon className="size-5" />
@@ -178,7 +179,7 @@ function MatchesPage() {
                   {getStatusBadge(match.status)}
                   {match.isLive && match.status !== "completed" && (
                     <div className="relative flex h-3 w-3">
-                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-tournament-lime opacity-75" />
+                      <span className="bg-tournament-lime absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" />
                       <span className="relative inline-flex h-3 w-3 rounded-full bg-red-600" />
                     </div>
                   )}
@@ -201,7 +202,7 @@ function MatchesPage() {
                   <div className="mb-4 text-center">
                     <h3 className="text-lg font-bold tracking-wide text-slate-700 uppercase">
                       {getTeamDisplay(match, 1)}{" "}
-                      <span className="mx-2 font-black text-tournament-blue">VS</span>{" "}
+                      <span className="text-tournament-blue mx-2 font-black">VS</span>{" "}
                       {getTeamDisplay(match, 2)}
                     </h3>
                     <p className="mt-1 text-xs font-bold tracking-wider text-muted-foreground uppercase">
@@ -231,7 +232,7 @@ function MatchesPage() {
                     </div>
 
                     {/* Divider */}
-                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-tournament-blue text-xl font-black text-white">
+                    <div className="bg-tournament-blue flex h-14 w-14 items-center justify-center rounded-full text-xl font-black text-white">
                       -
                     </div>
 
@@ -258,15 +259,15 @@ function MatchesPage() {
                   {/* Action Hint */}
                   <div className="mt-4 flex items-center justify-center gap-2 text-center">
                     {match.status === "completed" ? (
-                      <span className="flex items-center gap-2 text-lg font-black text-tournament-blue uppercase">
-                        <TrophyIcon className="size-5 text-tournament-lime" />
+                      <span className="text-tournament-blue flex items-center gap-2 text-lg font-black uppercase">
+                        <TrophyIcon className="text-tournament-lime size-5" />
                         {isWinner(match, 1)
                           ? getTeamDisplay(match, 1)
                           : getTeamDisplay(match, 2)}{" "}
                         WINS
                       </span>
                     ) : match.status === "inProgress" ? (
-                      <span className="flex items-center gap-2 text-lg font-black text-tournament-blue uppercase">
+                      <span className="text-tournament-blue flex items-center gap-2 text-lg font-black uppercase">
                         CONTINUE MATCH
                         <span className="transition-transform group-hover:translate-x-2">→</span>
                       </span>

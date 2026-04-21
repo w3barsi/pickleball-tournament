@@ -47,7 +47,6 @@ function AppIndex() {
 
         <div className="flex flex-col gap-3 px-4">
           <Button
-            size="lg"
             render={
               <Link to="/app/tournaments">
                 <TrophyIcon />
