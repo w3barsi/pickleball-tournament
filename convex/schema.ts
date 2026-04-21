@@ -4,9 +4,9 @@ import { v } from "convex/values";
 export default defineSchema({
   // ========== PLAYERS & PAIRS ==========
   player: defineTable({
-    firstName: v.string(),
-    lastName: v.string(),
+    fullName: v.string(),
     nickname: v.string(),
+    photoUrl: v.optional(v.string()),
   }),
 
   playerPair: defineTable({

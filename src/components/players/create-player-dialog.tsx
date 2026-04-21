@@ -19,8 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 const createPlayerSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
+  fullName: z.string().min(1, "Full name is required"),
   nickname: z.string(),
 });
 
@@ -32,14 +31,12 @@ export function CreatePlayerDialog() {
 
   const form = useForm({
     defaultValues: {
-      firstName: "",
-      lastName: "",
+      fullName: "",
       nickname: "",
     } as CreatePlayerFormData,
     onSubmit: async ({ value }) => {
       await createPlayer({
-        firstName: value.firstName.trim(),
-        lastName: value.lastName.trim(),
+        fullName: value.fullName.trim(),
         nickname: value.nickname.trim(),
       });
       form.reset();
@@ -78,11 +75,11 @@ export function CreatePlayerDialog() {
           className="space-y-4 pt-4"
         >
           <form.Field
-            name="firstName"
+            name="fullName"
             validators={{
               onChange: ({ value }) => {
                 if (!value || value.trim().length === 0) {
-                  return "First name is required";
+                  return "Full name is required";
                 }
                 return undefined;
               },
@@ -91,7 +88,7 @@ export function CreatePlayerDialog() {
             {(field) => (
               <div className="space-y-2">
                 <Label htmlFor={field.name} className="font-bold">
-                  First Name *
+                  Full Name *
                 </Label>
                 <Input
                   id={field.name}
@@ -99,39 +96,7 @@ export function CreatePlayerDialog() {
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder="Enter first name"
-                />
-                {field.state.meta.errors.length > 0 && (
-                  <p className="text-sm text-red-500">{field.state.meta.errors[0]}</p>
-                )}
-              </div>
-            )}
-          </form.Field>
-
-          <form.Field
-            name="lastName"
-            validators={{
-              onChange: ({ value }) => {
-                if (!value || value.trim().length === 0) {
-                  return "Last name is required";
-                }
-                return undefined;
-              },
-            }}
-          >
-            {(field) => (
-              <div className="space-y-2">
-                <Label htmlFor={field.name} className="font-bold">
-                  Last Name *
-                </Label>
-                <Input
-                  id={field.name}
-                  name={field.name}
-                  value={field.state.value}
-                  onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder="Enter last name"
-                  className="border-2 focus-visible:ring-tournament-blue"
+                  placeholder="Enter full name"
                 />
                 {field.state.meta.errors.length > 0 && (
                   <p className="text-sm text-red-500">{field.state.meta.errors[0]}</p>
@@ -153,7 +118,7 @@ export function CreatePlayerDialog() {
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
                   placeholder="Enter nickname (optional)"
-                  className="border-2 focus-visible:ring-tournament-blue"
+                  className="focus-visible:ring-tournament-blue border-2"
                 />
               </div>
             )}

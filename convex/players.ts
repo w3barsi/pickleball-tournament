@@ -24,14 +24,12 @@ export const get = query({
 // Create a new player
 export const create = mutation({
   args: {
-    firstName: v.string(),
-    lastName: v.string(),
+    fullName: v.string(),
     nickname: v.string(),
   },
   handler: async (ctx, args) => {
     const playerId = await ctx.db.insert("player", {
-      firstName: args.firstName,
-      lastName: args.lastName,
+      fullName: args.fullName,
       nickname: args.nickname,
     });
     return playerId;
@@ -42,8 +40,7 @@ export const create = mutation({
 export const update = mutation({
   args: {
     playerId: v.id("player"),
-    firstName: v.optional(v.string()),
-    lastName: v.optional(v.string()),
+    fullName: v.optional(v.string()),
     nickname: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
