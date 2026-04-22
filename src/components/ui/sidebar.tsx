@@ -478,7 +478,7 @@ function SidebarMenuButton({
   render,
   isActive = false,
   variant = "default",
-  size = "default",
+  size = "lg",
   tooltip,
   className,
   ...props
