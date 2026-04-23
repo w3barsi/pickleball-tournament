@@ -26,8 +26,11 @@ export const Route = createFileRoute("/_auth/app/tournaments/")({
 
 function TournamentsPage() {
   const { data: tournaments } = useQuery(convexQuery(api.tournaments.listAll, {}));
+  const { data: editableIds } = useQuery(convexQuery(api.tournaments.getEditableIds, {}));
   const createTournament = useMutation(api.tournaments.create);
   const deleteTournament = useMutation(api.tournaments.remove);
+
+  const editableSet = new Set(editableIds ?? []);
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [tournamentToDelete, setTournamentToDelete] = useState<{
@@ -153,19 +156,21 @@ function TournamentsPage() {
               {/* Card Header Bar */}
               <div className="bg-tournament-blue flex items-center justify-between px-5 py-3">
                 {getStatusBadge(tournament.status)}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="rounded-full hover:bg-red-500 hover:text-white"
-                  onClick={() =>
-                    setTournamentToDelete({
-                      id: tournament._id,
-                      name: tournament.name,
-                    })
-                  }
-                >
-                  <Trash2Icon className="size-4" />
-                </Button>
+                {editableSet.has(tournament._id) && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-full hover:bg-red-500 hover:text-white"
+                    onClick={() =>
+                      setTournamentToDelete({
+                        id: tournament._id,
+                        name: tournament.name,
+                      })
+                    }
+                  >
+                    <Trash2Icon className="size-4" />
+                  </Button>
+                )}
               </div>
 
               <CardContent className="p-5">

@@ -39,6 +39,8 @@ function getInitials(name: string) {
 function UserDetails() {
   const { user } = useAuthSuspense();
 
+  console.log(user);
+
   if (!user) return null;
 
   return (

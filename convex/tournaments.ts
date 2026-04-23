@@ -1,6 +1,52 @@
 import { v } from "convex/values";
 
-import { query, mutation } from "./_generated/server";
+import { Id } from "./_generated/dataModel";
+import { query, mutation, QueryCtx } from "./_generated/server";
+import { authComponent } from "./auth";
+
+// ─── Helpers ───────────────────────────────────────────────────────────────
+
+async function getAuthUser(ctx: QueryCtx) {
+  return await authComponent.safeGetAuthUser(ctx);
+}
+
+async function requireAuthUser(ctx: QueryCtx) {
+  const user = await getAuthUser(ctx);
+  if (!user) {
+    throw new Error("Authentication required");
+  }
+  return user;
+}
+
+async function canManageTournament(ctx: QueryCtx, tournamentId: Id<"tournaments">) {
+  const user = await getAuthUser(ctx);
+  if (!user) return false;
+
+  const tournament = await ctx.db.get(tournamentId);
+  if (!tournament) return false;
+
+  // Creator always has access
+  if (tournament.createdBy === user._id) return true;
+
+  // Check manager table
+  const manager = await ctx.db
+    .query("tournamentManagers")
+    .withIndex("by_tournament_user", (q) =>
+      q.eq("tournamentId", tournamentId).eq("userId", user._id),
+    )
+    .unique();
+
+  return manager !== null;
+}
+
+async function requireManageTournament(ctx: QueryCtx, tournamentId: Id<"tournaments">) {
+  const canManage = await canManageTournament(ctx, tournamentId);
+  if (!canManage) {
+    throw new Error("You do not have permission to manage this tournament");
+  }
+}
+
+// ─── Queries ───────────────────────────────────────────────────────────────
 
 // List all tournaments
 export const listAll = query({
@@ -34,6 +80,52 @@ export const getBySlug = query({
   },
 });
 
+// Check if the current user can edit a tournament
+export const canEdit = query({
+  args: {
+    tournamentId: v.id("tournaments"),
+  },
+  handler: async (ctx, args) => {
+    return await canManageTournament(ctx, args.tournamentId);
+  },
+});
+
+// Get all tournament IDs the current user can manage
+export const getEditableIds = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await getAuthUser(ctx);
+    if (!user) return [];
+
+    const managers = await ctx.db
+      .query("tournamentManagers")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .collect();
+
+    return managers.map((m) => m.tournamentId);
+  },
+});
+
+// List managers for a tournament (including the creator as implicit owner)
+export const listManagers = query({
+  args: {
+    tournamentId: v.id("tournaments"),
+  },
+  handler: async (ctx, args) => {
+    const tournament = await ctx.db.get(args.tournamentId);
+    if (!tournament) return [];
+
+    const managers = await ctx.db
+      .query("tournamentManagers")
+      .withIndex("by_tournament", (q) => q.eq("tournamentId", args.tournamentId))
+      .collect();
+
+    return managers;
+  },
+});
+
+// ─── Mutations ─────────────────────────────────────────────────────────────
+
 // Create a new tournament
 export const create = mutation({
   args: {
@@ -44,6 +136,8 @@ export const create = mutation({
     slug: v.string(),
   },
   handler: async (ctx, args) => {
+    const user = await requireAuthUser(ctx);
+
     // Check if a tournament with this slug already exists
     const existing = await ctx.db
       .query("tournaments")
@@ -63,7 +157,17 @@ export const create = mutation({
       status: "upcoming",
       createdAt: now,
       slug: args.slug,
+      createdBy: user._id,
     });
+
+    // Also record the creator as an owner in the managers table
+    await ctx.db.insert("tournamentManagers", {
+      tournamentId,
+      userId: user._id,
+      role: "owner",
+      invitedAt: now,
+    });
+
     return tournamentId;
   },
 });
@@ -81,6 +185,8 @@ export const update = mutation({
     ),
   },
   handler: async (ctx, args) => {
+    await requireManageTournament(ctx, args.tournamentId);
+
     const { tournamentId, ...updates } = args;
     await ctx.db.patch(tournamentId, updates);
     return { success: true };
@@ -93,6 +199,8 @@ export const remove = mutation({
     tournamentId: v.id("tournaments"),
   },
   handler: async (ctx, args) => {
+    await requireManageTournament(ctx, args.tournamentId);
+
     // Get all categories for this tournament
     const categories = await ctx.db
       .query("categories")
@@ -154,8 +262,90 @@ export const remove = mutation({
       await ctx.db.delete(category._id);
     }
 
+    // Delete all managers
+    const managers = await ctx.db
+      .query("tournamentManagers")
+      .withIndex("by_tournament", (q) => q.eq("tournamentId", args.tournamentId))
+      .collect();
+
+    for (const manager of managers) {
+      await ctx.db.delete(manager._id);
+    }
+
     // Finally delete the tournament
     await ctx.db.delete(args.tournamentId);
+    return { success: true };
+  },
+});
+
+// Invite a user to manage a tournament
+export const inviteManager = mutation({
+  args: {
+    tournamentId: v.id("tournaments"),
+    userId: v.string(),
+    role: v.optional(v.union(v.literal("owner"), v.literal("manager"))),
+  },
+  handler: async (ctx, args) => {
+    await requireManageTournament(ctx, args.tournamentId);
+
+    // Check if already a manager
+    const existing = await ctx.db
+      .query("tournamentManagers")
+      .withIndex("by_tournament_user", (q) =>
+        q.eq("tournamentId", args.tournamentId).eq("userId", args.userId),
+      )
+      .unique();
+
+    if (existing !== null) {
+      throw new Error("User is already a manager of this tournament");
+    }
+
+    const now = Date.now();
+    await ctx.db.insert("tournamentManagers", {
+      tournamentId: args.tournamentId,
+      userId: args.userId,
+      role: args.role ?? "manager",
+      invitedAt: now,
+    });
+
+    return { success: true };
+  },
+});
+
+// Remove a manager from a tournament
+export const removeManager = mutation({
+  args: {
+    tournamentId: v.id("tournaments"),
+    userId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await requireManageTournament(ctx, args.tournamentId);
+
+    const manager = await ctx.db
+      .query("tournamentManagers")
+      .withIndex("by_tournament_user", (q) =>
+        q.eq("tournamentId", args.tournamentId).eq("userId", args.userId),
+      )
+      .unique();
+
+    if (manager === null) {
+      throw new Error("User is not a manager of this tournament");
+    }
+
+    // Don't allow removing the last owner
+    if (manager.role === "owner") {
+      const owners = await ctx.db
+        .query("tournamentManagers")
+        .withIndex("by_tournament", (q) => q.eq("tournamentId", args.tournamentId))
+        .collect();
+
+      const ownerCount = owners.filter((m) => m.role === "owner").length;
+      if (ownerCount <= 1) {
+        throw new Error("Cannot remove the last owner of a tournament");
+      }
+    }
+
+    await ctx.db.delete(manager._id);
     return { success: true };
   },
 });

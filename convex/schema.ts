@@ -27,7 +27,20 @@ export default defineSchema({
     organizerName: v.string(),
     status: v.union(v.literal("upcoming"), v.literal("inProgress"), v.literal("completed")),
     createdAt: v.number(),
-  }).index("by_slug", ["slug"]),
+    createdBy: v.string(),
+  })
+    .index("by_slug", ["slug"])
+    .index("by_createdBy", ["createdBy"]),
+
+  tournamentManagers: defineTable({
+    tournamentId: v.id("tournaments"),
+    userId: v.string(),
+    role: v.union(v.literal("owner"), v.literal("manager")),
+    invitedAt: v.number(),
+  })
+    .index("by_tournament", ["tournamentId"])
+    .index("by_user", ["userId"])
+    .index("by_tournament_user", ["tournamentId", "userId"]),
 
   categories: defineTable({
     tournamentId: v.id("tournaments"),
