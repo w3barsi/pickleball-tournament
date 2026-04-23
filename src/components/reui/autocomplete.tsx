@@ -37,7 +37,7 @@ const inputVariants = cva(
         sm: "h-7 px-2 [&~[data-slot=autocomplete-clear]]:end-1.5 [&~[data-slot=autocomplete-trigger]]:end-1.5",
         default:
           "h-8 px-2.5 [&~[data-slot=autocomplete-clear]]:end-1.75 [&~[data-slot=autocomplete-trigger]]:end-1.75",
-        lg: "h-9 px-2.5 [&~[data-slot=autocomplete-clear]]:end-2 [&~[data-slot=autocomplete-trigger]]:end-2",
+        lg: "h-10 px-2.5 [&~[data-slot=autocomplete-clear]]:end-2 [&~[data-slot=autocomplete-trigger]]:end-2",
       },
     },
     defaultVariants: {
@@ -54,7 +54,7 @@ function AutocompleteValue({ ...props }: AutocompletePrimitive.Value.Props) {
 
 function AutocompleteInput({
   className,
-  size = "default",
+  size = "lg",
   showClear = false,
   showTrigger = false,
   prefix,
