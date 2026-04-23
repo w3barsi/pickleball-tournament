@@ -102,7 +102,7 @@ function TournamentsPage() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Hero Header */}
 
       <HeaderCard>
@@ -129,22 +129,17 @@ function TournamentsPage() {
         </div>
       ) : tournaments.length === 0 ? (
         <Card className="overflow-hidden">
-          <CardContent className="flex flex-col items-center justify-center py-16">
-            <div className="bg-tournament-blue flex h-20 w-20 items-center justify-center rounded-full">
-              <TrophyIcon className="text-tournament-lime size-10" />
+          <CardContent className="py-12 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+              <TrophyIcon className="size-8" />
             </div>
-            <p className="text-tournament-blue mt-6 text-2xl font-black tracking-tight uppercase">
-              No Tournaments Yet
+            <p className="text-lg font-bold">No tournaments yet</p>
+            <p className="text-sm text-muted-foreground">
+              Create your first tournament to get started
             </p>
-            <p className="mt-2 text-sm font-semibold text-muted-foreground">
-              Create your first pickleball tournament to get started
-            </p>
-            <Button
-              className="border-tournament-blue bg-tournament-lime text-tournament-blue mt-6 gap-2 rounded-full border-4 px-6 py-5 font-black tracking-wide uppercase"
-              onClick={() => setIsCreateOpen(true)}
-            >
-              <PlusIcon className="size-5" />
-              Create First Tournament
+            <Button className="mt-4" variant="secondary" onClick={() => setIsCreateOpen(true)}>
+              <PlusIcon className="size-4" />
+              Create Tournament
             </Button>
           </CardContent>
         </Card>
