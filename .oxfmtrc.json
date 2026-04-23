@@ -32,6 +32,7 @@
     ".wrangler",
     ".netlify",
     "dist",
-    "convex/_generated/"
+    "convex/_generated/",
+    "convex/betterAuth/_generated/"
   ]
 }
