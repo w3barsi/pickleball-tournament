@@ -57,18 +57,25 @@ function AutocompleteInput({
   size = "default",
   showClear = false,
   showTrigger = false,
+  prefix,
   ...props
-}: Omit<AutocompletePrimitive.Input.Props, "size"> &
+}: Omit<AutocompletePrimitive.Input.Props, "size" | "prefix"> &
   VariantProps<typeof inputVariants> & {
     showClear?: boolean;
     showTrigger?: boolean;
+    prefix?: React.ReactNode;
   }) {
   return (
     <div className="relative w-full">
+      {prefix && (
+        <div className="pointer-events-none absolute top-1/2 left-2 z-10 -translate-y-1/2">
+          {prefix}
+        </div>
+      )}
       <AutocompletePrimitive.Input
         data-slot="autocomplete-input"
         data-size={size}
-        className={cn(inputVariants({ size }), className)}
+        className={cn(inputVariants({ size }), prefix && "pl-28", className)}
         {...props}
       />
       {showTrigger && <AutocompleteTrigger />}

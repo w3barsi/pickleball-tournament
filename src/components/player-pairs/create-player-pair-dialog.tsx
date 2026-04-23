@@ -4,7 +4,7 @@ import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@convex/_generated/api.js";
 import { Id } from "@convex/_generated/dataModel";
 import { useForm } from "@tanstack/react-form";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useMutation } from "convex/react";
 import { PlusIcon } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
@@ -19,6 +19,7 @@ import {
   AutocompleteEmpty,
   AutocompleteCollection,
 } from "@/components/reui/autocomplete";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -64,18 +65,6 @@ function getOptions(results: PlayerResult[], query: string): Option[] {
   return [...results, { _id: "__create__", fullName: query.trim(), nickname: "" }];
 }
 
-function formatOptionValue(item: Option): string {
-  if (item._id === "__create__") return `__create__|${item.fullName}`;
-  return item.fullName;
-}
-
-function parseOptionValue(val: string): { isCreate: boolean; name: string } {
-  if (val.startsWith("__create__|")) {
-    return { isCreate: true, name: val.slice("__create__|".length) };
-  }
-  return { isCreate: false, name: val };
-}
-
 interface PendingPlayers {
   teamName?: string;
   player1: { name: string; id: string | null };
@@ -94,12 +83,14 @@ export function CreatePlayerPairDialog() {
   const debouncedP1 = useDebouncedValue(p1Query);
   const debouncedP2 = useDebouncedValue(p2Query);
 
-  const { data: p1Results = [] } = useQuery(
-    convexQuery(api.players.search, { query: debouncedP1 }),
-  );
-  const { data: p2Results = [] } = useQuery(
-    convexQuery(api.players.search, { query: debouncedP2 }),
-  );
+  const { data: p1Results = [] } = useQuery({
+    ...convexQuery(api.players.search, { query: debouncedP1 }),
+    placeholderData: keepPreviousData,
+  });
+  const { data: p2Results = [] } = useQuery({
+    ...convexQuery(api.players.search, { query: debouncedP2 }),
+    placeholderData: keepPreviousData,
+  });
 
   const p1Options = getOptions(p1Results, p1Query);
   const p2Options = getOptions(p2Results, p2Query);
@@ -114,19 +105,19 @@ export function CreatePlayerPairDialog() {
       player2: "",
     },
     onSubmit: async ({ value }) => {
-      const p1 = parseOptionValue(value.player1);
-      const p2 = parseOptionValue(value.player2);
+      const p1Name = value.player1;
+      const p2Name = value.player2;
 
       let finalP1Id = p1Id;
       let finalP2Id = p2Id;
 
-      if (!finalP1Id && !p1.isCreate) {
-        const match = p1Results.find((r) => r.fullName.toLowerCase() === p1.name.toLowerCase());
+      if (!finalP1Id) {
+        const match = p1Results.find((r) => r.fullName.toLowerCase() === p1Name.toLowerCase());
         if (match) finalP1Id = match._id;
       }
 
-      if (!finalP2Id && !p2.isCreate) {
-        const match = p2Results.find((r) => r.fullName.toLowerCase() === p2.name.toLowerCase());
+      if (!finalP2Id) {
+        const match = p2Results.find((r) => r.fullName.toLowerCase() === p2Name.toLowerCase());
         if (match) finalP2Id = match._id;
       }
 
@@ -136,14 +127,14 @@ export function CreatePlayerPairDialog() {
       }
 
       const missing = [];
-      if (!finalP1Id) missing.push(p1.name);
-      if (!finalP2Id) missing.push(p2.name);
+      if (!finalP1Id) missing.push(p1Name);
+      if (!finalP2Id) missing.push(p2Name);
 
       if (missing.length > 0) {
         setPending({
           teamName: value.teamName.trim() || undefined,
-          player1: { name: p1.name, id: finalP1Id },
-          player2: { name: p2.name, id: finalP2Id },
+          player1: { name: p1Name, id: finalP1Id },
+          player2: { name: p2Name, id: finalP2Id },
         });
         setConfirmOpen(true);
         return;
@@ -194,34 +185,22 @@ export function CreatePlayerPairDialog() {
   };
 
   const handleP1ValueChange = (val: string, details: { reason: string }) => {
-    const parsed = parseOptionValue(val);
-    if (parsed.isCreate) {
-      setP1Query(parsed.name);
-      setP1Id(null);
+    setP1Query(val);
+    if (details.reason === "itemPress") {
+      const match = p1Results.find((r) => r.fullName === val);
+      setP1Id(match ? match._id : null);
     } else {
-      setP1Query(val);
-      if (details.reason === "itemPress") {
-        const match = p1Results.find((r) => r.fullName === val);
-        setP1Id(match ? match._id : null);
-      } else {
-        setP1Id(null);
-      }
+      setP1Id(null);
     }
   };
 
   const handleP2ValueChange = (val: string, details: { reason: string }) => {
-    const parsed = parseOptionValue(val);
-    if (parsed.isCreate) {
-      setP2Query(parsed.name);
-      setP2Id(null);
+    setP2Query(val);
+    if (details.reason === "itemPress") {
+      const match = p2Results.find((r) => r.fullName === val);
+      setP2Id(match ? match._id : null);
     } else {
-      setP2Query(val);
-      if (details.reason === "itemPress") {
-        const match = p2Results.find((r) => r.fullName === val);
-        setP2Id(match ? match._id : null);
-      } else {
-        setP2Id(null);
-      }
+      setP2Id(null);
     }
   };
 
@@ -300,6 +279,14 @@ export function CreatePlayerPairDialog() {
                       placeholder="Search or enter player name..."
                       className="w-full"
                       showClear
+                      prefix={
+                        p1Query.trim().length > 0 &&
+                        !p1Results.some(
+                          (r) => r.fullName.toLowerCase() === p1Query.trim().toLowerCase(),
+                        ) ? (
+                          <Badge variant="secondary">Create Player</Badge>
+                        ) : undefined
+                      }
                     />
                     <AutocompleteContent>
                       <AutocompleteList>
@@ -308,7 +295,7 @@ export function CreatePlayerPairDialog() {
                         </AutocompleteEmpty>
                         <AutocompleteCollection>
                           {(item: Option) => (
-                            <AutocompleteItem key={item._id} value={formatOptionValue(item)}>
+                            <AutocompleteItem key={item._id} value={item.fullName}>
                               {item._id === "__create__" ? (
                                 <span className="text-muted-foreground italic">
                                   Create player: {item.fullName}
@@ -360,6 +347,14 @@ export function CreatePlayerPairDialog() {
                       placeholder="Search or enter player name..."
                       className="w-full"
                       showClear
+                      prefix={
+                        p2Query.trim().length > 0 &&
+                        !p2Results.some(
+                          (r) => r.fullName.toLowerCase() === p2Query.trim().toLowerCase(),
+                        ) ? (
+                          <Badge variant="secondary">Create Player</Badge>
+                        ) : undefined
+                      }
                     />
                     <AutocompleteContent>
                       <AutocompleteList>
@@ -368,7 +363,7 @@ export function CreatePlayerPairDialog() {
                         </AutocompleteEmpty>
                         <AutocompleteCollection>
                           {(item: Option) => (
-                            <AutocompleteItem key={item._id} value={formatOptionValue(item)}>
+                            <AutocompleteItem key={item._id} value={item.fullName}>
                               {item._id === "__create__" ? (
                                 <span className="text-muted-foreground italic">
                                   Create player: {item.fullName}
