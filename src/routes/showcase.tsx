@@ -14,6 +14,16 @@ import {
   AutocompleteGroupLabel,
 } from "@/components/reui/autocomplete";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Sample data for autocomplete
 interface Tag {
@@ -243,6 +253,9 @@ function ShowcasePage() {
 
         {/* Autocomplete Section */}
         <AutocompleteShowcase />
+
+        {/* Select Section */}
+        <SelectShowcase />
 
         {/* Footer */}
         <footer className="border-t pt-8 text-center text-sm text-muted-foreground">
@@ -524,6 +537,147 @@ function AutocompleteShowcase() {
               </AutocompleteList>
             </AutocompleteContent>
           </Autocomplete>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function SelectShowcase() {
+  const [language, setLanguage] = useState<string>("");
+  const [country, setCountry] = useState<string>("");
+  const [tag, setTag] = useState<string>("");
+
+  return (
+    <section className="space-y-6">
+      <h2 className="text-2xl font-bold text-foreground">Select</h2>
+
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {/* Basic Select */}
+        <div className="space-y-2">
+          <h3 className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+            Basic
+          </h3>
+          <Select value={language} onValueChange={(v) => setLanguage(v ?? "")}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Choose a language" />
+            </SelectTrigger>
+            <SelectContent>
+              {programmingLanguages.map((lang) => (
+                <SelectItem key={lang} value={lang}>
+                  {lang}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* With Groups */}
+        <div className="space-y-2">
+          <h3 className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+            Grouped
+          </h3>
+          <Select value={country} onValueChange={(v) => setCountry(v ?? "")}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Choose a country" />
+            </SelectTrigger>
+            <SelectContent>
+              {groupedCountries.map((group) => (
+                <SelectGroup key={group.region}>
+                  <SelectLabel>{group.region}</SelectLabel>
+                  {group.items.map((item) => (
+                    <SelectItem key={item.code} value={item.name}>
+                      <span className="mr-2">{getCountryFlag(item.code)}</span>
+                      {item.name}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Disabled State */}
+        <div className="space-y-2">
+          <h3 className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+            Disabled
+          </h3>
+          <Select disabled>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Disabled select" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="a">Option A</SelectItem>
+              <SelectItem value="b">Option B</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* With Separator */}
+        <div className="space-y-2">
+          <h3 className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+            With Separator
+          </h3>
+          <Select value={tag} onValueChange={(v) => setTag(v ?? "")}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Choose a tag" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {tags.slice(0, 4).map((t) => (
+                  <SelectItem key={t.id} value={t.value}>
+                    {t.value}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+              <SelectSeparator />
+              <SelectGroup>
+                {tags.slice(4).map((t) => (
+                  <SelectItem key={t.id} value={t.value}>
+                    {t.value}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Small Size */}
+        <div className="space-y-2">
+          <h3 className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+            Small Size
+          </h3>
+          <Select>
+            <SelectTrigger size="sm" className="w-full">
+              <SelectValue placeholder="Small trigger" />
+            </SelectTrigger>
+            <SelectContent>
+              {tags.map((t) => (
+                <SelectItem key={t.id} value={t.value}>
+                  {t.value}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Pre-selected Value */}
+        <div className="space-y-2">
+          <h3 className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+            Pre-selected
+          </h3>
+          <Select defaultValue="TypeScript">
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {programmingLanguages.map((lang) => (
+                <SelectItem key={lang} value={lang}>
+                  {lang}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
     </section>
