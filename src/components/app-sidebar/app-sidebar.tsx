@@ -1,3 +1,7 @@
+import { convexQuery } from "@convex-dev/react-query";
+import { api } from "@convex/_generated/api";
+import { useQuery } from "@tanstack/react-query";
+import { useRouteContext } from "@tanstack/react-router";
 import { LogOutIcon, UserIcon } from "lucide-react";
 import { Suspense } from "react";
 
@@ -5,8 +9,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -21,7 +29,9 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { authClient } from "@/lib/auth/auth-client";
 import { useAuth, useAuthSuspense } from "@/lib/auth/hooks";
+import { cn } from "@/lib/utils";
 
+import { AdminMenuItem } from "./admin-menu-item";
 import { HomeMenuItem } from "./home-menu-item";
 import { PlayerPairsMenuItem } from "./player-pairs-menu-item";
 import { PlayersMenuItem } from "./players-menu-item";
@@ -38,6 +48,8 @@ function getInitials(name: string) {
 
 function UserDetails() {
   const { user } = useAuthSuspense();
+  const { data: sessions } = useQuery(convexQuery(api.session.listDeviceSessions, {}));
+  console.log(sessions);
 
   console.log(user);
 
@@ -60,6 +72,21 @@ function UserDetails() {
           <UserIcon />
           Edit Profile
         </DropdownMenuItem>
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger>
+            <UserIcon /> Change User
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent>
+            <DropdownMenuGroup>
+              {sessions?.map((s) => (
+                <DropdownMenuItem key={s.session.id}>
+                  <UserIcon />
+                  {s.user.name}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuGroup>
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           variant="destructive"
@@ -82,10 +109,13 @@ function UserDetails() {
 }
 
 export function AppSidebar() {
+  const { isAdmin } = useRouteContext({ from: "/_auth" });
   return (
     <Sidebar variant="inset">
-      <SidebarHeader className="flex h-14 items-center border-b border-sidebar-border px-4">
-        <span className="font-semibold text-sidebar-foreground">Pickle Tournament</span>
+      <SidebarHeader className="flex h-14 items-center justify-center border-b border-sidebar-border px-4">
+        <span className={cn("font-semibold text-sidebar-foreground", isAdmin && "text-red-600")}>
+          Pickle Tournament
+        </span>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
@@ -93,6 +123,7 @@ export function AppSidebar() {
             <HomeMenuItem />
             <PlayersMenuItem />
             <PlayerPairsMenuItem />
+            <AdminMenuItem />
           </SidebarMenu>
         </SidebarGroup>
 

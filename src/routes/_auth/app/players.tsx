@@ -2,13 +2,14 @@ import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@convex/_generated/api.js";
 import { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouteContext } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
-import { UserIcon, Trash2Icon, UsersIcon } from "lucide-react";
+import { UserIcon, Trash2Icon, UsersIcon, FlagIcon } from "lucide-react";
 import { useState } from "react";
 
 import { HeaderCard, HeaderCardDescription, HeaderCardHeading } from "@/components/header-card";
 import { CreatePlayerDialog } from "@/components/players/create-player-dialog";
+import { RequestDeletionDialog } from "@/components/request-deletion-dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,9 +39,14 @@ export const Route = createFileRoute("/_auth/app/players")({
 });
 
 function PlayersPage() {
+  const { isAdmin } = useRouteContext({ from: "/_auth/app" });
   const { data: players } = useQuery(convexQuery(api.players.listAll, {}));
   const deletePlayer = useMutation(api.players.remove);
   const [playerToDelete, setPlayerToDelete] = useState<Id<"player"> | null>(null);
+  const [playerToRequestDelete, setPlayerToRequestDelete] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   const handleDelete = async () => {
     if (!playerToDelete) return;
@@ -121,14 +127,27 @@ function PlayersPage() {
                       })}
                     </TableCell>
                     <TableCell>
-                      <Button
-                        onClick={() => setPlayerToDelete(player._id)}
-                        variant="ghost"
-                        size="icon-lg"
-                        title="Delete player"
-                      >
-                        <Trash2Icon />
-                      </Button>
+                      {isAdmin ? (
+                        <Button
+                          onClick={() => setPlayerToDelete(player._id)}
+                          variant="ghost"
+                          size="icon-lg"
+                          title="Delete player"
+                        >
+                          <Trash2Icon />
+                        </Button>
+                      ) : (
+                        <Button
+                          onClick={() =>
+                            setPlayerToRequestDelete({ id: player._id, name: player.fullName })
+                          }
+                          variant="ghost"
+                          size="icon-lg"
+                          title="Request deletion"
+                        >
+                          <FlagIcon />
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -154,6 +173,16 @@ function PlayersPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <RequestDeletionDialog
+        targetType="player"
+        targetId={playerToRequestDelete?.id ?? ""}
+        targetName={playerToRequestDelete?.name ?? ""}
+        open={!!playerToRequestDelete}
+        onOpenChange={(open) => {
+          if (!open) setPlayerToRequestDelete(null);
+        }}
+      />
     </div>
   );
 }

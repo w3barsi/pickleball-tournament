@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { LogOutIcon, UserIcon } from "lucide-react";
 import { Suspense } from "react";
 
@@ -78,8 +79,10 @@ function UserDetails() {
 export function AdminSidebar() {
   return (
     <Sidebar variant="inset">
-      <SidebarHeader className="flex h-14 items-center border-b border-sidebar-border px-4">
-        <span className="font-semibold text-sidebar-foreground">Pickle Tournament</span>
+      <SidebarHeader className="flex h-14 items-center justify-center border-b border-sidebar-border px-4">
+        <Link to="/app" className="font-semibold text-sidebar-foreground">
+          Pickle Tournament
+        </Link>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>

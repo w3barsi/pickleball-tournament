@@ -2,13 +2,14 @@ import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@convex/_generated/api.js";
 import { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouteContext } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
-import { UserPlusIcon, Trash2Icon, UsersIcon } from "lucide-react";
+import { UserPlusIcon, Trash2Icon, UsersIcon, FlagIcon } from "lucide-react";
 import { useState } from "react";
 
 import { HeaderCard, HeaderCardDescription, HeaderCardHeading } from "@/components/header-card";
 import { CreatePlayerPairDialog } from "@/components/player-pairs/create-player-pair-dialog";
+import { RequestDeletionDialog } from "@/components/request-deletion-dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,9 +39,14 @@ export const Route = createFileRoute("/_auth/app/playerPairs")({
 });
 
 function PlayerPairsPage() {
+  const { isAdmin } = useRouteContext({ from: "/_auth/app" });
   const { data: pairs } = useQuery(convexQuery(api.playerPairs.listAll, {}));
   const deletePair = useMutation(api.playerPairs.remove);
   const [pairToDelete, setPairToDelete] = useState<Id<"playerPair"> | null>(null);
+  const [pairToRequestDelete, setPairToRequestDelete] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   const handleDelete = async () => {
     if (!pairToDelete) return;
@@ -110,14 +116,31 @@ function PlayerPairsPage() {
                     <TableCell className="text-right">{pair.wins}</TableCell>
                     <TableCell className="text-right">{pair.losses}</TableCell>
                     <TableCell>
-                      <Button
-                        onClick={() => setPairToDelete(pair._id)}
-                        variant="ghost"
-                        size="icon-lg"
-                        title="Delete pair"
-                      >
-                        <Trash2Icon />
-                      </Button>
+                      {isAdmin ? (
+                        <Button
+                          onClick={() => setPairToDelete(pair._id)}
+                          variant="ghost"
+                          size="icon-lg"
+                          title="Delete pair"
+                        >
+                          <Trash2Icon />
+                        </Button>
+                      ) : (
+                        <Button
+                          onClick={() =>
+                            setPairToRequestDelete({
+                              id: pair._id,
+                              name:
+                                pair.teamName || `${pair.playerOneName} & ${pair.playerTwoName}`,
+                            })
+                          }
+                          variant="ghost"
+                          size="icon-lg"
+                          title="Request deletion"
+                        >
+                          <FlagIcon />
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -143,6 +166,16 @@ function PlayerPairsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <RequestDeletionDialog
+        targetType="playerPair"
+        targetId={pairToRequestDelete?.id ?? ""}
+        targetName={pairToRequestDelete?.name ?? ""}
+        open={!!pairToRequestDelete}
+        onOpenChange={(open) => {
+          if (!open) setPairToRequestDelete(null);
+        }}
+      />
     </div>
   );
 }
