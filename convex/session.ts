@@ -1,11 +1,10 @@
-import { query } from "./_generated/server";
+import { httpAction, query } from "./_generated/server";
 import { authComponent, createAuth } from "./auth";
-import { auth } from "./betterAuth/auth";
 
-export const listDeviceSessions = query({
-  args: {},
-  handler: async (ctx) => {
-    const { auth, headers } = await authComponent.getAuth(createAuth, ctx);
-    return auth.api.listDeviceSessions({ headers });
-  },
+// Use HTTP action instead of query to access request headers with cookies
+export const listDeviceSessions = query(async (ctx) => {
+  const { auth, headers } = await authComponent.getAuth(createAuth, ctx);
+  console.log(headers);
+  const result = await auth.api.listDeviceSessions({ headers });
+  return result;
 });

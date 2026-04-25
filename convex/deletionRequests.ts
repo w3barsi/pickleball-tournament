@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 
 import { query, mutation } from "./_generated/server";
 import { authComponent } from "./auth";
@@ -26,7 +26,7 @@ export const create = mutation({
       .unique();
 
     if (existing) {
-      throw new Error("A pending deletion request already exists for this item.");
+      throw new ConvexError("A pending deletion request already exists for this item.");
     }
 
     const requestId = await ctx.db.insert("deletionRequest", {

@@ -168,12 +168,13 @@ export default defineSchema({
     targetType: v.union(v.literal("player"), v.literal("playerPair")),
     targetId: v.string(),
     reason: v.string(),
-    requestedBy: v.id("user"),
+    requestedBy: v.string(),
     status: v.union(v.literal("pending"), v.literal("approved"), v.literal("rejected")),
     updatedAt: v.number(),
+
+    deletedAt: v.optional(v.number()),
   })
     .index("by_target", ["targetType", "targetId"])
-    .index("by_status", ["status"]),
-
-  ...authTables,
+    .index("by_status", ["status"])
+    .index("by_deletedAt", ["deletedAt"]),
 });

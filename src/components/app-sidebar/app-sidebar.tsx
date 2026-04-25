@@ -1,16 +1,31 @@
-import { convexQuery } from "@convex-dev/react-query";
-import { api } from "@convex/_generated/api";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouteContext } from "@tanstack/react-router";
-import { LogOutIcon, UserIcon } from "lucide-react";
-import { Suspense } from "react";
+import {
+  CheckIcon,
+  LoaderCircleIcon,
+  LogOutIcon,
+  PlusIcon,
+  TrashIcon,
+  UserIcon,
+} from "lucide-react";
+import { Suspense, useState } from "react";
+import { toast } from "sonner";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
@@ -27,8 +42,16 @@ import {
   SidebarMenu,
 } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { authClient } from "@/lib/auth/auth-client";
-import { useAuth, useAuthSuspense } from "@/lib/auth/hooks";
+import { useAuthSuspense } from "@/lib/auth/hooks";
 import { cn } from "@/lib/utils";
 
 import { AdminMenuItem } from "./admin-menu-item";
@@ -46,65 +69,230 @@ function getInitials(name: string) {
     .slice(0, 2);
 }
 
+type SessionItem = {
+  session: {
+    id: string;
+    createdAt: Date;
+    updatedAt: Date;
+    userId: string;
+    expiresAt: Date;
+    token: string;
+    ipAddress?: string | null;
+    userAgent?: string | null;
+  };
+  user: {
+    id: string;
+    createdAt: Date;
+    updatedAt: Date;
+    email: string;
+    emailVerified: boolean;
+    name: string;
+    image?: string | null;
+  };
+};
+
+function SessionManagementDialog({
+  open,
+  onOpenChange,
+  currentUser,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  currentUser: { _id: string; name: string; email: string; image?: string | null };
+}) {
+  const queryClient = useQueryClient();
+  const [activeToken, setActiveToken] = useState<string | null>(null);
+
+  const { data: sessions } = useQuery({
+    queryKey: ["deviceSessions"],
+    queryFn: async () => {
+      const res = await authClient.multiSession.listDeviceSessions();
+      return res;
+    },
+  });
+
+  const { mutate: switchSession, isPending: isSwitching } = useMutation({
+    mutationFn: async (sessionToken: string) => {
+      setActiveToken(sessionToken);
+      const result = await authClient.multiSession.setActive({ sessionToken });
+      if (result.error) {
+        throw new Error(result.error.message);
+      }
+      return result.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["auth"] });
+      toast.success("Switched to selected account");
+      onOpenChange(false);
+      location.reload();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to switch account");
+    },
+    onSettled: () => {
+      setActiveToken(null);
+    },
+  });
+
+  const { mutate: revokeSession, isPending: isRevoking } = useMutation({
+    mutationFn: async (sessionToken: string) => {
+      const result = await authClient.multiSession.revoke({ sessionToken });
+      if (result.error) {
+        throw new Error(result.error.message);
+      }
+      return result.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["deviceSessions"] });
+      toast.success("Session revoked");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to revoke session");
+    },
+  });
+
+  const isCurrentSession = (sessionUserId: string) => sessionUserId === currentUser._id;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Manage Accounts</DialogTitle>
+          <DialogDescription>
+            Switch between your logged-in accounts or revoke sessions.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="mt-4">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>User</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead className="w-25">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {sessions?.data?.map((s) => (
+                <TableRow key={s.session.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Avatar size="sm">
+                        <AvatarImage src={s.user.image ?? undefined} alt={s.user.name} />
+                        <AvatarFallback>{getInitials(s.user.name)}</AvatarFallback>
+                      </Avatar>
+                      <span className="font-medium">{s.user.name}</span>
+                      {isCurrentSession(s.user.id) && (
+                        <CheckIcon className="size-4 text-green-600" />
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">{s.user.email}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      {!isCurrentSession(s.user.id) && (
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => switchSession(s.session.token)}
+                          disabled={isSwitching}
+                        >
+                          {isSwitching && activeToken === s.session.token ? (
+                            <LoaderCircleIcon className="animate-spin" />
+                          ) : (
+                            <CheckIcon />
+                          )}
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => revokeSession(s.session.token)}
+                        disabled={isRevoking}
+                      >
+                        <TrashIcon className="text-destructive" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {(!sessions || sessions.data?.length === 0) && (
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center text-muted-foreground">
+                    No other active sessions
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        <div className="mt-4 flex justify-end">
+          <Button
+            variant="outline"
+            onClick={() => {
+              onOpenChange(false);
+              window.location.href = "/login";
+            }}
+          >
+            <PlusIcon />
+            Add Account
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function UserDetails() {
   const { user } = useAuthSuspense();
-  const { data: sessions } = useQuery(convexQuery(api.session.listDeviceSessions, {}));
-  console.log(sessions);
+  const queryClient = useQueryClient();
 
-  console.log(user);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   if (!user) return null;
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger className="flex items-center gap-3 rounded-md px-2 py-2 text-left outline-hidden hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
-        <Avatar size="sm">
-          <AvatarImage src={user.image ?? undefined} alt={user.name} />
-          <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
-        </Avatar>
-        <div className="flex min-w-0 flex-col">
-          <span className="truncate text-sm font-medium text-sidebar-foreground">{user.name}</span>
-          <span className="truncate text-xs text-sidebar-foreground/60">{user.email}</span>
-        </div>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" side="top" className="w-56">
-        <DropdownMenuItem disabled>
-          <UserIcon />
-          Edit Profile
-        </DropdownMenuItem>
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger>
-            <UserIcon /> Change User
-          </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent>
-            <DropdownMenuGroup>
-              {sessions?.map((s) => (
-                <DropdownMenuItem key={s.session.id}>
-                  <UserIcon />
-                  {s.user.name}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuGroup>
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          variant="destructive"
-          onClick={async () => {
-            await authClient.signOut({
-              fetchOptions: {
-                onSuccess: () => {
-                  location.reload();
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger className="flex items-center gap-3 rounded-md px-2 py-2 text-left outline-hidden hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+          <Avatar size="sm">
+            <AvatarImage src={user.image ?? undefined} alt={user.name} />
+            <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+          </Avatar>
+          <div className="flex min-w-0 flex-col">
+            <span className="truncate text-sm font-medium text-sidebar-foreground">
+              {user.name}
+            </span>
+            <span className="truncate text-xs text-sidebar-foreground/60">{user.email}</span>
+          </div>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" side="top" className="w-56">
+          <DropdownMenuItem onClick={() => setDialogOpen(true)}>
+            <UserIcon />
+            Manage Accounts
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            variant="destructive"
+            onClick={async () => {
+              await authClient.signOut({
+                fetchOptions: {
+                  onSuccess: () => {
+                    location.reload();
+                  },
                 },
-              },
-            });
-          }}
-        >
-          <LogOutIcon />
-          Log out
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+              });
+            }}
+          >
+            <LogOutIcon />
+            Log out
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <SessionManagementDialog open={dialogOpen} onOpenChange={setDialogOpen} currentUser={user} />
+    </>
   );
 }
 

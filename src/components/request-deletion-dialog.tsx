@@ -1,6 +1,8 @@
 import { api } from "@convex/_generated/api.js";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
+import { ConvexError } from "convex/values";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -37,13 +39,20 @@ export function RequestDeletionDialog({
       reason: "",
     },
     onSubmit: async ({ value }) => {
-      await createRequest({
-        targetType,
-        targetId,
-        reason: value.reason.trim(),
-      });
-      form.reset();
-      onOpenChange(false);
+      try {
+        await createRequest({
+          targetType,
+          targetId,
+          reason: value.reason.trim(),
+        });
+        form.reset();
+        onOpenChange(false);
+      } catch (error) {
+        if (error instanceof ConvexError && error.cause === "CONFLICT") {
+          return toast.error(error.message);
+        }
+        return toast.error("Failed to create request");
+      }
     },
   });
 
