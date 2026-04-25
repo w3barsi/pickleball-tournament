@@ -1036,4 +1036,34 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         Name
       >;
     };
+    users: {
+      list: FunctionReference<
+        "query",
+        "internal",
+        {},
+        Array<{
+          _creationTime: number;
+          _id: string;
+          banExpires?: null | number;
+          banReason?: null | string;
+          banned?: null | boolean;
+          createdAt: number;
+          email: string;
+          emailVerified: boolean;
+          image?: null | string;
+          name: string;
+          role?: null | string;
+          updatedAt: number;
+          userId?: null | string;
+        }>,
+        Name
+      >;
+      updateRole: FunctionReference<
+        "mutation",
+        "internal",
+        { role: "user" | "admin"; userId: string },
+        any,
+        Name
+      >;
+    };
   };

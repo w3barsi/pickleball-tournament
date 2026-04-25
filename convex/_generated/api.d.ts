@@ -14,6 +14,7 @@ import type * as playerPairs from "../playerPairs.js";
 import type * as players from "../players.js";
 import type * as scoring from "../scoring.js";
 import type * as tournaments from "../tournaments.js";
+import type * as users from "../users.js";
 
 import type {
   ApiFromModules,
@@ -28,6 +29,7 @@ declare const fullApi: ApiFromModules<{
   players: typeof players;
   scoring: typeof scoring;
   tournaments: typeof tournaments;
+  users: typeof users;
 }>;
 
 /**

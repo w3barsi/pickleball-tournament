@@ -1,7 +1,10 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
+import { tables as authTables } from "./betterAuth/schema";
+
 export default defineSchema({
+  ...authTables,
   // ========== PLAYERS & PAIRS ==========
   player: defineTable({
     fullName: v.string(),

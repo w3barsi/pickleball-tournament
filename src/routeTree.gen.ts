@@ -17,12 +17,15 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as GuestSignupRouteImport } from './routes/_guest/signup'
 import { Route as GuestLoginRouteImport } from './routes/_guest/login'
 import { Route as AuthAppRouteRouteImport } from './routes/_auth/app/route'
+import { Route as AuthAdminRouteRouteImport } from './routes/_auth/admin/route'
 import { Route as AuthAppIndexRouteImport } from './routes/_auth/app/index'
+import { Route as AuthAdminIndexRouteImport } from './routes/_auth/admin/index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AuthAppScorerRouteImport } from './routes/_auth/app/scorer'
 import { Route as AuthAppPlayersRouteImport } from './routes/_auth/app/players'
 import { Route as AuthAppPlayerPairsRouteImport } from './routes/_auth/app/playerPairs'
 import { Route as AuthAppGamesRouteImport } from './routes/_auth/app/games'
+import { Route as AuthAdminUsersRouteImport } from './routes/_auth/admin/users'
 import { Route as AuthAppTournamentsIndexRouteImport } from './routes/_auth/app/tournaments/index'
 import { Route as AuthAppTournamentsSlugRouteImport } from './routes/_auth/app/tournaments/$slug'
 import { Route as AuthAppGIdRouteImport } from './routes/_auth/app/g.$id'
@@ -65,10 +68,20 @@ const AuthAppRouteRoute = AuthAppRouteRouteImport.update({
   path: '/app',
   getParentRoute: () => AuthRouteRoute,
 } as any)
+const AuthAdminRouteRoute = AuthAdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthRouteRoute,
+} as any)
 const AuthAppIndexRoute = AuthAppIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthAppRouteRoute,
+} as any)
+const AuthAdminIndexRoute = AuthAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthAdminRouteRoute,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
@@ -95,6 +108,11 @@ const AuthAppGamesRoute = AuthAppGamesRouteImport.update({
   path: '/games',
   getParentRoute: () => AuthAppRouteRoute,
 } as any)
+const AuthAdminUsersRoute = AuthAdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AuthAdminRouteRoute,
+} as any)
 const AuthAppTournamentsIndexRoute = AuthAppTournamentsIndexRouteImport.update({
   id: '/tournaments/',
   path: '/tournaments/',
@@ -115,14 +133,17 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/overlay': typeof OverlayRoute
   '/showcase': typeof ShowcaseRoute
+  '/admin': typeof AuthAdminRouteRouteWithChildren
   '/app': typeof AuthAppRouteRouteWithChildren
   '/login': typeof GuestLoginRoute
   '/signup': typeof GuestSignupRoute
+  '/admin/users': typeof AuthAdminUsersRoute
   '/app/games': typeof AuthAppGamesRoute
   '/app/playerPairs': typeof AuthAppPlayerPairsRoute
   '/app/players': typeof AuthAppPlayersRoute
   '/app/scorer': typeof AuthAppScorerRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/admin/': typeof AuthAdminIndexRoute
   '/app/': typeof AuthAppIndexRoute
   '/app/g/$id': typeof AuthAppGIdRoute
   '/app/tournaments/$slug': typeof AuthAppTournamentsSlugRoute
@@ -134,11 +155,13 @@ export interface FileRoutesByTo {
   '/showcase': typeof ShowcaseRoute
   '/login': typeof GuestLoginRoute
   '/signup': typeof GuestSignupRoute
+  '/admin/users': typeof AuthAdminUsersRoute
   '/app/games': typeof AuthAppGamesRoute
   '/app/playerPairs': typeof AuthAppPlayerPairsRoute
   '/app/players': typeof AuthAppPlayersRoute
   '/app/scorer': typeof AuthAppScorerRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/admin': typeof AuthAdminIndexRoute
   '/app': typeof AuthAppIndexRoute
   '/app/g/$id': typeof AuthAppGIdRoute
   '/app/tournaments/$slug': typeof AuthAppTournamentsSlugRoute
@@ -151,14 +174,17 @@ export interface FileRoutesById {
   '/_guest': typeof GuestRouteRouteWithChildren
   '/overlay': typeof OverlayRoute
   '/showcase': typeof ShowcaseRoute
+  '/_auth/admin': typeof AuthAdminRouteRouteWithChildren
   '/_auth/app': typeof AuthAppRouteRouteWithChildren
   '/_guest/login': typeof GuestLoginRoute
   '/_guest/signup': typeof GuestSignupRoute
+  '/_auth/admin/users': typeof AuthAdminUsersRoute
   '/_auth/app/games': typeof AuthAppGamesRoute
   '/_auth/app/playerPairs': typeof AuthAppPlayerPairsRoute
   '/_auth/app/players': typeof AuthAppPlayersRoute
   '/_auth/app/scorer': typeof AuthAppScorerRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/_auth/admin/': typeof AuthAdminIndexRoute
   '/_auth/app/': typeof AuthAppIndexRoute
   '/_auth/app/g/$id': typeof AuthAppGIdRoute
   '/_auth/app/tournaments/$slug': typeof AuthAppTournamentsSlugRoute
@@ -170,14 +196,17 @@ export interface FileRouteTypes {
     | '/'
     | '/overlay'
     | '/showcase'
+    | '/admin'
     | '/app'
     | '/login'
     | '/signup'
+    | '/admin/users'
     | '/app/games'
     | '/app/playerPairs'
     | '/app/players'
     | '/app/scorer'
     | '/api/auth/$'
+    | '/admin/'
     | '/app/'
     | '/app/g/$id'
     | '/app/tournaments/$slug'
@@ -189,11 +218,13 @@ export interface FileRouteTypes {
     | '/showcase'
     | '/login'
     | '/signup'
+    | '/admin/users'
     | '/app/games'
     | '/app/playerPairs'
     | '/app/players'
     | '/app/scorer'
     | '/api/auth/$'
+    | '/admin'
     | '/app'
     | '/app/g/$id'
     | '/app/tournaments/$slug'
@@ -205,14 +236,17 @@ export interface FileRouteTypes {
     | '/_guest'
     | '/overlay'
     | '/showcase'
+    | '/_auth/admin'
     | '/_auth/app'
     | '/_guest/login'
     | '/_guest/signup'
+    | '/_auth/admin/users'
     | '/_auth/app/games'
     | '/_auth/app/playerPairs'
     | '/_auth/app/players'
     | '/_auth/app/scorer'
     | '/api/auth/$'
+    | '/_auth/admin/'
     | '/_auth/app/'
     | '/_auth/app/g/$id'
     | '/_auth/app/tournaments/$slug'
@@ -286,12 +320,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthAppRouteRouteImport
       parentRoute: typeof AuthRouteRoute
     }
+    '/_auth/admin': {
+      id: '/_auth/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthAdminRouteRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
     '/_auth/app/': {
       id: '/_auth/app/'
       path: '/'
       fullPath: '/app/'
       preLoaderRoute: typeof AuthAppIndexRouteImport
       parentRoute: typeof AuthAppRouteRoute
+    }
+    '/_auth/admin/': {
+      id: '/_auth/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthAdminIndexRouteImport
+      parentRoute: typeof AuthAdminRouteRoute
     }
     '/api/auth/$': {
       id: '/api/auth/$'
@@ -328,6 +376,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthAppGamesRouteImport
       parentRoute: typeof AuthAppRouteRoute
     }
+    '/_auth/admin/users': {
+      id: '/_auth/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AuthAdminUsersRouteImport
+      parentRoute: typeof AuthAdminRouteRoute
+    }
     '/_auth/app/tournaments/': {
       id: '/_auth/app/tournaments/'
       path: '/tournaments'
@@ -351,6 +406,20 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AuthAdminRouteRouteChildren {
+  AuthAdminUsersRoute: typeof AuthAdminUsersRoute
+  AuthAdminIndexRoute: typeof AuthAdminIndexRoute
+}
+
+const AuthAdminRouteRouteChildren: AuthAdminRouteRouteChildren = {
+  AuthAdminUsersRoute: AuthAdminUsersRoute,
+  AuthAdminIndexRoute: AuthAdminIndexRoute,
+}
+
+const AuthAdminRouteRouteWithChildren = AuthAdminRouteRoute._addFileChildren(
+  AuthAdminRouteRouteChildren,
+)
 
 interface AuthAppRouteRouteChildren {
   AuthAppGamesRoute: typeof AuthAppGamesRoute
@@ -379,10 +448,12 @@ const AuthAppRouteRouteWithChildren = AuthAppRouteRoute._addFileChildren(
 )
 
 interface AuthRouteRouteChildren {
+  AuthAdminRouteRoute: typeof AuthAdminRouteRouteWithChildren
   AuthAppRouteRoute: typeof AuthAppRouteRouteWithChildren
 }
 
 const AuthRouteRouteChildren: AuthRouteRouteChildren = {
+  AuthAdminRouteRoute: AuthAdminRouteRouteWithChildren,
   AuthAppRouteRoute: AuthAppRouteRouteWithChildren,
 }
 
