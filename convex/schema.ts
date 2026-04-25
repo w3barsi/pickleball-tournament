@@ -4,13 +4,13 @@ import { v } from "convex/values";
 import { tables as authTables } from "./betterAuth/schema";
 
 export default defineSchema({
-  ...authTables,
   // ========== PLAYERS & PAIRS ==========
   player: defineTable({
     fullName: v.string(),
     nickname: v.string(),
     photoUrl: v.optional(v.string()),
-  }),
+    deletedAt: v.optional(v.number()),
+  }).index("by_deletedAt", ["deletedAt"]),
 
   playerPair: defineTable({
     teamName: v.optional(v.string()),
@@ -19,7 +19,10 @@ export default defineSchema({
     pairKey: v.string(), // Sorted player IDs, e.g., "playerA:playerB" where A < B
     wins: v.number(),
     losses: v.number(),
-  }).index("by_pair_key", ["pairKey"]),
+    deletedAt: v.optional(v.number()),
+  })
+    .index("by_pair_key", ["pairKey"])
+    .index("by_deletedAt", ["deletedAt"]),
 
   // ========== TOURNAMENT STRUCTURE ==========
   tournaments: defineTable({
@@ -31,19 +34,23 @@ export default defineSchema({
     status: v.union(v.literal("upcoming"), v.literal("inProgress"), v.literal("completed")),
     createdAt: v.number(),
     createdBy: v.string(),
+    deletedAt: v.optional(v.number()),
   })
     .index("by_slug", ["slug"])
-    .index("by_createdBy", ["createdBy"]),
+    .index("by_createdBy", ["createdBy"])
+    .index("by_deletedAt", ["deletedAt"]),
 
   tournamentManagers: defineTable({
     tournamentId: v.id("tournaments"),
     userId: v.string(),
     role: v.union(v.literal("owner"), v.literal("manager")),
     invitedAt: v.number(),
+    deletedAt: v.optional(v.number()),
   })
     .index("by_tournament", ["tournamentId"])
     .index("by_user", ["userId"])
-    .index("by_tournament_user", ["tournamentId", "userId"]),
+    .index("by_tournament_user", ["tournamentId", "userId"])
+    .index("by_deletedAt", ["deletedAt"]),
 
   categories: defineTable({
     tournamentId: v.id("tournaments"),
@@ -59,7 +66,10 @@ export default defineSchema({
     ),
     maxParticipants: v.optional(v.number()),
     createdAt: v.number(),
-  }).index("by_tournament", ["tournamentId"]),
+    deletedAt: v.optional(v.number()),
+  })
+    .index("by_tournament", ["tournamentId"])
+    .index("by_deletedAt", ["deletedAt"]),
 
   // Players/Pairs register HERE at the category level
   categoryParticipants: defineTable({
@@ -70,10 +80,12 @@ export default defineSchema({
     wins: v.number(),
     losses: v.number(),
     createdAt: v.number(),
+    deletedAt: v.optional(v.number()),
   })
     .index("by_category", ["categoryId"])
     .index("by_player", ["playerId"])
-    .index("by_pair", ["pairId"]),
+    .index("by_pair", ["pairId"])
+    .index("by_deletedAt", ["deletedAt"]),
 
   // Brackets = group stages within a category
   brackets: defineTable({
@@ -83,9 +95,11 @@ export default defineSchema({
     status: v.union(v.literal("upcoming"), v.literal("inProgress"), v.literal("completed")),
     maxParticipants: v.optional(v.number()),
     createdAt: v.number(),
+    deletedAt: v.optional(v.number()),
   })
     .index("by_category", ["categoryId"])
-    .index("by_category_stage", ["categoryId", "stage"]),
+    .index("by_category_stage", ["categoryId", "stage"])
+    .index("by_deletedAt", ["deletedAt"]),
 
   // Who advances to which bracket
   bracketParticipants: defineTable({
@@ -93,9 +107,11 @@ export default defineSchema({
     categoryParticipantId: v.id("categoryParticipants"),
     status: v.union(v.literal("active"), v.literal("eliminated"), v.literal("withdrawn")),
     createdAt: v.number(),
+    deletedAt: v.optional(v.number()),
   })
     .index("by_bracket", ["bracketId"])
-    .index("by_category_participant", ["categoryParticipantId"]),
+    .index("by_category_participant", ["categoryParticipantId"])
+    .index("by_deletedAt", ["deletedAt"]),
 
   // ========== MATCHES ==========
   matches: defineTable({
@@ -120,13 +136,15 @@ export default defineSchema({
     startedAt: v.number(),
     completedAt: v.optional(v.number()),
     lastUpdatedAt: v.number(),
+    deletedAt: v.optional(v.number()),
   })
     .index("by_bracket", ["bracketId"])
     .index("by_category", ["categoryId"])
     .index("by_status", ["status"])
     .index("by_is_live", ["isLive"])
     .index("by_participant", ["participant1Id"])
-    .index("by_participant2", ["participant2Id"]),
+    .index("by_participant2", ["participant2Id"])
+    .index("by_deletedAt", ["deletedAt"]),
 
   // ========== POINTS ==========
   pickleballPoints: defineTable({
@@ -139,7 +157,23 @@ export default defineSchema({
     pointWinner: v.union(v.literal(1), v.literal(2)),
     sequenceNumber: v.number(),
     timestamp: v.number(),
+    deletedAt: v.optional(v.number()),
   })
     .index("by_match", ["matchId"])
-    .index("by_match_and_sequence", ["matchId", "sequenceNumber"]),
+    .index("by_match_and_sequence", ["matchId", "sequenceNumber"])
+    .index("by_deletedAt", ["deletedAt"]),
+
+  // ========== DELETION REQUESTS ==========
+  deletionRequest: defineTable({
+    targetType: v.union(v.literal("player"), v.literal("playerPair")),
+    targetId: v.string(),
+    reason: v.string(),
+    requestedBy: v.id("user"),
+    status: v.union(v.literal("pending"), v.literal("approved"), v.literal("rejected")),
+    updatedAt: v.number(),
+  })
+    .index("by_target", ["targetType", "targetId"])
+    .index("by_status", ["status"]),
+
+  ...authTables,
 });

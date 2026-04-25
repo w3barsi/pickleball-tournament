@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 
 import { query, mutation } from "./_generated/server";
+import { authComponent } from "./auth";
 
 // List all players
 export const listAll = query({
@@ -50,13 +51,33 @@ export const update = mutation({
   },
 });
 
-// Delete a player
+// Delete a player (admin only)
 export const remove = mutation({
   args: {
     playerId: v.id("player"),
   },
   handler: async (ctx, args) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+    if (!user || user.role !== "admin") {
+      throw new Error("Unauthorized");
+    }
+
     await ctx.db.delete(args.playerId);
+
+    // Approve any pending deletion requests for this player
+    const pendingRequests = await ctx.db
+      .query("deletionRequest")
+      .withIndex("by_target", (q) => q.eq("targetType", "player").eq("targetId", args.playerId))
+      .filter((q) => q.eq(q.field("status"), "pending"))
+      .collect();
+
+    for (const request of pendingRequests) {
+      await ctx.db.patch(request._id, {
+        status: "approved",
+        updatedAt: Date.now(),
+      });
+    }
+
     return { success: true };
   },
 });
