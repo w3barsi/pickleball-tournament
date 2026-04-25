@@ -3,7 +3,7 @@ import type { GenericCtx } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
 import { betterAuth } from "better-auth/minimal";
 import type { BetterAuthOptions } from "better-auth/minimal";
-import { admin } from "better-auth/plugins";
+import { admin, multiSession } from "better-auth/plugins";
 
 import { components } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
@@ -35,6 +35,7 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
       convex({ authConfig }),
       // Admin plugin for user management
       admin({ defaultRole: "user" }),
+      multiSession(),
     ],
   } satisfies BetterAuthOptions;
 };

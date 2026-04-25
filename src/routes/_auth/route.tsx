@@ -19,6 +19,6 @@ export const Route = createFileRoute("/_auth")({
     }
 
     // return context for use in child routes & loaders
-    return { user };
+    return { user, isAdmin: user.role === "admin" };
   },
 });

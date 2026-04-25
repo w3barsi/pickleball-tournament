@@ -1,7 +1,7 @@
 import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@convex/_generated/api.js";
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import {
   TrophyIcon,
   GamepadIcon,
@@ -17,6 +17,9 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 export const Route = createFileRoute("/_auth/admin/")({
   component: AppIndex,
+  beforeLoad: () => {
+    throw redirect({ to: "/admin/users" });
+  },
 });
 
 function AppIndex() {

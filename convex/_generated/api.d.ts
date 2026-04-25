@@ -9,10 +9,12 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as deletionRequests from "../deletionRequests.js";
 import type * as http from "../http.js";
 import type * as playerPairs from "../playerPairs.js";
 import type * as players from "../players.js";
 import type * as scoring from "../scoring.js";
+import type * as session from "../session.js";
 import type * as tournaments from "../tournaments.js";
 import type * as users from "../users.js";
 
@@ -24,10 +26,12 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  deletionRequests: typeof deletionRequests;
   http: typeof http;
   playerPairs: typeof playerPairs;
   players: typeof players;
   scoring: typeof scoring;
+  session: typeof session;
   tournaments: typeof tournaments;
   users: typeof users;
 }>;
