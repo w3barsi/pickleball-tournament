@@ -84,7 +84,7 @@ function TournamentsPage() {
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-slate-300 bg-slate-100 px-3 py-1 text-xs font-black tracking-wider text-slate-600 uppercase">
+          <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-neutral-300 bg-neutral-100 px-3 py-1 text-xs font-black tracking-wider text-neutral-600 uppercase">
             Upcoming
           </span>
         );
