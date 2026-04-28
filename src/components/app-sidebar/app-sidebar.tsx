@@ -61,7 +61,9 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarGroup>
 
-      {isOnTournamentPage && <TournamentSidebar />}
+      {isOnTournamentPage && tournamentMatch && (
+        <TournamentSidebar slug={tournamentMatch.params.slug} />
+      )}
     </BaseSidebar>
   );
 }
