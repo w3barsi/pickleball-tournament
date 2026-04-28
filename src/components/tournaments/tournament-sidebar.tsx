@@ -110,7 +110,7 @@ function statusColor(status: TournamentStatus | MatchStatus) {
   switch (status) {
     case "upcoming":
     case "scheduled":
-      return "text-amber-500";
+      return "text-lime-500";
     case "inProgress":
       return "text-emerald-500";
     case "completed":
@@ -140,107 +140,114 @@ export function TournamentSidebar() {
 
   return (
     <>
-      {/* Tournament Header */}
+      {/* Tournament-scoped card */}
       <SidebarGroup>
-        <SidebarGroupLabel className="text-[11px] tracking-wider uppercase">
-          Active Tournament
-        </SidebarGroupLabel>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              size="lg"
-              tooltip={tournament.name}
-              render={
-                <a href={`/app/tournaments/${tournament.slug}`}>
-                  <TrophyIcon className="size-5 text-amber-500" />
-                  <div className="flex min-w-0 flex-col">
-                    <span className="truncate font-semibold">{tournament.name}</span>
-                    <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      {statusDot(tournament.status)}
-                      <span className="capitalize">{tournament.status}</span>
-                    </span>
-                  </div>
-                </a>
-              }
-            />
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarGroup>
+        <div className="relative mx-1 overflow-hidden rounded-lg border border-sidebar-border/70 bg-sidebar-accent/40 p-2">
+          {/* Accent stripe */}
+          <div className="absolute inset-y-0 left-0 w-1 rounded-full bg-lime-500" />
 
-      {/* Quick Links */}
-      <SidebarGroup>
-        <SidebarGroupLabel>Quick Links</SidebarGroupLabel>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              render={
-                <a href={`/app/tournaments/${tournament.slug}`}>
-                  <EyeIcon />
-                  <span>Overview</span>
-                </a>
-              }
-            />
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              render={
-                <a href={`/app/tournaments/${tournament.slug}/categories`}>
-                  <LayoutGridIcon />
-                  <span>Categories</span>
-                </a>
-              }
-            />
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              render={
-                <a href={`/app/tournaments/${tournament.slug}/matches`}>
-                  <SwordsIcon />
-                  <span>All Matches</span>
-                </a>
-              }
-            />
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              render={
-                <a href={`/app/tournaments/${tournament.slug}/live`}>
-                  <CircleDotIcon className="text-red-500" />
-                  <span>Live Matches</span>
-                </a>
-              }
-            />
-            {totalLive > 0 && (
-              <SidebarMenuBadge className="bg-red-500 text-white">{totalLive}</SidebarMenuBadge>
-            )}
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarGroup>
+          {/* Header */}
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                size="lg"
+                tooltip={tournament.name}
+                render={
+                  <a href={`/app/tournaments/${tournament.slug}`}>
+                    <TrophyIcon className="size-5 text-lime-500" />
+                    <div className="flex min-w-0 flex-col">
+                      <span className="truncate font-semibold">{tournament.name}</span>
+                      <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        {statusDot(tournament.status)}
+                        <span className="capitalize">{tournament.status}</span>
+                      </span>
+                    </div>
+                  </a>
+                }
+              />
+            </SidebarMenuItem>
+          </SidebarMenu>
 
-      {/* Categories — flat, one click each */}
-      <SidebarGroup className="flex-1">
-        <SidebarGroupLabel>Categories</SidebarGroupLabel>
-        <SidebarMenu>
-          {MOCK_CATEGORIES.map((category) => {
-            const live = liveCountForCategory(category._id);
-            return (
-              <SidebarMenuItem key={category._id}>
+          {/* Quick Links */}
+          <div className="mt-2 border-t border-sidebar-border/50 pt-2">
+            <SidebarGroupLabel className="text-[10px] tracking-wider text-sidebar-foreground/60 uppercase">
+              Quick Links
+            </SidebarGroupLabel>
+            <SidebarMenu>
+              <SidebarMenuItem>
                 <SidebarMenuButton
-                  tooltip={`${category.name} · ${category.type} · ${category.format}`}
                   render={
-                    <a href={`/app/tournaments/${tournament.slug}/categories/${category._id}`}>
-                      <UsersIcon className="size-4 shrink-0 text-sidebar-foreground/60" />
-                      <span className="truncate">{category.name}</span>
+                    <a href={`/app/tournaments/${tournament.slug}`}>
+                      <EyeIcon className="size-4" />
+                      <span>Overview</span>
                     </a>
                   }
                 />
-                {live > 0 && (
-                  <SidebarMenuBadge className="bg-red-500 text-white">{live}</SidebarMenuBadge>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  render={
+                    <a href={`/app/tournaments/${tournament.slug}/categories`}>
+                      <LayoutGridIcon className="size-4" />
+                      <span>Categories</span>
+                    </a>
+                  }
+                />
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  render={
+                    <a href={`/app/tournaments/${tournament.slug}/matches`}>
+                      <SwordsIcon className="size-4" />
+                      <span>All Matches</span>
+                    </a>
+                  }
+                />
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  render={
+                    <a href={`/app/tournaments/${tournament.slug}/live`}>
+                      <CircleDotIcon className="size-4 text-red-500" />
+                      <span>Live Matches</span>
+                    </a>
+                  }
+                />
+                {totalLive > 0 && (
+                  <SidebarMenuBadge className="bg-red-500 text-white">{totalLive}</SidebarMenuBadge>
                 )}
               </SidebarMenuItem>
-            );
-          })}
-        </SidebarMenu>
+            </SidebarMenu>
+          </div>
+
+          {/* Categories */}
+          <div className="mt-2 border-t border-sidebar-border/50 pt-2">
+            <SidebarGroupLabel className="text-[10px] tracking-wider text-sidebar-foreground/60 uppercase">
+              Categories
+            </SidebarGroupLabel>
+            <SidebarMenu>
+              {MOCK_CATEGORIES.map((category) => {
+                const live = liveCountForCategory(category._id);
+                return (
+                  <SidebarMenuItem key={category._id}>
+                    <SidebarMenuButton
+                      tooltip={`${category.name} · ${category.type} · ${category.format}`}
+                      render={
+                        <a href={`/app/tournaments/${tournament.slug}/categories/${category._id}`}>
+                          <UsersIcon className="size-4 shrink-0 text-sidebar-foreground/60" />
+                          <span className="truncate">{category.name}</span>
+                        </a>
+                      }
+                    />
+                    {live > 0 && (
+                      <SidebarMenuBadge className="bg-red-500 text-white">{live}</SidebarMenuBadge>
+                    )}
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </div>
+        </div>
       </SidebarGroup>
     </>
   );
