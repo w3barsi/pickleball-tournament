@@ -1,3 +1,5 @@
+import { convexQuery } from "@convex-dev/react-query";
+import { api } from "@convex/_generated/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useMatch, useRouter } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
@@ -156,9 +158,18 @@ function SessionManagementDialog({
       }
       return result.data;
     },
-    onSuccess: () => {
+    onSuccess: ({ user }) => {
       queryClient.invalidateQueries({ queryKey: ["auth"] });
-      router.invalidate();
+      // queryClient.invalidateQueries({
+      //   queryKey: convexQuery(api.auth.getCurrentUser, {}).queryKey,
+      // });
+
+      if (user.role !== "admin" && router.state.location.pathname.startsWith("/admin")) {
+        router.navigate({ to: "/app", replace: true });
+      } else {
+        router.invalidate();
+      }
+
       toast.success("Switched to selected account");
       onOpenChange(false);
     },
