@@ -221,7 +221,7 @@ function RouteComponent() {
           <CardHeader className="pb-2">
             <div className="flex items-center gap-2">
               {gameState.servingTeam === 1 && (
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-full border-green-800/10 bg-ballgreen text-xs font-bold">
+                <div className="bg-ballgreen flex size-10 shrink-0 items-center justify-center rounded-full border-green-800/10 text-xs font-bold">
                   {gameState.serverNumber}
                 </div>
               )}
@@ -256,7 +256,7 @@ function RouteComponent() {
           <CardHeader className="pb-2">
             <div className="flex items-center gap-2">
               {gameState.servingTeam === 2 && (
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-full border-green-800/10 bg-ballgreen text-xs font-bold">
+                <div className="bg-ballgreen flex size-10 shrink-0 items-center justify-center rounded-full border-green-800/10 text-xs font-bold">
                   {gameState.serverNumber}
                 </div>
               )}
