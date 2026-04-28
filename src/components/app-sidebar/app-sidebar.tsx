@@ -11,6 +11,17 @@ import {
 import { Suspense, useState } from "react";
 import { toast } from "sonner";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -104,6 +115,7 @@ function SessionManagementDialog({
   const [activeToken, setActiveToken] = useState<string | null>(null);
 
   const { data: sessions } = useQuery({
+    enabled: open,
     queryKey: ["deviceSessions"],
     queryFn: async () => {
       const res = await authClient.multiSession.listDeviceSessions();
@@ -124,7 +136,6 @@ function SessionManagementDialog({
       queryClient.invalidateQueries({ queryKey: ["auth"] });
       toast.success("Switched to selected account");
       onOpenChange(false);
-      location.reload();
     },
     onError: (error) => {
       toast.error(error.message || "Failed to switch account");
@@ -169,12 +180,20 @@ function SessionManagementDialog({
               <TableRow>
                 <TableHead>User</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead className="w-25">Actions</TableHead>
+                <TableHead className="w-10"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {sessions?.data?.map((s) => (
-                <TableRow key={s.session.id}>
+                <TableRow
+                  key={s.session.id}
+                  className={cn("cursor-pointer", isCurrentSession(s.user.id) && "bg-muted/50")}
+                  onClick={() => {
+                    if (!isCurrentSession(s.user.id)) {
+                      switchSession(s.session.token);
+                    }
+                  }}
+                >
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Avatar size="sm">
@@ -185,34 +204,45 @@ function SessionManagementDialog({
                       {isCurrentSession(s.user.id) && (
                         <CheckIcon className="size-4 text-green-600" />
                       )}
+                      {isSwitching && activeToken === s.session.token && (
+                        <LoaderCircleIcon className="size-4 animate-spin" />
+                      )}
                     </div>
                   </TableCell>
                   <TableCell className="text-muted-foreground">{s.user.email}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      {!isCurrentSession(s.user.id) && (
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          onClick={() => switchSession(s.session.token)}
-                          disabled={isSwitching}
-                        >
-                          {isSwitching && activeToken === s.session.token ? (
-                            <LoaderCircleIcon className="animate-spin" />
-                          ) : (
-                            <CheckIcon />
-                          )}
-                        </Button>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        onClick={() => revokeSession(s.session.token)}
-                        disabled={isRevoking}
+                  <TableCell className="text-center">
+                    <AlertDialog>
+                      <AlertDialogTrigger
+                        render={
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={(e) => e.stopPropagation()}
+                            disabled={isRevoking}
+                          />
+                        }
                       >
                         <TrashIcon className="text-destructive" />
-                      </Button>
-                    </div>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Revoke session?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will log out <strong>{s.user.name}</strong> ({s.user.email}). This
+                            action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            variant="destructive"
+                            onClick={() => revokeSession(s.session.token)}
+                          >
+                            Revoke
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </TableCell>
                 </TableRow>
               ))}
@@ -246,7 +276,6 @@ function SessionManagementDialog({
 
 function UserDetails() {
   const { user } = useAuthSuspense();
-  const queryClient = useQueryClient();
 
   const [dialogOpen, setDialogOpen] = useState(false);
 

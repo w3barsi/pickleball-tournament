@@ -39,7 +39,7 @@ export const Route = createFileRoute("/_auth/app/players")({
 });
 
 function PlayersPage() {
-  const { isAdmin } = useRouteContext({ from: "/_auth/app" });
+  const { data: authUser } = useQuery(convexQuery(api.auth.getCurrentUser, {}));
   const { data: players } = useQuery(convexQuery(api.players.listAll, {}));
   const deletePlayer = useMutation(api.players.remove);
   const [playerToDelete, setPlayerToDelete] = useState<Id<"player"> | null>(null);
@@ -47,6 +47,8 @@ function PlayersPage() {
     id: string;
     name: string;
   } | null>(null);
+
+  const isAdmin = authUser?.role === "admin";
 
   const handleDelete = async () => {
     if (!playerToDelete) return;

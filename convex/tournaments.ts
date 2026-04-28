@@ -48,12 +48,44 @@ async function requireManageTournament(ctx: QueryCtx, tournamentId: Id<"tourname
 
 // ─── Queries ───────────────────────────────────────────────────────────────
 
-// List all tournaments
+// List tournaments accessible by the current user (created by or manager of)
 export const listAll = query({
   args: {},
   handler: async (ctx) => {
-    const tournaments = await ctx.db.query("tournaments").order("desc").take(100);
-    return tournaments;
+    const user = await getAuthUser(ctx);
+    if (!user) return [];
+
+    // Get tournaments created by the user
+    const createdTournaments = await ctx.db
+      .query("tournaments")
+      .withIndex("by_createdBy", (q) => q.eq("createdBy", user._id))
+      .order("desc")
+      .collect();
+
+    // Get tournaments where user is a manager
+    const managers = await ctx.db
+      .query("tournamentManagers")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .collect();
+
+    const managedTournamentIds = new Set(managers.map((m) => m.tournamentId));
+
+    // Fetch managed tournaments that weren't created by this user
+    const managedTournaments: typeof createdTournaments = [];
+    for (const tournamentId of managedTournamentIds) {
+      if (!createdTournaments.some((t) => t._id === tournamentId)) {
+        const tournament = await ctx.db.get(tournamentId);
+        if (tournament) {
+          managedTournaments.push(tournament);
+        }
+      }
+    }
+
+    // Combine and sort by date descending
+    const allTournaments = [...createdTournaments, ...managedTournaments];
+    allTournaments.sort((a, b) => b.date - a.date);
+
+    return allTournaments;
   },
 });
 
@@ -67,16 +99,27 @@ export const get = query({
   },
 });
 
-// Get a single tournament by slug
+// Get a single tournament by slug (only if user has access)
 export const getBySlug = query({
   args: {
     slug: v.string(),
   },
   handler: async (ctx, args) => {
-    return await ctx.db
+    const user = await getAuthUser(ctx);
+    if (!user) return null;
+
+    const tournament = await ctx.db
       .query("tournaments")
       .withIndex("by_slug", (q) => q.eq("slug", args.slug))
       .unique();
+
+    if (!tournament) return null;
+
+    // Check if user has access (created by or is a manager)
+    const hasAccess = await canManageTournament(ctx, tournament._id);
+    if (!hasAccess) return null;
+
+    return tournament;
   },
 });
 

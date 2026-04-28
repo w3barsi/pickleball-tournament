@@ -17,6 +17,7 @@
 ## UI Components
 
 - All UI components use **base-ui** (NOT Radix). Refer to existing components in `src/components/ui/` for prop patterns and usage.
+- DO NOT USE asChild prop! Remember this is base-ui and not Radix, so it uses the "render" prop.
 - Dialogs, popovers, and other overlay components are built on `@base-ui/react` primitives.
 - A `shadcn` skill is available for shadcn/ui component management, debugging, and styling workflows.
 

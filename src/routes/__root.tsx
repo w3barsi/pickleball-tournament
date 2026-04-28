@@ -1,6 +1,9 @@
 import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
 import type { ConvexQueryClient } from "@convex-dev/react-query";
+import { a11yDevtoolsPlugin } from "@tanstack/devtools-a11y/react";
+import { TanStackDevtools } from "@tanstack/react-devtools";
 import { queryOptions, type QueryClient } from "@tanstack/react-query";
+import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools";
 import {
   createRootRouteWithContext,
   HeadContent,
@@ -17,7 +20,7 @@ import { getAuth } from "@/lib/auth/queries";
 
 import appCss from "@/styles.css?url";
 
-const authQueryOptions = queryOptions({
+export const authQueryOptions = queryOptions({
   queryKey: ["auth"],
   queryFn: getAuth,
   staleTime: 5 * 60 * 1000, // 5 minutes
@@ -100,6 +103,19 @@ function RootDocument({ children }: { readonly children: React.ReactNode }) {
           <Toaster richColors />
         </ThemeProvider>
 
+        <TanStackDevtools
+          plugins={[
+            {
+              name: "TanStack Query",
+              render: <ReactQueryDevtoolsPanel />,
+            },
+            {
+              name: "TanStack Router",
+              render: <TanStackRouterDevtoolsPanel />,
+            },
+            a11yDevtoolsPlugin(),
+          ]}
+        />
         <Scripts />
       </body>
     </html>

@@ -48,8 +48,8 @@ export function RequestDeletionDialog({
         form.reset();
         onOpenChange(false);
       } catch (error) {
-        if (error instanceof ConvexError && error.cause === "CONFLICT") {
-          return toast.error(error.message);
+        if (error instanceof ConvexError) {
+          return toast.error(error.message.split("ConvexError:")[1].split("at handler")[0]);
         }
         return toast.error("Failed to create request");
       }
@@ -126,18 +126,14 @@ export function RequestDeletionDialog({
             <Button
               type="button"
               variant="outline"
-              className="flex-1 font-bold"
+              className="flex-1"
               onClick={() => handleOpenChange(false)}
             >
               Cancel
             </Button>
             <form.Subscribe selector={(state) => [state.isSubmitting, state.canSubmit]}>
               {([isSubmitting, canSubmit]) => (
-                <Button
-                  type="submit"
-                  className="flex-1 font-bold"
-                  disabled={isSubmitting || !canSubmit}
-                >
+                <Button type="submit" className="flex-1" disabled={isSubmitting || !canSubmit}>
                   {isSubmitting ? "Submitting..." : "Submit Request"}
                 </Button>
               )}
