@@ -9,6 +9,12 @@ export default defineSchema({
     fullName: v.string(),
     nickname: v.string(),
     photoUrl: v.optional(v.string()),
+    email: v.optional(v.string()),
+    phone: v.optional(v.string()),
+    skillRating: v.optional(v.string()), // e.g., UTPR, DUPR, or self-rated
+    dateOfBirth: v.optional(v.number()), // timestamp
+    dominantHand: v.optional(v.union(v.literal("left"), v.literal("right"))),
+    clubAffiliation: v.optional(v.string()),
     deletedAt: v.optional(v.number()),
   }).index("by_deletedAt", ["deletedAt"]),
 
@@ -28,11 +34,16 @@ export default defineSchema({
   tournaments: defineTable({
     name: v.string(),
     slug: v.string(),
-    date: v.number(),
+    date: v.number(), // Start date
+    endDate: v.optional(v.number()),
     description: v.optional(v.string()),
     organizerName: v.string(),
+    venueName: v.optional(v.string()),
+    venueAddress: v.optional(v.string()),
+    bannerImageUrl: v.optional(v.string()),
+    registrationDeadline: v.optional(v.number()),
+    isPublic: v.optional(v.boolean()),
     status: v.union(v.literal("upcoming"), v.literal("inProgress"), v.literal("completed")),
-    createdAt: v.number(),
     createdBy: v.string(),
     deletedAt: v.optional(v.number()),
   })
@@ -56,7 +67,6 @@ export default defineSchema({
     tournamentId: v.id("tournaments"),
     name: v.string(),
     type: v.union(v.literal("singles"), v.literal("doubles")),
-    format: v.union(v.literal("roundRobin"), v.literal("singleElimination")),
     rating: v.union(v.literal("beginner"), v.literal("intermediate"), v.literal("advanced")),
     category: v.union(
       v.literal("womens"),
@@ -65,7 +75,6 @@ export default defineSchema({
       v.literal("open"),
     ),
     maxParticipants: v.optional(v.number()),
-    createdAt: v.number(),
     deletedAt: v.optional(v.number()),
   })
     .index("by_tournament", ["tournamentId"])
@@ -77,9 +86,17 @@ export default defineSchema({
     playerId: v.optional(v.id("player")),
     pairId: v.optional(v.id("playerPair")),
     status: v.union(v.literal("active"), v.literal("eliminated"), v.literal("withdrawn")),
+    registrationStatus: v.union(
+      v.literal("pending"),
+      v.literal("confirmed"),
+      v.literal("waitlisted"),
+      v.literal("checkedIn"),
+    ),
+    checkedInAt: v.optional(v.number()),
+    waitlistPosition: v.optional(v.number()),
+    entryFeePaid: v.optional(v.boolean()),
     wins: v.number(),
     losses: v.number(),
-    createdAt: v.number(),
     deletedAt: v.optional(v.number()),
   })
     .index("by_category", ["categoryId"])
@@ -87,14 +104,24 @@ export default defineSchema({
     .index("by_pair", ["pairId"])
     .index("by_deletedAt", ["deletedAt"]),
 
+  // ========== COURTS ==========
+  courts: defineTable({
+    tournamentId: v.id("tournaments"),
+    name: v.string(),
+    number: v.optional(v.number()),
+    deletedAt: v.optional(v.number()),
+  })
+    .index("by_tournament", ["tournamentId"])
+    .index("by_deletedAt", ["deletedAt"]),
+
   // Brackets = group stages within a category
   brackets: defineTable({
     categoryId: v.id("categories"),
     name: v.string(),
     stage: v.number(),
+    format: v.union(v.literal("roundRobin"), v.literal("singleElimination")),
     status: v.union(v.literal("upcoming"), v.literal("inProgress"), v.literal("completed")),
     maxParticipants: v.optional(v.number()),
-    createdAt: v.number(),
     deletedAt: v.optional(v.number()),
   })
     .index("by_category", ["categoryId"])
@@ -106,7 +133,6 @@ export default defineSchema({
     bracketId: v.id("brackets"),
     categoryParticipantId: v.id("categoryParticipants"),
     status: v.union(v.literal("active"), v.literal("eliminated"), v.literal("withdrawn")),
-    createdAt: v.number(),
     deletedAt: v.optional(v.number()),
   })
     .index("by_bracket", ["bracketId"])
@@ -115,16 +141,11 @@ export default defineSchema({
 
   // ========== MATCHES ==========
   matches: defineTable({
+    tournamentId: v.id("tournaments"),
     bracketId: v.id("brackets"),
     categoryId: v.id("categories"),
     participant1Id: v.id("categoryParticipants"),
     participant2Id: v.id("categoryParticipants"),
-    team1Score: v.number(),
-    team2Score: v.number(),
-    servingTeam: v.union(v.literal(1), v.literal(2)),
-    serverNumber: v.union(v.literal(1), v.literal(2)),
-    isFirstServe: v.boolean(),
-    targetScore: v.number(),
     status: v.union(
       v.literal("scheduled"),
       v.literal("inProgress"),
@@ -133,11 +154,26 @@ export default defineSchema({
     ),
     winnerParticipantId: v.optional(v.id("categoryParticipants")),
     isLive: v.optional(v.boolean()),
-    startedAt: v.number(),
+    startedAt: v.optional(v.number()),
     completedAt: v.optional(v.number()),
     lastUpdatedAt: v.number(),
+    // Scheduling & officiating
+    courtNumber: v.optional(v.number()),
+    scheduledAt: v.optional(v.number()),
+    refereeName: v.optional(v.string()),
+    matchNotes: v.optional(v.string()),
+    forfeitedBy: v.optional(v.union(v.literal(1), v.literal(2))),
+    // Bracket progression (to be implemented later)
+    nextMatchId: v.optional(v.id("matches")),
+    nextMatchPosition: v.optional(v.union(v.literal(1), v.literal(2))),
+    isBye: v.optional(v.boolean()),
+    roundNumber: v.optional(v.number()),
+    matchOrder: v.optional(v.number()),
+    numberOfSets: v.number(),
+    pointsPerGame: v.number(),
     deletedAt: v.optional(v.number()),
   })
+    .index("by_tournament", ["tournamentId"])
     .index("by_bracket", ["bracketId"])
     .index("by_category", ["categoryId"])
     .index("by_status", ["status"])
@@ -146,9 +182,26 @@ export default defineSchema({
     .index("by_participant2", ["participant2Id"])
     .index("by_deletedAt", ["deletedAt"]),
 
+  // ========== MATCH SETS ==========
+  // A match can consist of multiple sets (games). This table tracks each set.
+  matchSets: defineTable({
+    matchId: v.id("matches"),
+    setNumber: v.number(),
+    team1Score: v.number(),
+    team2Score: v.number(),
+    targetScore: v.number(),
+    winnerTeam: v.optional(v.union(v.literal(1), v.literal(2))),
+    status: v.union(v.literal("upcoming"), v.literal("inProgress"), v.literal("completed")),
+    completedAt: v.optional(v.number()),
+    deletedAt: v.optional(v.number()),
+  })
+    .index("by_match", ["matchId"])
+    .index("by_match_and_set_number", ["matchId", "setNumber"])
+    .index("by_deletedAt", ["deletedAt"]),
+
   // ========== POINTS ==========
   pickleballPoints: defineTable({
-    matchId: v.id("matches"),
+    matchSetId: v.id("matchSets"),
     team1Score: v.number(),
     team2Score: v.number(),
     servingTeam: v.union(v.literal(1), v.literal(2)),
@@ -159,8 +212,8 @@ export default defineSchema({
     timestamp: v.number(),
     deletedAt: v.optional(v.number()),
   })
-    .index("by_match", ["matchId"])
-    .index("by_match_and_sequence", ["matchId", "sequenceNumber"])
+    .index("by_match_set", ["matchSetId"])
+    .index("by_match_set_and_sequence", ["matchSetId", "sequenceNumber"])
     .index("by_deletedAt", ["deletedAt"]),
 
   // ========== DELETION REQUESTS ==========

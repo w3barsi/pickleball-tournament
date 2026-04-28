@@ -140,7 +140,8 @@ export const createMatch = mutation({
     bracketId: v.id("brackets"),
     participant1Id: v.id("categoryParticipants"),
     participant2Id: v.id("categoryParticipants"),
-    targetScore: v.optional(v.number()),
+    numberOfSets: v.optional(v.number()),
+    pointsPerGame: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     // Get bracket to find category
@@ -155,16 +156,12 @@ export const createMatch = mutation({
       categoryId: bracket.categoryId,
       participant1Id: args.participant1Id,
       participant2Id: args.participant2Id,
-      team1Score: 0,
-      team2Score: 0,
-      servingTeam: 1,
-      serverNumber: 2, // Start as server 2 (first serve rule)
-      isFirstServe: true,
-      targetScore: args.targetScore ?? 11,
       status: "scheduled",
       isLive: false,
       startedAt: now,
       lastUpdatedAt: now,
+      numberOfSets: args.numberOfSets ?? 3,
+      pointsPerGame: args.pointsPerGame ?? 11,
     });
 
     return matchId;

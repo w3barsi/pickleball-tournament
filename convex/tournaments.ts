@@ -173,10 +173,15 @@ export const listManagers = query({
 export const create = mutation({
   args: {
     name: v.string(),
+    slug: v.string(),
     date: v.number(),
+    endDate: v.optional(v.number()),
     description: v.optional(v.string()),
     organizerName: v.string(),
-    slug: v.string(),
+    venueName: v.optional(v.string()),
+    venueAddress: v.optional(v.string()),
+    registrationDeadline: v.optional(v.number()),
+    isPublic: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const user = await requireAuthUser(ctx);
@@ -194,12 +199,16 @@ export const create = mutation({
     const now = Date.now();
     const tournamentId = await ctx.db.insert("tournaments", {
       name: args.name,
+      slug: args.slug,
       date: args.date,
+      endDate: args.endDate,
       description: args.description,
       organizerName: args.organizerName,
+      venueName: args.venueName,
+      venueAddress: args.venueAddress,
+      registrationDeadline: args.registrationDeadline,
+      isPublic: args.isPublic,
       status: "upcoming",
-      createdAt: now,
-      slug: args.slug,
       createdBy: user._id,
     });
 
@@ -266,14 +275,23 @@ export const remove = mutation({
           .collect();
 
         for (const match of matches) {
-          // Delete all points for this match
-          const points = await ctx.db
-            .query("pickleballPoints")
+          // Delete all match sets (and their points) for this match
+          const matchSets = await ctx.db
+            .query("matchSets")
             .withIndex("by_match", (q) => q.eq("matchId", match._id))
             .collect();
 
-          for (const point of points) {
-            await ctx.db.delete(point._id);
+          for (const matchSet of matchSets) {
+            const points = await ctx.db
+              .query("pickleballPoints")
+              .withIndex("by_match_set", (q) => q.eq("matchSetId", matchSet._id))
+              .collect();
+
+            for (const point of points) {
+              await ctx.db.delete(point._id);
+            }
+
+            await ctx.db.delete(matchSet._id);
           }
 
           await ctx.db.delete(match._id);
@@ -303,6 +321,16 @@ export const remove = mutation({
       }
 
       await ctx.db.delete(category._id);
+    }
+
+    // Delete all courts
+    const courts = await ctx.db
+      .query("courts")
+      .withIndex("by_tournament", (q) => q.eq("tournamentId", args.tournamentId))
+      .collect();
+
+    for (const court of courts) {
+      await ctx.db.delete(court._id);
     }
 
     // Delete all managers

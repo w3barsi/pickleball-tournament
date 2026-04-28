@@ -9,6 +9,7 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as categories from "../categories.js";
 import type * as deletionRequests from "../deletionRequests.js";
 import type * as http from "../http.js";
 import type * as playerPairs from "../playerPairs.js";
@@ -26,6 +27,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  categories: typeof categories;
   deletionRequests: typeof deletionRequests;
   http: typeof http;
   playerPairs: typeof playerPairs;
