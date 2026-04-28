@@ -39,8 +39,13 @@ function TournamentsPage() {
     name: string;
     slug: string;
     date: number;
+    endDate?: number;
     description?: string;
     organizerName: string;
+    venueName?: string;
+    venueAddress?: string;
+    registrationDeadline?: number;
+    isPublic?: boolean;
   }) => {
     try {
       await createTournament(data);

@@ -13,6 +13,14 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface CreateTournamentDialogProps {
   open: boolean;
@@ -21,8 +29,13 @@ interface CreateTournamentDialogProps {
     name: string;
     slug: string;
     date: number;
+    endDate?: number;
     description?: string;
     organizerName: string;
+    venueName?: string;
+    venueAddress?: string;
+    registrationDeadline?: number;
+    isPublic?: boolean;
   }) => Promise<{ error?: string } | void>;
 }
 
@@ -35,8 +48,13 @@ export function CreateTournamentDialog({
   const [slug, setSlug] = useState("");
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [date, setDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [description, setDescription] = useState("");
   const [organizerName, setOrganizerName] = useState("");
+  const [venueName, setVenueName] = useState("");
+  const [venueAddress, setVenueAddress] = useState("");
+  const [registrationDeadline, setRegistrationDeadline] = useState("");
+  const [isPublic, setIsPublic] = useState<string>("true");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,6 +77,21 @@ export function CreateTournamentDialog({
     setSlug(e.target.value);
   };
 
+  const resetForm = () => {
+    setName("");
+    setSlug("");
+    setSlugManuallyEdited(false);
+    setDate("");
+    setEndDate("");
+    setDescription("");
+    setOrganizerName("");
+    setVenueName("");
+    setVenueAddress("");
+    setRegistrationDeadline("");
+    setIsPublic("true");
+    setError(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!name.trim() || !date || !organizerName.trim() || !slug.trim()) return;
@@ -70,8 +103,15 @@ export function CreateTournamentDialog({
       name: name.trim(),
       slug: slug.trim(),
       date: new Date(date).getTime(),
+      endDate: endDate ? new Date(endDate).getTime() : undefined,
       description: description.trim() || undefined,
       organizerName: organizerName.trim(),
+      venueName: venueName.trim() || undefined,
+      venueAddress: venueAddress.trim() || undefined,
+      registrationDeadline: registrationDeadline
+        ? new Date(registrationDeadline).getTime()
+        : undefined,
+      isPublic: isPublic === "true",
     });
 
     setIsSubmitting(false);
@@ -81,26 +121,13 @@ export function CreateTournamentDialog({
       return;
     }
 
-    // Reset form on success
-    setName("");
-    setSlug("");
-    setSlugManuallyEdited(false);
-    setDate("");
-    setDescription("");
-    setOrganizerName("");
+    resetForm();
     onOpenChange(false);
   };
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {
-      // Reset form when closing
-      setName("");
-      setSlug("");
-      setSlugManuallyEdited(false);
-      setDate("");
-      setDescription("");
-      setOrganizerName("");
-      setError(null);
+      resetForm();
     }
     onOpenChange(newOpen);
   };
@@ -115,16 +142,17 @@ export function CreateTournamentDialog({
           </Button>
         }
       />
-      <DialogContent>
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Create Tournament</DialogTitle>
           <DialogDescription>
-            Set up a new pickleball tournament with date and organizer details.
+            Set up a new pickleball tournament with date, venue, and organizer details.
           </DialogDescription>
         </DialogHeader>
 
         <form id="create-tournament" onSubmit={handleSubmit}>
           <div className="space-y-4">
+            {/* Name */}
             <div className="space-y-2">
               <Label htmlFor="name">Tournament Name *</Label>
               <Input
@@ -136,6 +164,7 @@ export function CreateTournamentDialog({
               />
             </div>
 
+            {/* Slug */}
             <div className="space-y-2">
               <Label htmlFor="slug">
                 URL Slug *
@@ -155,9 +184,10 @@ export function CreateTournamentDialog({
               </p>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="date">Date *</Label>
-              <div className="relative">
+            {/* Dates */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="date">Start Date *</Label>
                 <Input
                   id="date"
                   type="date"
@@ -166,8 +196,18 @@ export function CreateTournamentDialog({
                   required
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="endDate">End Date</Label>
+                <Input
+                  id="endDate"
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+              </div>
             </div>
 
+            {/* Organizer */}
             <div className="space-y-2">
               <Label htmlFor="organizer">Organizer Name *</Label>
               <Input
@@ -180,6 +220,58 @@ export function CreateTournamentDialog({
               />
             </div>
 
+            {/* Venue */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="venueName">Venue Name</Label>
+                <Input
+                  id="venueName"
+                  value={venueName}
+                  onChange={(e) => setVenueName(e.target.value)}
+                  placeholder="e.g., City Pickleball Center"
+                />
+              </div>
+            </div>
+
+            {/* Venue Address */}
+            <div className="space-y-2">
+              <Label htmlFor="venueAddress">Venue Address</Label>
+              <Input
+                id="venueAddress"
+                value={venueAddress}
+                onChange={(e) => setVenueAddress(e.target.value)}
+                placeholder="e.g., 123 Main St, City, State"
+              />
+            </div>
+
+            {/* Registration Deadline + Visibility */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="registrationDeadline">Registration Deadline</Label>
+                <Input
+                  id="registrationDeadline"
+                  type="date"
+                  value={registrationDeadline}
+                  onChange={(e) => setRegistrationDeadline(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Visibility</Label>
+                <Select value={isPublic} onValueChange={setIsPublic}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value="true">Public</SelectItem>
+                      <SelectItem value="false">Private</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Description */}
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
               <Input
