@@ -1,3 +1,4 @@
+import { useMatch } from "@tanstack/react-router";
 import { HomeIcon, TrophyIcon, UserPlusIcon, UsersIcon } from "lucide-react";
 
 import { SidebarGroup, SidebarGroupLabel, SidebarMenu } from "@/components/ui/sidebar";
@@ -5,9 +6,15 @@ import { useAuthSuspense } from "@/lib/auth/hooks";
 import { cn } from "@/lib/utils";
 
 import { BaseSidebar, SidebarMenuLinkItem } from "../sidebar/base-sidebar";
+import { TournamentSidebar } from "../tournaments/tournament-sidebar";
 
 export function AppSidebar() {
   const { isAdmin } = useAuthSuspense();
+  const tournamentMatch = useMatch({
+    from: "/_auth/app/tournaments/$slug",
+    shouldThrow: false,
+  });
+  const isOnTournamentPage = !!tournamentMatch;
 
   return (
     <BaseSidebar
@@ -53,6 +60,8 @@ export function AppSidebar() {
           />
         </SidebarMenu>
       </SidebarGroup>
+
+      {isOnTournamentPage && <TournamentSidebar />}
     </BaseSidebar>
   );
 }
