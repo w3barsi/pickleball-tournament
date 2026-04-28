@@ -30,6 +30,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useAuthSuspense } from "@/lib/auth/hooks";
 
 export const Route = createFileRoute("/_auth/app/playerPairs")({
   component: PlayerPairsPage,
@@ -39,7 +40,6 @@ export const Route = createFileRoute("/_auth/app/playerPairs")({
 });
 
 function PlayerPairsPage() {
-  const { isAdmin } = useRouteContext({ from: "/_auth/app" });
   const { data: pairs } = useQuery(convexQuery(api.playerPairs.listAll, {}));
   const deletePair = useMutation(api.playerPairs.remove);
   const [pairToDelete, setPairToDelete] = useState<Id<"playerPair"> | null>(null);
@@ -47,6 +47,8 @@ function PlayerPairsPage() {
     id: string;
     name: string;
   } | null>(null);
+
+  const { user, isAdmin } = useAuthSuspense();
 
   const handleDelete = async () => {
     if (!pairToDelete) return;

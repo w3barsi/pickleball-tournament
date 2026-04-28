@@ -13,5 +13,5 @@ export function useAuth() {
 
 export function useAuthSuspense() {
   const { data: user } = useSuspenseQuery(convexQuery(api.auth.getCurrentUser, {}));
-  return { user };
+  return { user, isAdmin: user?.role === "admin" };
 }

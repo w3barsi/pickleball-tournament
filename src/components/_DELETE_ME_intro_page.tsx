@@ -173,7 +173,7 @@ export function IntroPageDeleteMe() {
 }
 
 function UserAction() {
-  const { data: user } = useSuspenseQuery(convexQuery(api.auth.getCurrentUser, {}));
+  const { user } = useAuthSuspense();
 
   return user ? (
     <section className="mb-20 flex flex-col items-center space-y-1.5">

@@ -1,5 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRouteContext } from "@tanstack/react-router";
 import {
   CheckIcon,
   LoaderCircleIcon,
@@ -34,13 +33,8 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -326,7 +320,8 @@ function UserDetails() {
 }
 
 export function AppSidebar() {
-  const { isAdmin } = useRouteContext({ from: "/_auth" });
+  const { isAdmin } = useAuthSuspense();
+
   return (
     <Sidebar variant="inset">
       <SidebarHeader className="flex h-14 items-center justify-center border-b border-sidebar-border px-4">
