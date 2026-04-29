@@ -16,13 +16,123 @@ import { useState } from "react";
 
 import { HeaderCard, HeaderCardDescription, HeaderCardHeading } from "@/components/header-card";
 import { CreateTournamentDialog } from "@/components/tournaments/create-tournament-dialog";
-import { DeleteTournamentAlertDialog } from "@/components/tournaments/delete-tournament-alert-dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 
 export const Route = createFileRoute("/_auth/app/tournaments/")({
   component: TournamentsPage,
 });
+
+function getStatusBadge(status: string) {
+  switch (status) {
+    case "completed":
+      return (
+        <Badge className="bg-slate-50 font-normal text-slate-600 hover:bg-slate-50">
+          Completed
+        </Badge>
+      );
+    case "inProgress":
+      return (
+        <Badge className="bg-blue-50 font-normal text-blue-600 hover:bg-blue-50">In Progress</Badge>
+      );
+    default:
+      return (
+        <Badge className="bg-green-50 font-normal text-green-600 hover:bg-green-50">Upcoming</Badge>
+      );
+  }
+}
+
+function TournamentCard({
+  tournament,
+  deleteTournament,
+  formatDate,
+}: {
+  tournament: {
+    _id: Id<"tournaments">;
+    name: string;
+    slug: string;
+    status: string;
+    date: number;
+    organizerName: string;
+    description?: string;
+  };
+  deleteTournament: (args: { tournamentId: Id<"tournaments"> }) => void;
+  formatDate: (timestamp: number) => string;
+}) {
+  return (
+    <Link to="/app/tournaments/$slug" params={{ slug: tournament.slug }}>
+      <Card className="group hover:-translate-y-0.2 overflow-hidden transition-all duration-300 hover:shadow">
+        <CardContent className="">
+          <div className="flex items-center justify-between pb-2">
+            {getStatusBadge(tournament.status)}
+            <AlertDialog>
+              <AlertDialogTrigger
+                render={
+                  <Button variant="destructive" size="icon" onClick={(e) => e.stopPropagation()} />
+                }
+              >
+                <Trash2Icon className="size-4" />
+              </AlertDialogTrigger>
+              <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Tournament</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete{" "}
+                    <span className="font-semibold">{tournament.name}</span>? This action cannot be
+                    undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    variant="destructive"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteTournament({ tournamentId: tournament._id });
+                    }}
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+
+          <h3 className="group-hover:text-tournament-blue mb-4 text-lg font-medium tracking-tight text-foreground transition-colors">
+            {tournament.name}
+          </h3>
+          <div className="space-y-2.5 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2.5">
+              <CalendarIcon className="size-4 text-muted-foreground/70" />
+              <span>{formatDate(tournament.date)}</span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <UsersIcon className="size-4 text-muted-foreground/70" />
+              <span>Organizer: {tournament.organizerName}</span>
+            </div>
+            {tournament.description && <p className="line-clamp-2">{tournament.description}</p>}
+          </div>
+        </CardContent>
+        <CardFooter className="gap-1">
+          View details
+          <ChevronRightIcon className="size-4 transition-transform group-hover:translate-x-1" />
+        </CardFooter>
+      </Card>
+    </Link>
+  );
+}
 
 function TournamentsPage() {
   const { data: tournaments } = useQuery(convexQuery(api.tournaments.listAll, {}));
@@ -30,10 +140,6 @@ function TournamentsPage() {
   const deleteTournament = useMutation(api.tournaments.remove);
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [tournamentToDelete, setTournamentToDelete] = useState<{
-    id: Id<"tournaments">;
-    name: string;
-  } | null>(null);
 
   const handleCreate = async (data: {
     name: string;
@@ -58,41 +164,6 @@ function TournamentsPage() {
         };
       }
       return { error: `Failed to create tournament: ${message}` };
-    }
-  };
-
-  const handleDelete = async () => {
-    if (tournamentToDelete) {
-      await deleteTournament({ tournamentId: tournamentToDelete.id });
-      setTournamentToDelete(null);
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "completed":
-        return (
-          <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-white bg-slate-500 px-3 py-1 text-xs font-black tracking-wider text-white uppercase">
-            <TrophyIcon className="size-3" />
-            Completed
-          </span>
-        );
-      case "inProgress":
-        return (
-          <span className="border-tournament-lime bg-tournament-lime text-tournament-blue inline-flex items-center gap-1.5 rounded-full border-2 px-3 py-1 text-xs font-black tracking-wider uppercase">
-            <span className="relative flex h-2 w-2">
-              <span className="bg-tournament-blue absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" />
-              <span className="bg-tournament-blue relative inline-flex h-2 w-2 rounded-full" />
-            </span>
-            In Progress
-          </span>
-        );
-      default:
-        return (
-          <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-neutral-300 bg-neutral-100 px-3 py-1 text-xs font-black tracking-wider text-neutral-600 uppercase">
-            Upcoming
-          </span>
-        );
     }
   };
 
@@ -151,76 +222,15 @@ function TournamentsPage() {
       ) : (
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {tournaments.map((tournament) => (
-            <Card
+            <TournamentCard
               key={tournament._id}
-              className="group overflow-hidden transition-all duration-300 hover:shadow-xl"
-            >
-              {/* Card Header Bar */}
-              <div className="bg-tournament-blue flex items-center justify-between px-5 py-3">
-                {getStatusBadge(tournament.status)}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="rounded-full hover:bg-red-500 hover:text-white"
-                  onClick={() =>
-                    setTournamentToDelete({
-                      id: tournament._id,
-                      name: tournament.name,
-                    })
-                  }
-                >
-                  <Trash2Icon className="size-4" />
-                </Button>
-              </div>
-
-              <CardContent className="p-5">
-                <Link
-                  to="/app/tournaments/$slug"
-                  params={{ slug: tournament.slug }}
-                  className="block"
-                >
-                  {/* Tournament Name */}
-                  <h3 className="text-tournament-blue group-hover:text-tournament-blue/80 mb-3 text-xl font-black tracking-tight uppercase transition-colors">
-                    {tournament.name}
-                  </h3>
-
-                  {/* Details */}
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <CalendarIcon className="text-tournament-lime size-4" />
-                      <span className="font-semibold">{formatDate(tournament.date)}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <UsersIcon className="text-tournament-lime size-4" />
-                      <span className="font-semibold">Organizer: {tournament.organizerName}</span>
-                    </div>
-                  </div>
-
-                  {tournament.description && (
-                    <p className="mt-4 line-clamp-2 text-sm text-muted-foreground">
-                      {tournament.description}
-                    </p>
-                  )}
-
-                  {/* Action Hint */}
-                  <div className="text-tournament-blue mt-5 flex items-center gap-2 text-sm font-black tracking-wide uppercase">
-                    VIEW DETAILS
-                    <ChevronRightIcon className="size-4 transition-transform group-hover:translate-x-1" />
-                  </div>
-                </Link>
-              </CardContent>
-            </Card>
+              tournament={tournament}
+              deleteTournament={deleteTournament}
+              formatDate={formatDate}
+            />
           ))}
         </div>
       )}
-
-      {/* Delete Confirmation Dialog */}
-      <DeleteTournamentAlertDialog
-        open={!!tournamentToDelete}
-        onOpenChange={() => setTournamentToDelete(null)}
-        onConfirm={handleDelete}
-        tournamentName={tournamentToDelete?.name}
-      />
     </div>
   );
 }
