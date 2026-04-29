@@ -73,7 +73,7 @@ function TournamentCard({
 }) {
   return (
     <Link to="/app/tournaments/$slug" params={{ slug: tournament.slug }}>
-      <Card className="group hover:-translate-y-0.2 overflow-hidden transition-all duration-300 hover:shadow">
+      <Card className="group hover:-translate-y-0.2 overflow-hidden transition-all duration-300 hover:shadow-sm">
         <CardContent className="">
           <div className="flex items-center justify-between pb-2">
             {getStatusBadge(tournament.status)}
