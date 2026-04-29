@@ -13,7 +13,7 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
 interface BracketItem {
@@ -125,34 +125,33 @@ export function BracketList({
                       <span>{bracket.matchCount ?? 0} matches</span>
                     </div>
                   </div>
-
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      render={
-                        <Link
-                          to="/app/tournaments/$slug/categories/$categoryId/$bracketId"
-                          params={{ slug, categoryId, bracketId: bracket._id }}
-                        >
-                          View Bracket
-                          <ArrowRightIcon className="ml-1 size-3" />
-                        </Link>
-                      }
-                    />
-                    {canEdit && unassignedCount > 0 && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onAutoAssign(bracket._id)}
-                        title="Auto-assign remaining participants"
-                      >
-                        <ShuffleIcon className="size-4" />
-                      </Button>
-                    )}
-                  </div>
                 </CardContent>
+                <CardFooter>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    render={
+                      <Link
+                        to="/app/tournaments/$slug/categories/$categoryId/$bracketId"
+                        params={{ slug, categoryId, bracketId: bracket._id }}
+                      >
+                        View Bracket
+                        <ArrowRightIcon className="ml-1 size-3" />
+                      </Link>
+                    }
+                  />
+                  {canEdit && unassignedCount > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onAutoAssign(bracket._id)}
+                      title="Auto-assign remaining participants"
+                    >
+                      <ShuffleIcon className="size-4" />
+                    </Button>
+                  )}
+                </CardFooter>
               </Card>
             ))}
           </div>
