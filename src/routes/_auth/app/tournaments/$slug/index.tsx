@@ -3,10 +3,11 @@ import { api } from "@convex/_generated/api.js";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
-import { Loader2Icon, PlusIcon, SettingsIcon, Trash2Icon, UserIcon, UsersIcon } from "lucide-react";
+import { Loader2Icon, SettingsIcon, Trash2Icon, UserIcon, UsersIcon } from "lucide-react";
 import { useState } from "react";
 
 import { HeaderCard, HeaderCardDescription, HeaderCardHeading } from "@/components/header-card";
+import { InviteManagerForm } from "@/components/tournaments/invite-manager-form";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -16,7 +17,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth/hooks";
 
 export const Route = createFileRoute("/_auth/app/tournaments/$slug/")({
@@ -42,12 +42,8 @@ function TournamentDetailPage() {
     convexQuery(api.tournaments.canEdit, tournament ? { tournamentId: tournament._id } : "skip"),
   );
 
-  const inviteManager = useMutation(api.tournaments.inviteManager);
   const removeManager = useMutation(api.tournaments.removeManager);
 
-  const [inviteUserId, setInviteUserId] = useState("");
-  const [isInviting, setIsInviting] = useState(false);
-  const [inviteError, setInviteError] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   if (!tournament) {
@@ -58,27 +54,6 @@ function TournamentDetailPage() {
       </div>
     );
   }
-
-  const handleInvite = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!inviteUserId.trim() || !canEdit) return;
-
-    setIsInviting(true);
-    setInviteError(null);
-
-    try {
-      await inviteManager({
-        tournamentId: tournament._id,
-        userId: inviteUserId.trim(),
-      });
-      setInviteUserId("");
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to invite manager";
-      setInviteError(message);
-    } finally {
-      setIsInviting(false);
-    }
-  };
 
   const handleRemoveManager = async (targetUserId: string) => {
     if (!canEdit) return;
@@ -154,29 +129,7 @@ function TournamentDetailPage() {
                 </div>
 
                 {/* Invite Form */}
-                <form onSubmit={handleInvite} className="flex items-end gap-2">
-                  <div className="flex-1 space-y-2">
-                    <label htmlFor="invite-user-id" className="text-sm font-medium">
-                      Invite Manager
-                    </label>
-                    <Input
-                      id="invite-user-id"
-                      value={inviteUserId}
-                      onChange={(e) => setInviteUserId(e.target.value)}
-                      placeholder="Paste user's Convex ID..."
-                      disabled={isInviting}
-                    />
-                  </div>
-                  <Button type="submit" disabled={isInviting || !inviteUserId.trim()}>
-                    {isInviting ? (
-                      <Loader2Icon className="size-4 animate-spin" />
-                    ) : (
-                      <PlusIcon className="size-4" />
-                    )}
-                    Invite
-                  </Button>
-                </form>
-                {inviteError && <p className="text-sm font-semibold text-red-600">{inviteError}</p>}
+                <InviteManagerForm tournamentId={tournament._id} />
               </div>
             </DialogContent>
           </Dialog>
