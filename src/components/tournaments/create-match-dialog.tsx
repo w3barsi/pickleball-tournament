@@ -51,13 +51,20 @@ interface CreateMatchDialogProps {
   categoryType: "singles" | "doubles";
 }
 
-function getParticipantName(bp: BracketParticipant, categoryType: "singles" | "doubles"): string {
+function getParticipantName(bp: BracketParticipant, categoryType: "singles" | "doubles") {
   const cp = bp.categoryParticipant;
   if (categoryType === "singles") {
-    return cp.player?.fullName ?? "Unknown";
+    return <p>cp.player?.fullName ?? "Unknown"</p>;
   }
-  return (
-    cp.pair?.teamName ??
+  return cp.pair?.teamName ? (
+    <p>
+      {cp.pair.teamName}{" "}
+      <span className="text-xs text-muted-foreground">
+        {" "}
+        {`(${cp.playerOne?.fullName ?? "Unknown"} / ${cp.playerTwo?.fullName ?? "Unknown"})`}
+      </span>
+    </p>
+  ) : (
     `${cp.playerOne?.fullName ?? "Unknown"} / ${cp.playerTwo?.fullName ?? "Unknown"}`
   );
 }
