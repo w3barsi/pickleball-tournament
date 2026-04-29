@@ -99,41 +99,6 @@ export function CategoryCard({ category, slug, canEdit }: CategoryCardProps) {
         <CardContent>
           <div className="flex items-center justify-between pb-2">
             {getRatingBadge(category.rating)}
-            {canEdit && (
-              <AlertDialog>
-                <AlertDialogTrigger
-                  render={
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  }
-                >
-                  <Trash2Icon className="size-4" />
-                </AlertDialogTrigger>
-                <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Category</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Are you sure you want to delete this category? This action cannot be undone.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      variant="destructive"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteCategory({ categoryId: category._id });
-                      }}
-                    >
-                      Delete
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            )}
           </div>
 
           <h3 className="group-hover:text-tournament-blue mb-4 text-lg font-medium tracking-tight text-foreground transition-colors">

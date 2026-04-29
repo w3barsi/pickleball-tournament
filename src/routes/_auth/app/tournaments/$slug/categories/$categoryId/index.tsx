@@ -66,29 +66,11 @@ function CategoryDetailPage() {
     }),
   );
 
-  const updateCategory = useMutation(api.categories.update);
   const unregister = useMutation(api.categoryParticipants.unregister);
   const createBracket = useMutation(api.brackets.create);
   const autoAssign = useMutation(api.brackets.autoAssignRemaining);
 
-  const [isEditOpen, setIsEditOpen] = useState(false);
   const [isCreateBracketOpen, setIsCreateBracketOpen] = useState(false);
-
-  const handleEdit = async (data: {
-    name: string;
-    type: "singles" | "doubles";
-    rating: "beginner" | "intermediate" | "advanced";
-    category: "womens" | "mens" | "mixed" | "open";
-    maxParticipants?: number;
-  }) => {
-    try {
-      await updateCategory({ categoryId: categoryId as Id<"categories">, ...data });
-      return {};
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      return { error: `Failed to update category: ${message}` };
-    }
-  };
 
   const handleRemove = async (participantId: Id<"categoryParticipants">) => {
     try {
@@ -209,20 +191,7 @@ function CategoryDetailPage() {
             {getTypeLabel(category.type)}
           </HeaderCardDescription>
         </div>
-        {canEdit && (
-          <EditCategoryDialog
-            open={isEditOpen}
-            onOpenChange={setIsEditOpen}
-            onEdit={handleEdit}
-            defaultValues={{
-              name: category.name,
-              type: category.type,
-              rating: category.rating,
-              category: category.category,
-              maxParticipants: category.maxParticipants ?? undefined,
-            }}
-          />
-        )}
+        {canEdit && <EditCategoryDialog category={category} tournamentSlug={slug} />}
       </HeaderCard>
 
       {/* Category Info Cards */}

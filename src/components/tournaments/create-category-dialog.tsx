@@ -257,14 +257,10 @@ export function CreateCategoryDialog({ open, onOpenChange, onCreate }: CreateCat
           <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
             Cancel
           </Button>
-          <form.Subscribe selector={(state) => state.values.name}>
-            {(name) => (
-              <Button
-                form="create-category"
-                type="submit"
-                disabled={form.state.isSubmitting || !name.trim()}
-              >
-                {form.state.isSubmitting ? (
+          <form.Subscribe selector={(state) => [state.values.name, state.isSubmitting] as const}>
+            {([name, isSubmitting]) => (
+              <Button form="create-category" type="submit" disabled={isSubmitting || !name.trim()}>
+                {isSubmitting ? (
                   <>
                     <Loader2Icon className="size-4 animate-spin" />
                     Creating...
