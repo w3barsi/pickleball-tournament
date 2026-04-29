@@ -95,7 +95,7 @@ export function CategoryCard({ category, slug, canEdit }: CategoryCardProps) {
       to="/app/tournaments/$slug/categories/$categoryId"
       params={{ slug, categoryId: category._id }}
     >
-      <Card className="group hover:-translate-y-0.2 overflow-hidden transition-all duration-300 hover:shadow">
+      <Card className="group hover:-translate-y-0.2 h-full justify-between overflow-hidden transition-all duration-300 hover:shadow">
         <CardContent>
           <div className="flex items-center justify-between pb-2">
             {getRatingBadge(category.rating)}
