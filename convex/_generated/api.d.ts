@@ -9,9 +9,12 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as brackets from "../brackets.js";
 import type * as categories from "../categories.js";
+import type * as categoryParticipants from "../categoryParticipants.js";
 import type * as deletionRequests from "../deletionRequests.js";
 import type * as http from "../http.js";
+import type * as matches from "../matches.js";
 import type * as playerPairs from "../playerPairs.js";
 import type * as players from "../players.js";
 import type * as scoring from "../scoring.js";
@@ -27,9 +30,12 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  brackets: typeof brackets;
   categories: typeof categories;
+  categoryParticipants: typeof categoryParticipants;
   deletionRequests: typeof deletionRequests;
   http: typeof http;
+  matches: typeof matches;
   playerPairs: typeof playerPairs;
   players: typeof players;
   scoring: typeof scoring;

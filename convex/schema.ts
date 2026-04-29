@@ -86,15 +86,7 @@ export default defineSchema({
     playerId: v.optional(v.id("player")),
     pairId: v.optional(v.id("playerPair")),
     status: v.union(v.literal("active"), v.literal("eliminated"), v.literal("withdrawn")),
-    registrationStatus: v.union(
-      v.literal("pending"),
-      v.literal("confirmed"),
-      v.literal("waitlisted"),
-      v.literal("checkedIn"),
-    ),
-    checkedInAt: v.optional(v.number()),
-    waitlistPosition: v.optional(v.number()),
-    entryFeePaid: v.optional(v.boolean()),
+    registrationStatus: v.union(v.literal("pending"), v.literal("confirmed")),
     wins: v.number(),
     losses: v.number(),
     deletedAt: v.optional(v.number()),
@@ -102,6 +94,8 @@ export default defineSchema({
     .index("by_category", ["categoryId"])
     .index("by_player", ["playerId"])
     .index("by_pair", ["pairId"])
+    .index("by_category_and_player", ["categoryId", "playerId"])
+    .index("by_category_and_pair", ["categoryId", "pairId"])
     .index("by_deletedAt", ["deletedAt"]),
 
   // ========== COURTS ==========
