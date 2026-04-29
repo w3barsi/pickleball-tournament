@@ -2,7 +2,7 @@ import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@convex/_generated/api.js";
 import { Id } from "@convex/_generated/dataModel.js";
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import {
   Loader2Icon,
@@ -12,6 +12,7 @@ import {
   SwordsIcon,
   PlusIcon,
   UserPlusIcon,
+  Trash2Icon,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -21,6 +22,17 @@ import { AssignParticipantsDialog } from "@/components/tournaments/assign-partic
 import { BracketParticipantList } from "@/components/tournaments/bracket-participant-list";
 import { CreateMatchDialog } from "@/components/tournaments/create-match-dialog";
 import { MatchList } from "@/components/tournaments/match-list";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -71,10 +83,13 @@ function BracketDetailPage() {
   );
 
   const removeParticipant = useMutation(api.brackets.removeParticipant);
+  const removeBracket = useMutation(api.brackets.remove);
   const createMatch = useMutation(api.matches.create);
+  const navigate = useNavigate();
 
   const [isAssignOpen, setIsAssignOpen] = useState(false);
   const [isCreateMatchOpen, setIsCreateMatchOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   if (!bracketData || !category || !tournament) {
     return (
@@ -138,6 +153,21 @@ function BracketDetailPage() {
     }
   };
 
+  const handleDeleteBracket = async () => {
+    setIsDeleting(true);
+    try {
+      await removeBracket({ bracketId: bracketId as Id<"brackets"> });
+      toast.success("Bracket deleted");
+      navigate({
+        to: "/app/tournaments/$slug/categories/$categoryId",
+        params: { slug, categoryId },
+      });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete bracket");
+      setIsDeleting(false);
+    }
+  };
+
   const unassignedCount = unassignedParticipants?.length ?? 0;
 
   return (
@@ -172,6 +202,33 @@ function BracketDetailPage() {
             {getFormatLabel(bracket.format)}
           </HeaderCardDescription>
         </div>
+        {canEdit && (
+          <AlertDialog>
+            <AlertDialogTrigger render={<Button variant="destructive" size="icon" />}>
+              <Trash2Icon className="size-4" />
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Bracket</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to delete{" "}
+                  <span className="font-semibold">{bracket.name}</span>? This action cannot be
+                  undone and will also remove all participants and matches.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  variant="destructive"
+                  disabled={isDeleting}
+                  onClick={handleDeleteBracket}
+                >
+                  {isDeleting ? "Deleting..." : "Delete"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
       </HeaderCard>
 
       {/* Bracket Info Cards */}
@@ -251,10 +308,13 @@ function BracketDetailPage() {
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold">Matches</h2>
           {canEdit && participants.length >= 2 && (
-            <Button variant="secondary" size="sm" onClick={() => setIsCreateMatchOpen(true)}>
-              <PlusIcon className="size-4" />
-              Create Match
-            </Button>
+            <CreateMatchDialog
+              open={isCreateMatchOpen}
+              onOpenChange={setIsCreateMatchOpen}
+              onCreate={handleCreateMatch}
+              bracketParticipants={participants}
+              categoryType={category.type}
+            />
           )}
         </div>
         <MatchList matches={matches ?? []} categoryType={category.type} canEdit={!!canEdit} />
