@@ -1,0 +1,262 @@
+"use client";
+
+import { api } from "@convex/_generated/api.js";
+import { Id } from "@convex/_generated/dataModel";
+import { useMutation } from "convex/react";
+import { SwordsIcon, CheckCircle2Icon, ClockIcon, PlayIcon, Trash2Icon } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+interface MatchParticipant {
+  _id: Id<"categoryParticipants">;
+  player?: { fullName: string } | null;
+  pair?: { teamName?: string } | null;
+  playerOne?: { fullName: string } | null;
+  playerTwo?: { fullName: string } | null;
+}
+
+interface MatchSet {
+  _id: Id<"matchSets">;
+  setNumber: number;
+  team1Score: number;
+  team2Score: number;
+  winnerTeam?: 1 | 2 | null;
+}
+
+interface MatchItem {
+  _id: Id<"matches">;
+  status: "scheduled" | "inProgress" | "completed" | "abandoned";
+  participant1: MatchParticipant | null;
+  participant2: MatchParticipant | null;
+  winnerParticipantId?: Id<"categoryParticipants"> | null;
+  courtNumber?: number | null;
+  scheduledAt?: number | null;
+  roundNumber?: number | null;
+  matchOrder?: number | null;
+  matchSets: MatchSet[];
+}
+
+interface MatchListProps {
+  matches: MatchItem[];
+  categoryType: "singles" | "doubles";
+  canEdit: boolean;
+}
+
+function getStatusBadge(status: string) {
+  switch (status) {
+    case "inProgress":
+      return (
+        <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100">
+          <PlayIcon className="mr-1 size-3" />
+          Live
+        </Badge>
+      );
+    case "completed":
+      return (
+        <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
+          <CheckCircle2Icon className="mr-1 size-3" />
+          Completed
+        </Badge>
+      );
+    case "abandoned":
+      return <Badge variant="destructive">Abandoned</Badge>;
+    default:
+      return (
+        <Badge className="bg-slate-100 text-slate-700 hover:bg-slate-100">
+          <ClockIcon className="mr-1 size-3" />
+          Scheduled
+        </Badge>
+      );
+  }
+}
+
+function getParticipantName(
+  participant: MatchParticipant | null,
+  categoryType: "singles" | "doubles",
+) {
+  if (!participant) return "TBD";
+  if (categoryType === "singles") {
+    return participant.player?.fullName ?? "Unknown";
+  }
+  return (
+    participant.pair?.teamName ??
+    `${participant.playerOne?.fullName ?? "Unknown"} / ${participant.playerTwo?.fullName ?? "Unknown"}`
+  );
+}
+
+function getMatchScore(match: MatchItem) {
+  if (match.matchSets.length > 0) {
+    const p1Wins = match.matchSets.filter((s) => s.winnerTeam === 1).length;
+    const p2Wins = match.matchSets.filter((s) => s.winnerTeam === 2).length;
+    return `${p1Wins} - ${p2Wins}`;
+  }
+  if (match.status === "completed" && match.winnerParticipantId) {
+    return "W - L";
+  }
+  return "—";
+}
+
+export function MatchList({ matches, categoryType, canEdit }: MatchListProps) {
+  const removeMatch = useMutation(api.matches.remove);
+  const updateResult = useMutation(api.matches.updateResult);
+
+  const [deleteTarget, setDeleteTarget] = useState<Id<"matches"> | null>(null);
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    try {
+      await removeMatch({ matchId: deleteTarget });
+      toast.success("Match deleted");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete match");
+    } finally {
+      setDeleteTarget(null);
+    }
+  };
+
+  const handleSetWinner = async (matchId: Id<"matches">, winnerId: Id<"categoryParticipants">) => {
+    try {
+      await updateResult({ matchId, winnerParticipantId: winnerId });
+      toast.success("Winner recorded");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to record winner");
+    }
+  };
+
+  if (matches.length === 0) {
+    return (
+      <div className="rounded-lg border py-12 text-center text-muted-foreground">
+        <SwordsIcon className="mx-auto size-8" />
+        <p className="mt-4 text-lg font-bold">No matches yet</p>
+        <p className="text-sm">Create a match to get started</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-lg border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Match</TableHead>
+              <TableHead>Participants</TableHead>
+              <TableHead>Score</TableHead>
+              <TableHead>Status</TableHead>
+              {canEdit && <TableHead className="w-24" />}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {matches.map((match) => {
+              const p1Name = getParticipantName(match.participant1, categoryType);
+              const p2Name = getParticipantName(match.participant2, categoryType);
+              const isP1Winner = match.winnerParticipantId === match.participant1?._id;
+              const isP2Winner = match.winnerParticipantId === match.participant2?._id;
+
+              return (
+                <TableRow key={match._id}>
+                  <TableCell className="font-medium">
+                    {match.roundNumber ? `R${match.roundNumber}` : "—"}
+                    {match.matchOrder ? ` · M${match.matchOrder}` : ""}
+                    {match.courtNumber ? (
+                      <span className="ml-1 text-xs text-muted-foreground">
+                        (Court {match.courtNumber})
+                      </span>
+                    ) : null}
+                  </TableCell>
+                  <TableCell>
+                    <div className="space-y-1">
+                      <div className={isP1Winner ? "font-bold text-green-700" : ""}>{p1Name}</div>
+                      <div className="text-xs text-muted-foreground">vs</div>
+                      <div className={isP2Winner ? "font-bold text-green-700" : ""}>{p2Name}</div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="font-mono text-lg">{getMatchScore(match)}</TableCell>
+                  <TableCell>{getStatusBadge(match.status)}</TableCell>
+                  {canEdit && (
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        {match.status !== "completed" &&
+                          match.participant1 &&
+                          match.participant2 && (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 px-2 text-xs"
+                                onClick={() => handleSetWinner(match._id, match.participant1!._id)}
+                              >
+                                P1 Wins
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 px-2 text-xs"
+                                onClick={() => handleSetWinner(match._id, match.participant2!._id)}
+                              >
+                                P2 Wins
+                              </Button>
+                            </>
+                          )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-7 text-red-600 hover:bg-red-50 hover:text-red-700"
+                          onClick={() => setDeleteTarget(match._id)}
+                        >
+                          <Trash2Icon className="size-3" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  )}
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+
+      <AlertDialog open={deleteTarget !== null} onOpenChange={() => setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Match</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this match? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              render={
+                <Button variant="destructive" onClick={handleDelete}>
+                  Delete
+                </Button>
+              }
+            />
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
