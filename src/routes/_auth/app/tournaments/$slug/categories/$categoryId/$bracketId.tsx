@@ -84,11 +84,8 @@ function BracketDetailPage() {
 
   const removeParticipant = useMutation(api.brackets.removeParticipant);
   const removeBracket = useMutation(api.brackets.remove);
-  const createMatch = useMutation(api.matches.create);
   const navigate = useNavigate();
 
-  const [isAssignOpen, setIsAssignOpen] = useState(false);
-  const [isCreateMatchOpen, setIsCreateMatchOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   if (!bracketData || !category || !tournament) {
@@ -130,26 +127,6 @@ function BracketDetailPage() {
       toast.success("Participant removed from bracket");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to remove participant");
-    }
-  };
-
-  const handleCreateMatch = async (data: {
-    participant1Id: Id<"categoryParticipants">;
-    participant2Id: Id<"categoryParticipants">;
-    courtNumber?: number;
-    scheduledAt?: number;
-    roundNumber?: number;
-  }) => {
-    try {
-      await createMatch({
-        bracketId: bracketId as Id<"brackets">,
-        ...data,
-      });
-      toast.success("Match created");
-      return {};
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      return { error: `Failed to create match: ${message}` };
     }
   };
 
@@ -289,10 +266,10 @@ function BracketDetailPage() {
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold">Participants</h2>
           {canEdit && unassignedCount > 0 && (
-            <Button variant="secondary" size="sm" onClick={() => setIsAssignOpen(true)}>
-              <UserPlusIcon className="size-4" />
-              Add Participants
-            </Button>
+            <AssignParticipantsDialog
+              bracketId={bracketId as Id<"brackets">}
+              categoryId={categoryId as Id<"categories">}
+            />
           )}
         </div>
         <BracketParticipantList
@@ -309,9 +286,7 @@ function BracketDetailPage() {
           <h2 className="text-lg font-bold">Matches</h2>
           {canEdit && participants.length >= 2 && (
             <CreateMatchDialog
-              open={isCreateMatchOpen}
-              onOpenChange={setIsCreateMatchOpen}
-              onCreate={handleCreateMatch}
+              bracketId={bracketId as Id<"brackets">}
               bracketParticipants={participants}
               categoryType={category.type}
             />
@@ -321,23 +296,7 @@ function BracketDetailPage() {
       </div>
 
       {/* Dialogs */}
-      {canEdit && (
-        <>
-          <AssignParticipantsDialog
-            bracketId={bracketId as Id<"brackets">}
-            categoryId={categoryId as Id<"categories">}
-            open={isAssignOpen}
-            onOpenChange={setIsAssignOpen}
-          />
-          <CreateMatchDialog
-            open={isCreateMatchOpen}
-            onOpenChange={setIsCreateMatchOpen}
-            onCreate={handleCreateMatch}
-            bracketParticipants={participants}
-            categoryType={category.type}
-          />
-        </>
-      )}
+      {canEdit && <></>}
     </div>
   );
 }

@@ -1,9 +1,12 @@
 "use client";
 
+import { api } from "@convex/_generated/api.js";
 import { Id } from "@convex/_generated/dataModel";
 import { useForm } from "@tanstack/react-form";
+import { useMutation } from "convex/react";
 import { CircleAlertIcon, Loader2Icon, PlusIcon } from "lucide-react";
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -38,15 +41,7 @@ interface BracketParticipant {
 }
 
 interface CreateMatchDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onCreate: (data: {
-    participant1Id: Id<"categoryParticipants">;
-    participant2Id: Id<"categoryParticipants">;
-    courtNumber?: number;
-    scheduledAt?: number;
-    roundNumber?: number;
-  }) => Promise<{ error?: string } | void>;
+  bracketId: Id<"brackets">;
   bracketParticipants: BracketParticipant[];
   categoryType: "singles" | "doubles";
 }
@@ -70,13 +65,13 @@ function getParticipantName(bp: BracketParticipant, categoryType: "singles" | "d
 }
 
 export function CreateMatchDialog({
-  open,
-  onOpenChange,
-  onCreate,
+  bracketId,
   bracketParticipants,
   categoryType,
 }: CreateMatchDialogProps) {
+  const [open, setOpen] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const createMatch = useMutation(api.matches.create);
 
   const form = useForm({
     defaultValues: {
@@ -97,18 +92,20 @@ export function CreateMatchDialog({
         return;
       }
 
-      const result = await onCreate({
-        participant1Id: value.participant1Id as Id<"categoryParticipants">,
-        participant2Id: value.participant2Id as Id<"categoryParticipants">,
-        courtNumber: value.courtNumber ? Number(value.courtNumber) : undefined,
-        roundNumber: value.roundNumber ? Number(value.roundNumber) : undefined,
-      });
-
-      if (result?.error) {
-        setServerError(result.error);
-        return;
+      try {
+        await createMatch({
+          bracketId,
+          participant1Id: value.participant1Id as Id<"categoryParticipants">,
+          participant2Id: value.participant2Id as Id<"categoryParticipants">,
+          courtNumber: value.courtNumber ? Number(value.courtNumber) : undefined,
+          roundNumber: value.roundNumber ? Number(value.roundNumber) : undefined,
+        });
+        toast.success("Match created");
+        setOpen(false);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown error";
+        setServerError(`Failed to create match: ${message}`);
       }
-      onOpenChange(false);
     },
   });
 
@@ -124,7 +121,7 @@ export function CreateMatchDialog({
       form.reset();
       setServerError(null);
     }
-    onOpenChange(newOpen);
+    setOpen(newOpen);
   };
 
   const participantOptions = bracketParticipants.map((bp) => ({
@@ -136,7 +133,7 @@ export function CreateMatchDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger
         render={
-          <Button variant="secondary" size="sm">
+          <Button variant="secondary">
             <PlusIcon className="size-4" />
             Create Match
           </Button>

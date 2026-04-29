@@ -5,7 +5,7 @@ import { api } from "@convex/_generated/api.js";
 import { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "@tanstack/react-query";
 import { useMutation } from "convex/react";
-import { Loader2Icon, CheckIcon } from "lucide-react";
+import { Loader2Icon, CheckIcon, UserPlusIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -18,22 +18,16 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 
 interface AssignParticipantsDialogProps {
   bracketId: Id<"brackets">;
   categoryId: Id<"categories">;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
 }
 
-export function AssignParticipantsDialog({
-  bracketId,
-  categoryId,
-  open,
-  onOpenChange,
-}: AssignParticipantsDialogProps) {
+export function AssignParticipantsDialog({ bracketId, categoryId }: AssignParticipantsDialogProps) {
   const { data: unassigned, isLoading } = useQuery(
     convexQuery(api.brackets.getUnassignedParticipants, { categoryId }),
   );
@@ -43,6 +37,7 @@ export function AssignParticipantsDialog({
 
   const addParticipants = useMutation(api.brackets.addParticipants);
 
+  const [isAssignOpen, setIsAssignOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -72,7 +67,7 @@ export function AssignParticipantsDialog({
       });
       toast.success(`${selectedIds.size} participants assigned`);
       setSelectedIds(new Set());
-      onOpenChange(false);
+      setIsAssignOpen(false);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to assign participants");
     } finally {
@@ -84,7 +79,7 @@ export function AssignParticipantsDialog({
     if (!newOpen) {
       setSelectedIds(new Set());
     }
-    onOpenChange(newOpen);
+    setIsAssignOpen(newOpen);
   };
 
   const bracket = bracketData?.bracket;
@@ -93,7 +88,16 @@ export function AssignParticipantsDialog({
   const remainingSlots = maxParticipants !== undefined ? maxParticipants - currentCount : undefined;
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={isAssignOpen} onOpenChange={handleOpenChange}>
+      <DialogTrigger
+        render={
+          <Button variant="secondary" onClick={() => setIsAssignOpen(true)}>
+            <UserPlusIcon className="size-4" />
+            Add Participants
+          </Button>
+        }
+      />
+
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Assign Participants</DialogTitle>
