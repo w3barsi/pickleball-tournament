@@ -130,19 +130,26 @@ function ScorerPage() {
   const matchId = id as Id<"matches">;
   const navigate = useNavigate();
 
+  const [viewSetNumber, setViewSetNumber] = useState<number | null>(null);
+
+  const queryArgs = viewSetNumber !== null ? { matchId, viewSetNumber } : { matchId };
+
   const { data: matchData, isLoading } = useQuery(
-    convexQuery(api.scoring.getMatchForScorer, { matchId }),
+    convexQuery(
+      api.scoring.getMatchForScorer,
+      queryArgs as { matchId: Id<"matches">; viewSetNumber?: number },
+    ),
   );
 
   const startMatchMutation = useMutation(api.scoring.startMatch);
   const setMatchLiveMutation = useMutation(api.scoring.setMatchLive);
   const forfeitMatchMutation = useMutation(api.scoring.forfeitMatch);
+  const confirmSetCompleteMutation = useMutation(api.scoring.confirmSetComplete);
 
   const recordPoint = useMutation(api.scoring.recordPoint).withOptimisticUpdate(
     (localStore, args) => {
-      const current = localStore.getQuery(api.scoring.getMatchForScorer, {
-        matchId,
-      });
+      const queryKey = viewSetNumber !== null ? { matchId, viewSetNumber } : { matchId };
+      const current = localStore.getQuery(api.scoring.getMatchForScorer, queryKey);
       if (!current?.match || !current.currentSet || !current.computedState) return;
 
       const pointWinner = args.pointWinner as 1 | 2;
@@ -170,22 +177,17 @@ function ScorerPage() {
         current.match.winByTwo,
       );
 
-      localStore.setQuery(
-        api.scoring.getMatchForScorer,
-        { matchId },
-        {
-          ...current,
-          currentSetPoints: newPoints,
-          computedState: newState,
-        },
-      );
+      localStore.setQuery(api.scoring.getMatchForScorer, queryKey, {
+        ...current,
+        currentSetPoints: newPoints,
+        computedState: newState,
+      });
     },
   );
 
   const undoPoint = useMutation(api.scoring.undoLastPoint).withOptimisticUpdate((localStore) => {
-    const current = localStore.getQuery(api.scoring.getMatchForScorer, {
-      matchId,
-    });
+    const queryKey = viewSetNumber !== null ? { matchId, viewSetNumber } : { matchId };
+    const current = localStore.getQuery(api.scoring.getMatchForScorer, queryKey);
     if (!current?.currentSetPoints.length || !current.currentSet) return;
 
     const newPoints = current.currentSetPoints.slice(0, -1);
@@ -195,15 +197,11 @@ function ScorerPage() {
       current.match.winByTwo,
     );
 
-    localStore.setQuery(
-      api.scoring.getMatchForScorer,
-      { matchId },
-      {
-        ...current,
-        currentSetPoints: newPoints,
-        computedState: newState,
-      },
-    );
+    localStore.setQuery(api.scoring.getMatchForScorer, queryKey, {
+      ...current,
+      currentSetPoints: newPoints,
+      computedState: newState,
+    });
   });
 
   const [showHistory, setShowHistory] = useState(false);
@@ -216,8 +214,10 @@ function ScorerPage() {
   const categoryType = matchData?.categoryType ?? "singles";
   const allSets = matchData?.allSets ?? [];
   const currentSet = matchData?.currentSet;
+  const activeSet = matchData?.activeSet;
   const currentSetPoints = matchData?.currentSetPoints ?? [];
   const computedState = matchData?.computedState;
+  const isViewingActiveSet = currentSet?._id === activeSet?._id;
 
   const team1Name = getParticipantName(participant1, categoryType);
   const team2Name = getParticipantName(participant2, categoryType);
@@ -230,7 +230,6 @@ function ScorerPage() {
   const team1SetWins = allSets.filter((s) => s.winnerTeam === 1).length;
   const team2SetWins = allSets.filter((s) => s.winnerTeam === 2).length;
 
-  const currentSetNumber = currentSet?.setNumber ?? 1;
   const totalSets = match?.numberOfSets ?? 3;
 
   const getScoreAnnouncement = useCallback(() => {
@@ -257,11 +256,14 @@ function ScorerPage() {
   const handleUndo = useCallback(async () => {
     if (currentSetPoints.length === 0) return;
     try {
-      await undoPoint({ matchId });
+      await undoPoint({
+        matchId,
+        setId: isViewingActiveSet ? undefined : currentSet?._id,
+      });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to undo");
     }
-  }, [matchId, currentSetPoints.length, undoPoint]);
+  }, [matchId, currentSetPoints.length, undoPoint, isViewingActiveSet, currentSet?._id]);
 
   const handleStartMatch = useCallback(async () => {
     try {
@@ -294,6 +296,16 @@ function ScorerPage() {
     [matchId, forfeitMatchMutation],
   );
 
+  const handleConfirmSetComplete = useCallback(async () => {
+    try {
+      await confirmSetCompleteMutation({ matchId });
+      setViewSetNumber(null);
+      toast.success("Set confirmed");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to confirm set");
+    }
+  }, [matchId, confirmSetCompleteMutation]);
+
   if (isLoading || !match) {
     return <div className="py-12 text-center text-muted-foreground">Loading match...</div>;
   }
@@ -322,12 +334,13 @@ function ScorerPage() {
             {team1Name} <span className="text-muted-foreground">vs</span> {team2Name}
           </h1>
           <p className="text-sm text-muted-foreground">
-            Set {currentSetNumber} of {totalSets} · {match.pointsPerGame} points
+            Set {currentSet?.setNumber ?? 1} of {totalSets} · {match.pointsPerGame} points
             {match.winByTwo ? " (win by 2)" : " (win at target)"}
+            {!isViewingActiveSet && <span className="ml-1 text-amber-600">(viewing)</span>}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {isInProgress && (
+          {(isInProgress || isGameOver || isAbandoned) && (
             <Button
               variant="outline"
               size="sm"
@@ -357,7 +370,7 @@ function ScorerPage() {
             <HistoryIcon className="size-4" />
             History
           </Button>
-          {isInProgress && (
+          {isInProgress && isViewingActiveSet && (
             <Button
               variant="outline"
               size="sm"
@@ -379,11 +392,15 @@ function ScorerPage() {
             <div className="flex gap-1">
               {Array.from({ length: totalSets }).map((_, i) => {
                 const set = allSets.find((s) => s.setNumber === i + 1);
+                const isViewed = set?.setNumber === currentSet?.setNumber;
                 return (
-                  <div
+                  <button
                     key={i}
+                    type="button"
+                    disabled={!set}
+                    onClick={() => setViewSetNumber(set?.setNumber ?? null)}
                     className={cn(
-                      "flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold",
+                      "flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold transition-all",
                       set?.winnerTeam === 1
                         ? "bg-green-500 text-white"
                         : set?.winnerTeam === 2
@@ -391,10 +408,12 @@ function ScorerPage() {
                           : set?.status === "inProgress"
                             ? "bg-primary text-primary-foreground"
                             : "bg-slate-100 text-slate-400",
+                      isViewed && "ring-2 ring-amber-500 ring-offset-1",
+                      set && "cursor-pointer hover:opacity-80",
                     )}
                   >
                     {set?.winnerTeam === 1 ? "W" : set?.winnerTeam === 2 ? "L" : i + 1}
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -509,7 +528,7 @@ function ScorerPage() {
       </div>
 
       {/* Point Buttons */}
-      {isInProgress && !computedState?.isGameOver && (
+      {isInProgress && isViewingActiveSet && !computedState?.isGameOver && (
         <div className="grid grid-cols-2 gap-4">
           <Button
             size="lg"
@@ -538,6 +557,24 @@ function ScorerPage() {
             </div>
           </Button>
         </div>
+      )}
+
+      {/* Set Complete Confirmation */}
+      {isInProgress && isViewingActiveSet && computedState?.isGameOver && computedState.winner && (
+        <Card className="border-4 border-green-400 bg-green-50">
+          <CardContent className="flex flex-col items-center justify-center gap-3 py-8">
+            <TrophyIcon className="size-12 text-green-500" />
+            <div className="text-2xl font-bold">Set {currentSet?.setNumber} Complete!</div>
+            <div className="text-muted-foreground">
+              {computedState.winner === 1 ? team1Name : team2Name} wins the set{" "}
+              {computedState.team1Score}-{computedState.team2Score}
+            </div>
+            <Button className="mt-2 gap-2" onClick={handleConfirmSetComplete}>
+              <PlayIcon className="size-4" />
+              Confirm & Start Next Set
+            </Button>
+          </CardContent>
+        </Card>
       )}
 
       {/* Game Over / Abandoned */}

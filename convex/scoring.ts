@@ -177,6 +177,7 @@ export const listAllMatches = query({
 export const getMatchForScorer = query({
   args: {
     matchId: v.id("matches"),
+    viewSetNumber: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const match = await ctx.db.get(args.matchId);
@@ -198,17 +199,22 @@ export const getMatchForScorer = query({
       currentSet = allSets[allSets.length - 1];
     }
 
+    let viewedSet = currentSet;
+    if (args.viewSetNumber !== undefined) {
+      viewedSet = allSets.find((s) => s.setNumber === args.viewSetNumber) ?? currentSet;
+    }
+
     let currentSetPoints: Doc<"pickleballPoints">[] = [];
     let computedState: SetState | null = null;
 
-    if (currentSet) {
+    if (viewedSet) {
       currentSetPoints = await ctx.db
         .query("pickleballPoints")
-        .withIndex("by_match_set", (q) => q.eq("matchSetId", currentSet!._id))
+        .withIndex("by_match_set", (q) => q.eq("matchSetId", viewedSet!._id))
         .order("asc")
         .collect();
 
-      computedState = computeSetState(currentSetPoints, currentSet.targetScore, match.winByTwo);
+      computedState = computeSetState(currentSetPoints, viewedSet.targetScore, match.winByTwo);
     }
 
     return {
@@ -217,9 +223,10 @@ export const getMatchForScorer = query({
       participant2,
       categoryType,
       allSets,
-      currentSet,
+      currentSet: viewedSet,
       currentSetPoints,
       computedState,
+      activeSet: currentSet,
     };
   },
 });
@@ -392,55 +399,89 @@ export const recordPoint = mutation({
       team2Score: afterState.team2Score,
     });
 
-    // If set is completed, mark it and check match completion
-    if (afterState.isGameOver && afterState.winner) {
-      await ctx.db.patch(currentSet._id, {
+    await ctx.db.patch(args.matchId, {
+      lastUpdatedAt: now,
+    });
+
+    return { success: true };
+  },
+});
+
+export const confirmSetComplete = mutation({
+  args: {
+    matchId: v.id("matches"),
+  },
+  handler: async (ctx, args) => {
+    const match = await ctx.db.get(args.matchId);
+    if (!match) {
+      throw new Error("Match not found");
+    }
+
+    if (match.status !== "inProgress") {
+      throw new Error("Match is not in progress");
+    }
+
+    const sets = await ctx.db
+      .query("matchSets")
+      .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
+      .order("asc")
+      .collect();
+
+    const currentSet = sets.find((s) => s.status === "inProgress");
+    if (!currentSet) {
+      throw new Error("No set in progress");
+    }
+
+    const points = await ctx.db
+      .query("pickleballPoints")
+      .withIndex("by_match_set", (q) => q.eq("matchSetId", currentSet._id))
+      .collect();
+
+    const state = computeSetState(points, currentSet.targetScore, match.winByTwo);
+
+    if (!state.isGameOver || !state.winner) {
+      throw new Error("Set is not over yet");
+    }
+
+    const now = Date.now();
+
+    await ctx.db.patch(currentSet._id, {
+      status: "completed",
+      winnerTeam: state.winner,
+      completedAt: now,
+    });
+
+    const team1SetWins =
+      sets.filter((s) => s.winnerTeam === 1).length + (state.winner === 1 ? 1 : 0);
+    const team2SetWins =
+      sets.filter((s) => s.winnerTeam === 2).length + (state.winner === 2 ? 1 : 0);
+    const needed = setsNeededToWin(match.numberOfSets);
+
+    if (team1SetWins >= needed || team2SetWins >= needed) {
+      const matchWinner = team1SetWins >= needed ? 1 : 2;
+      const winnerParticipantId = matchWinner === 1 ? match.participant1Id : match.participant2Id;
+      const loserParticipantId = matchWinner === 1 ? match.participant2Id : match.participant1Id;
+
+      await ctx.db.patch(args.matchId, {
         status: "completed",
-        winnerTeam: afterState.winner,
+        winnerParticipantId,
         completedAt: now,
+        lastUpdatedAt: now,
       });
 
-      // Count completed sets
-      const allSets = await ctx.db
-        .query("matchSets")
-        .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
-        .collect();
-
-      const team1SetWins = allSets.filter((s) => s.winnerTeam === 1).length;
-      const team2SetWins = allSets.filter((s) => s.winnerTeam === 2).length;
-      const needed = setsNeededToWin(match.numberOfSets);
-
-      if (team1SetWins >= needed || team2SetWins >= needed) {
-        const matchWinner = team1SetWins >= needed ? 1 : 2;
-        const winnerParticipantId = matchWinner === 1 ? match.participant1Id : match.participant2Id;
-        const loserParticipantId = matchWinner === 1 ? match.participant2Id : match.participant1Id;
-
-        await ctx.db.patch(args.matchId, {
-          status: "completed",
-          winnerParticipantId,
-          completedAt: now,
-          lastUpdatedAt: now,
-        });
-
-        await updateParticipantRecords(ctx, winnerParticipantId, loserParticipantId, 1);
-      } else {
-        // Create next set
-        const nextSetNumber = allSets.length + 1;
-        if (nextSetNumber <= match.numberOfSets) {
-          await ctx.db.insert("matchSets", {
-            matchId: args.matchId,
-            setNumber: nextSetNumber,
-            team1Score: 0,
-            team2Score: 0,
-            targetScore: match.pointsPerGame,
-            status: "inProgress",
-          });
-        }
-        await ctx.db.patch(args.matchId, {
-          lastUpdatedAt: now,
+      await updateParticipantRecords(ctx, winnerParticipantId, loserParticipantId, 1);
+    } else {
+      const nextSetNumber = sets.length + 1;
+      if (nextSetNumber <= match.numberOfSets) {
+        await ctx.db.insert("matchSets", {
+          matchId: args.matchId,
+          setNumber: nextSetNumber,
+          team1Score: 0,
+          team2Score: 0,
+          targetScore: match.pointsPerGame,
+          status: "inProgress",
         });
       }
-    } else {
       await ctx.db.patch(args.matchId, {
         lastUpdatedAt: now,
       });
@@ -453,6 +494,7 @@ export const recordPoint = mutation({
 export const undoLastPoint = mutation({
   args: {
     matchId: v.id("matches"),
+    setId: v.optional(v.id("matchSets")),
   },
   handler: async (ctx, args) => {
     const match = await ctx.db.get(args.matchId);
@@ -460,31 +502,43 @@ export const undoLastPoint = mutation({
       throw new Error("Match not found");
     }
 
-    // Get all sets ordered by setNumber desc
-    const sets = await ctx.db
-      .query("matchSets")
-      .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
-      .order("desc")
-      .collect();
-
-    if (sets.length === 0) {
-      throw new Error("No sets to undo");
-    }
-
-    // Find the set with the most recent point
     let targetSet: Doc<"matchSets"> | null = null;
     let lastPoint: Doc<"pickleballPoints"> | null = null;
 
-    for (const set of sets) {
-      const point = await ctx.db
+    if (args.setId) {
+      targetSet = await ctx.db.get(args.setId);
+      if (!targetSet || targetSet.matchId !== args.matchId) {
+        throw new Error("Set not found");
+      }
+      lastPoint = await ctx.db
         .query("pickleballPoints")
-        .withIndex("by_match_set_and_sequence", (q) => q.eq("matchSetId", set._id))
+        .withIndex("by_match_set_and_sequence", (q) => q.eq("matchSetId", targetSet!._id))
         .order("desc")
         .first();
-      if (point) {
-        targetSet = set;
-        lastPoint = point;
-        break;
+    } else {
+      // Get all sets ordered by setNumber desc
+      const sets = await ctx.db
+        .query("matchSets")
+        .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
+        .order("desc")
+        .collect();
+
+      if (sets.length === 0) {
+        throw new Error("No sets to undo");
+      }
+
+      // Find the set with the most recent point
+      for (const set of sets) {
+        const point = await ctx.db
+          .query("pickleballPoints")
+          .withIndex("by_match_set_and_sequence", (q) => q.eq("matchSetId", set._id))
+          .order("desc")
+          .first();
+        if (point) {
+          targetSet = set;
+          lastPoint = point;
+          break;
+        }
       }
     }
 
@@ -503,12 +557,16 @@ export const undoLastPoint = mutation({
       await updateParticipantRecords(ctx, match.winnerParticipantId, loserId, -1);
     }
 
-    // Delete the last point
-    await ctx.db.delete(lastPoint._id);
-
-    // If the set was completed, delete any sets created after it and revert this set
+    // If the set was completed, delete any sets created after it and revert this set.
+    // Then keep deleting points until the set is no longer game over so it can be re-scored.
     if (targetSet.status === "completed") {
-      for (const set of sets) {
+      const allSets = await ctx.db
+        .query("matchSets")
+        .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
+        .order("desc")
+        .collect();
+
+      for (const set of allSets) {
         if (set.setNumber > targetSet.setNumber) {
           // Delete points in that set first
           const points = await ctx.db
@@ -527,21 +585,44 @@ export const undoLastPoint = mutation({
         winnerTeam: undefined,
         completedAt: undefined,
       });
+
+      // Delete points until the set is no longer game over
+      let remainingPoints = await ctx.db
+        .query("pickleballPoints")
+        .withIndex("by_match_set", (q) => q.eq("matchSetId", targetSet._id))
+        .order("asc")
+        .collect();
+
+      let state = computeSetState(remainingPoints, targetSet.targetScore, match.winByTwo);
+      while (state.isGameOver && remainingPoints.length > 0) {
+        const pointToDelete = remainingPoints[remainingPoints.length - 1];
+        await ctx.db.delete(pointToDelete._id);
+        remainingPoints = remainingPoints.slice(0, -1);
+        state = computeSetState(remainingPoints, targetSet.targetScore, match.winByTwo);
+      }
+
+      await ctx.db.patch(targetSet._id, {
+        team1Score: state.team1Score,
+        team2Score: state.team2Score,
+      });
+    } else {
+      // Just delete the single point for in-progress sets
+      await ctx.db.delete(lastPoint._id);
+
+      // Recompute state for targetSet
+      const remainingPoints = await ctx.db
+        .query("pickleballPoints")
+        .withIndex("by_match_set", (q) => q.eq("matchSetId", targetSet._id))
+        .order("asc")
+        .collect();
+
+      const state = computeSetState(remainingPoints, targetSet.targetScore, match.winByTwo);
+
+      await ctx.db.patch(targetSet._id, {
+        team1Score: state.team1Score,
+        team2Score: state.team2Score,
+      });
     }
-
-    // Recompute state for targetSet
-    const remainingPoints = await ctx.db
-      .query("pickleballPoints")
-      .withIndex("by_match_set", (q) => q.eq("matchSetId", targetSet._id))
-      .order("asc")
-      .collect();
-
-    const state = computeSetState(remainingPoints, targetSet.targetScore, match.winByTwo);
-
-    await ctx.db.patch(targetSet._id, {
-      team1Score: state.team1Score,
-      team2Score: state.team2Score,
-    });
 
     // Revert match status if it was completed
     if (match.status === "completed") {
