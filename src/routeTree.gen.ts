@@ -27,13 +27,12 @@ import { Route as AuthAdminUsersRouteImport } from './routes/_auth/admin/users'
 import { Route as AuthAppTournamentsIndexRouteImport } from './routes/_auth/app/tournaments/index'
 import { Route as AuthAppTournamentsSlugRouteImport } from './routes/_auth/app/tournaments/$slug'
 import { Route as AuthAppGIdRouteImport } from './routes/_auth/app/g.$id'
-import { Route as AuthAppTournamentsSlugIndexRouteImport } from './routes/_auth/app/tournaments/$slug/index'
-import { Route as AuthAppTournamentsSlugCategoriesIndexRouteImport } from './routes/_auth/app/tournaments/$slug/categories/index'
-import { Route as AuthAppTournamentsSlugCategoriesCategoryIdRouteImport } from './routes/_auth/app/tournaments/$slug/categories/$categoryId'
-import { Route as AuthAppTournamentsSlugCategoriesCategoryIdIndexRouteImport } from './routes/_auth/app/tournaments/$slug/categories/$categoryId/index'
-import { Route as AuthAppTournamentsSlugCategoriesCategoryIdBracketIdRouteImport } from './routes/_auth/app/tournaments/$slug/categories/$categoryId/$bracketId'
-import { Route as AuthAppTournamentsSlugCategoriesCategoryIdBracketIdIndexRouteImport } from './routes/_auth/app/tournaments/$slug/categories/$categoryId/$bracketId/index'
-import { Route as AuthAppTournamentsSlugCategoriesCategoryIdBracketIdMatchesMatchIdRouteImport } from './routes/_auth/app/tournaments/$slug/categories/$categoryId/$bracketId/matches.$matchId'
+import { Route as AuthAppTournamentsSlugCategoriesIndexRouteImport } from './routes/_auth/app/tournaments/$slug.categories.index'
+import { Route as AuthAppTournamentsSlugCategoriesCategoryIdRouteImport } from './routes/_auth/app/tournaments/$slug.categories.$categoryId'
+import { Route as AuthAppTournamentsSlugCategoriesCategoryIdIndexRouteImport } from './routes/_auth/app/tournaments/$slug.categories.$categoryId.index'
+import { Route as AuthAppTournamentsSlugCategoriesCategoryIdBracketIdRouteImport } from './routes/_auth/app/tournaments/$slug.categories.$categoryId.$bracketId'
+import { Route as AuthAppTournamentsSlugCategoriesCategoryIdBracketIdIndexRouteImport } from './routes/_auth/app/tournaments/$slug.categories.$categoryId.$bracketId.index'
+import { Route as AuthAppTournamentsSlugCategoriesCategoryIdBracketIdMatchesMatchIdRouteImport } from './routes/_auth/app/tournaments/$slug.categories.$categoryId.$bracketId.matches.$matchId'
 
 const ShowcaseRoute = ShowcaseRouteImport.update({
   id: '/showcase',
@@ -123,12 +122,6 @@ const AuthAppGIdRoute = AuthAppGIdRouteImport.update({
   path: '/g/$id',
   getParentRoute: () => AuthAppRouteRoute,
 } as any)
-const AuthAppTournamentsSlugIndexRoute =
-  AuthAppTournamentsSlugIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AuthAppTournamentsSlugRoute,
-  } as any)
 const AuthAppTournamentsSlugCategoriesIndexRoute =
   AuthAppTournamentsSlugCategoriesIndexRouteImport.update({
     id: '/categories/',
@@ -187,7 +180,6 @@ export interface FileRoutesByFullPath {
   '/app/g/$id': typeof AuthAppGIdRoute
   '/app/tournaments/$slug': typeof AuthAppTournamentsSlugRouteWithChildren
   '/app/tournaments/': typeof AuthAppTournamentsIndexRoute
-  '/app/tournaments/$slug/': typeof AuthAppTournamentsSlugIndexRoute
   '/app/tournaments/$slug/categories/$categoryId': typeof AuthAppTournamentsSlugCategoriesCategoryIdRouteWithChildren
   '/app/tournaments/$slug/categories/': typeof AuthAppTournamentsSlugCategoriesIndexRoute
   '/app/tournaments/$slug/categories/$categoryId/$bracketId': typeof AuthAppTournamentsSlugCategoriesCategoryIdBracketIdRouteWithChildren
@@ -208,8 +200,8 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthAdminIndexRoute
   '/app': typeof AuthAppIndexRoute
   '/app/g/$id': typeof AuthAppGIdRoute
+  '/app/tournaments/$slug': typeof AuthAppTournamentsSlugRouteWithChildren
   '/app/tournaments': typeof AuthAppTournamentsIndexRoute
-  '/app/tournaments/$slug': typeof AuthAppTournamentsSlugIndexRoute
   '/app/tournaments/$slug/categories': typeof AuthAppTournamentsSlugCategoriesIndexRoute
   '/app/tournaments/$slug/categories/$categoryId': typeof AuthAppTournamentsSlugCategoriesCategoryIdIndexRoute
   '/app/tournaments/$slug/categories/$categoryId/$bracketId': typeof AuthAppTournamentsSlugCategoriesCategoryIdBracketIdIndexRoute
@@ -235,7 +227,6 @@ export interface FileRoutesById {
   '/_auth/app/g/$id': typeof AuthAppGIdRoute
   '/_auth/app/tournaments/$slug': typeof AuthAppTournamentsSlugRouteWithChildren
   '/_auth/app/tournaments/': typeof AuthAppTournamentsIndexRoute
-  '/_auth/app/tournaments/$slug/': typeof AuthAppTournamentsSlugIndexRoute
   '/_auth/app/tournaments/$slug/categories/$categoryId': typeof AuthAppTournamentsSlugCategoriesCategoryIdRouteWithChildren
   '/_auth/app/tournaments/$slug/categories/': typeof AuthAppTournamentsSlugCategoriesIndexRoute
   '/_auth/app/tournaments/$slug/categories/$categoryId/$bracketId': typeof AuthAppTournamentsSlugCategoriesCategoryIdBracketIdRouteWithChildren
@@ -262,7 +253,6 @@ export interface FileRouteTypes {
     | '/app/g/$id'
     | '/app/tournaments/$slug'
     | '/app/tournaments/'
-    | '/app/tournaments/$slug/'
     | '/app/tournaments/$slug/categories/$categoryId'
     | '/app/tournaments/$slug/categories/'
     | '/app/tournaments/$slug/categories/$categoryId/$bracketId'
@@ -283,8 +273,8 @@ export interface FileRouteTypes {
     | '/admin'
     | '/app'
     | '/app/g/$id'
-    | '/app/tournaments'
     | '/app/tournaments/$slug'
+    | '/app/tournaments'
     | '/app/tournaments/$slug/categories'
     | '/app/tournaments/$slug/categories/$categoryId'
     | '/app/tournaments/$slug/categories/$categoryId/$bracketId'
@@ -309,7 +299,6 @@ export interface FileRouteTypes {
     | '/_auth/app/g/$id'
     | '/_auth/app/tournaments/$slug'
     | '/_auth/app/tournaments/'
-    | '/_auth/app/tournaments/$slug/'
     | '/_auth/app/tournaments/$slug/categories/$categoryId'
     | '/_auth/app/tournaments/$slug/categories/'
     | '/_auth/app/tournaments/$slug/categories/$categoryId/$bracketId'
@@ -455,13 +444,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthAppGIdRouteImport
       parentRoute: typeof AuthAppRouteRoute
     }
-    '/_auth/app/tournaments/$slug/': {
-      id: '/_auth/app/tournaments/$slug/'
-      path: '/'
-      fullPath: '/app/tournaments/$slug/'
-      preLoaderRoute: typeof AuthAppTournamentsSlugIndexRouteImport
-      parentRoute: typeof AuthAppTournamentsSlugRoute
-    }
     '/_auth/app/tournaments/$slug/categories/': {
       id: '/_auth/app/tournaments/$slug/categories/'
       path: '/categories'
@@ -558,14 +540,12 @@ const AuthAppTournamentsSlugCategoriesCategoryIdRouteWithChildren =
   )
 
 interface AuthAppTournamentsSlugRouteChildren {
-  AuthAppTournamentsSlugIndexRoute: typeof AuthAppTournamentsSlugIndexRoute
   AuthAppTournamentsSlugCategoriesCategoryIdRoute: typeof AuthAppTournamentsSlugCategoriesCategoryIdRouteWithChildren
   AuthAppTournamentsSlugCategoriesIndexRoute: typeof AuthAppTournamentsSlugCategoriesIndexRoute
 }
 
 const AuthAppTournamentsSlugRouteChildren: AuthAppTournamentsSlugRouteChildren =
   {
-    AuthAppTournamentsSlugIndexRoute: AuthAppTournamentsSlugIndexRoute,
     AuthAppTournamentsSlugCategoriesCategoryIdRoute:
       AuthAppTournamentsSlugCategoriesCategoryIdRouteWithChildren,
     AuthAppTournamentsSlugCategoriesIndexRoute:
