@@ -165,6 +165,7 @@ export default defineSchema({
     matchOrder: v.optional(v.number()),
     numberOfSets: v.number(),
     pointsPerGame: v.number(),
+    winByTwo: v.boolean(),
     deletedAt: v.optional(v.number()),
   })
     .index("by_tournament", ["tournamentId"])

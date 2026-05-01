@@ -42,18 +42,11 @@ export const Route = createFileRoute(
 )({
   component: BracketDetailPage,
   loader: async ({ params, context }) => {
-    await Promise.all([
-      context.queryClient.ensureQueryData(
-        convexQuery(api.brackets.getWithParticipants, {
-          bracketId: params.bracketId as Id<"brackets">,
-        }),
-      ),
-      context.queryClient.ensureQueryData(
-        convexQuery(api.matches.listByBracket, {
-          bracketId: params.bracketId as Id<"brackets">,
-        }),
-      ),
-    ]);
+    await context.queryClient.ensureQueryData(
+      convexQuery(api.brackets.getWithParticipants, {
+        bracketId: params.bracketId as Id<"brackets">,
+      }),
+    );
   },
 });
 
@@ -68,11 +61,6 @@ function BracketDetailPage() {
   );
   const { data: bracketData } = useQuery(
     convexQuery(api.brackets.getWithParticipants, {
-      bracketId: bracketId as Id<"brackets">,
-    }),
-  );
-  const { data: matches } = useQuery(
-    convexQuery(api.matches.listByBracket, {
       bracketId: bracketId as Id<"brackets">,
     }),
   );
@@ -238,12 +226,8 @@ function BracketDetailPage() {
             <CardTitle className="text-sm font-medium">Matches</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-black">{matches?.length ?? 0}</p>
-            <p className="text-sm text-muted-foreground">
-              {matches && matches.length > 0
-                ? `${matches.filter((m) => m.status === "completed").length} completed`
-                : "No matches yet"}
-            </p>
+            <p className="text-2xl font-black">—</p>
+            <p className="text-sm text-muted-foreground">See list below</p>
           </CardContent>
         </Card>
 
@@ -292,7 +276,11 @@ function BracketDetailPage() {
             />
           )}
         </div>
-        <MatchList matches={matches ?? []} categoryType={category.type} canEdit={!!canEdit} />
+        <MatchList
+          bracketId={bracketId as Id<"brackets">}
+          categoryType={category.type}
+          canEdit={!!canEdit}
+        />
       </div>
 
       {/* Dialogs */}

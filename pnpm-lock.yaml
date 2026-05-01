@@ -14,6 +14,9 @@ importers:
       '@convex-dev/better-auth':
         specifier: ^0.11.3
         version: 0.11.5(@standard-schema/spec@1.1.0)(better-auth@1.5.3(@tanstack/react-start@1.167.49(crossws@0.4.5(srvx@0.11.15))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(vite@8.0.10(@types/node@24.12.2)(esbuild@0.27.0)(jiti@2.6.1)(yaml@2.8.3)))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(solid-js@1.9.12))(convex@1.36.1(react@19.2.5))(hono@4.12.15)(react@19.2.5)(typescript@6.0.3)
+      '@convex-dev/migrations':
+        specifier: ^0.3.4
+        version: 0.3.4(convex@1.36.1(react@19.2.5))
       '@convex-dev/react-query':
         specifier: ^0.1.0
         version: 0.1.0(@tanstack/react-query@5.100.5(react@19.2.5))(convex@1.36.1(react@19.2.5))
@@ -382,6 +385,11 @@ packages:
       better-auth: '>=1.5.0 <1.6.0'
       convex: ^1.25.0
       react: ^18.3.1 || ^19.0.0
+
+  '@convex-dev/migrations@0.3.4':
+    resolution: {integrity: sha512-fCUkc4hDzkZTgxicjV1WN4QfUdDDPPrMtvC7VgSLTGssg1B8pm+XlPC6NbZ2Aes38Xf5iiodX+y8VnU96narKQ==}
+    peerDependencies:
+      convex: ^1.24.8
 
   '@convex-dev/react-query@0.1.0':
     resolution: {integrity: sha512-ULmBZCtAQDUePdBhUv7hj1Yy4QiCelhi6uEIOtMpjW8db6W9CFKvQwLt9heLngccFyMFfAZdOfSrT+cP4AH0Jw==}
@@ -4132,6 +4140,10 @@ snapshots:
       - '@standard-schema/spec'
       - hono
       - typescript
+
+  '@convex-dev/migrations@0.3.4(convex@1.36.1(react@19.2.5))':
+    dependencies:
+      convex: 1.36.1(react@19.2.5)
 
   '@convex-dev/react-query@0.1.0(@tanstack/react-query@5.100.5(react@19.2.5))(convex@1.36.1(react@19.2.5))':
     dependencies:

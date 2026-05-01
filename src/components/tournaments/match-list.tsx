@@ -1,9 +1,18 @@
 "use client";
 
+import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@convex/_generated/api.js";
 import { Id } from "@convex/_generated/dataModel";
+import { useQuery } from "@tanstack/react-query";
 import { useMutation } from "convex/react";
-import { SwordsIcon, CheckCircle2Icon, ClockIcon, PlayIcon, Trash2Icon } from "lucide-react";
+import {
+  SwordsIcon,
+  CheckCircle2Icon,
+  ClockIcon,
+  PlayIcon,
+  Trash2Icon,
+  Loader2Icon,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -58,7 +67,7 @@ interface MatchItem {
 }
 
 interface MatchListProps {
-  matches: MatchItem[];
+  bracketId: Id<"brackets">;
   categoryType: "singles" | "doubles";
   canEdit: boolean;
 }
@@ -117,7 +126,9 @@ function getMatchScore(match: MatchItem) {
   return "—";
 }
 
-export function MatchList({ matches, categoryType, canEdit }: MatchListProps) {
+export function MatchList({ bracketId, categoryType, canEdit }: MatchListProps) {
+  const { data: matches } = useQuery(convexQuery(api.matches.listByBracket, { bracketId }));
+
   const removeMatch = useMutation(api.matches.remove);
   const updateResult = useMutation(api.matches.updateResult);
 
@@ -143,6 +154,15 @@ export function MatchList({ matches, categoryType, canEdit }: MatchListProps) {
       toast.error(err instanceof Error ? err.message : "Failed to record winner");
     }
   };
+
+  if (matches === undefined) {
+    return (
+      <div className="flex items-center justify-center py-12 text-muted-foreground">
+        <Loader2Icon className="size-6 animate-spin" />
+        <span className="ml-2 text-sm">Loading matches...</span>
+      </div>
+    );
+  }
 
   if (matches.length === 0) {
     return (

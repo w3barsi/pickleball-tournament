@@ -146,6 +146,7 @@ export const create = mutation({
     matchOrder: v.optional(v.number()),
     numberOfSets: v.optional(v.number()),
     pointsPerGame: v.optional(v.number()),
+    winByTwo: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const bracket = await ctx.db.get(args.bracketId);
@@ -196,6 +197,7 @@ export const create = mutation({
       matchOrder: args.matchOrder,
       numberOfSets: args.numberOfSets ?? 3,
       pointsPerGame: args.pointsPerGame ?? 11,
+      winByTwo: args.winByTwo ?? true,
       lastUpdatedAt: Date.now(),
     });
 

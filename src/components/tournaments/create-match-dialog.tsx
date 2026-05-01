@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -49,7 +50,7 @@ interface CreateMatchDialogProps {
 function getParticipantName(bp: BracketParticipant, categoryType: "singles" | "doubles") {
   const cp = bp.categoryParticipant;
   if (categoryType === "singles") {
-    return <p>cp.player?.fullName ?? "Unknown"</p>;
+    return <p>{cp.player?.fullName ?? "Unknown"}</p>;
   }
   return cp.pair?.teamName ? (
     <p>
@@ -79,6 +80,12 @@ export function CreateMatchDialog({
       participant2Id: "",
       courtNumber: "",
       roundNumber: "",
+      scheduledAt: "",
+      refereeName: "",
+      matchOrder: "",
+      numberOfSets: "3",
+      pointsPerGame: "11",
+      winByTwo: true,
     },
     onSubmit: async ({ value }) => {
       setServerError(null);
@@ -99,6 +106,12 @@ export function CreateMatchDialog({
           participant2Id: value.participant2Id as Id<"categoryParticipants">,
           courtNumber: value.courtNumber ? Number(value.courtNumber) : undefined,
           roundNumber: value.roundNumber ? Number(value.roundNumber) : undefined,
+          scheduledAt: value.scheduledAt ? new Date(value.scheduledAt).getTime() : undefined,
+          refereeName: value.refereeName || undefined,
+          matchOrder: value.matchOrder ? Number(value.matchOrder) : undefined,
+          numberOfSets: value.numberOfSets ? Number(value.numberOfSets) : undefined,
+          pointsPerGame: value.pointsPerGame ? Number(value.pointsPerGame) : undefined,
+          winByTwo: value.winByTwo,
         });
         toast.success("Match created");
         setOpen(false);
@@ -163,7 +176,10 @@ export function CreateMatchDialog({
                     onValueChange={(v) => v !== null && field.handleChange(v)}
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select participant..." />
+                      <SelectValue>
+                        {participantOptions.find((o) => o.value === field.state.value)?.label ??
+                          "Select participant..."}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
@@ -188,7 +204,10 @@ export function CreateMatchDialog({
                     onValueChange={(v) => v !== null && field.handleChange(v)}
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select participant..." />
+                      <SelectValue>
+                        {participantOptions.find((o) => o.value === field.state.value)?.label ??
+                          "Select participant..."}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
@@ -241,6 +260,113 @@ export function CreateMatchDialog({
                 )}
               </form.Field>
             </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <form.Field name="scheduledAt">
+                {(field) => (
+                  <div className="space-y-2">
+                    <Label htmlFor={field.name}>Scheduled At</Label>
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      type="datetime-local"
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      onBlur={field.handleBlur}
+                    />
+                  </div>
+                )}
+              </form.Field>
+
+              <form.Field name="refereeName">
+                {(field) => (
+                  <div className="space-y-2">
+                    <Label htmlFor={field.name}>Referee Name</Label>
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      type="text"
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      onBlur={field.handleBlur}
+                      placeholder="Optional"
+                    />
+                  </div>
+                )}
+              </form.Field>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <form.Field name="matchOrder">
+                {(field) => (
+                  <div className="space-y-2">
+                    <Label htmlFor={field.name}>Match Order</Label>
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      type="number"
+                      min={1}
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      onBlur={field.handleBlur}
+                      placeholder="Optional"
+                    />
+                  </div>
+                )}
+              </form.Field>
+
+              <form.Field name="numberOfSets">
+                {(field) => (
+                  <div className="space-y-2">
+                    <Label htmlFor={field.name}>Number of Sets</Label>
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      type="number"
+                      min={1}
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      onBlur={field.handleBlur}
+                      placeholder="Default: 3"
+                    />
+                  </div>
+                )}
+              </form.Field>
+
+              <form.Field name="pointsPerGame">
+                {(field) => (
+                  <div className="space-y-2">
+                    <Label htmlFor={field.name}>Points Per Game</Label>
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      type="number"
+                      min={1}
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      onBlur={field.handleBlur}
+                      placeholder="Default: 11"
+                    />
+                  </div>
+                )}
+              </form.Field>
+            </div>
+
+            <form.Field name="winByTwo">
+              {(field) => (
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id={field.name}
+                    name={field.name}
+                    checked={field.state.value}
+                    onCheckedChange={(checked) => field.handleChange(checked === true)}
+                  />
+                  <Label htmlFor={field.name} className="cursor-pointer">
+                    Win by two (slide-2 scoring)
+                  </Label>
+                </div>
+              )}
+            </form.Field>
 
             {serverError && (
               <div className="flex items-center gap-2 rounded-lg border-2 border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-600">

@@ -15,6 +15,7 @@ import type * as categoryParticipants from "../categoryParticipants.js";
 import type * as deletionRequests from "../deletionRequests.js";
 import type * as http from "../http.js";
 import type * as matches from "../matches.js";
+import type * as migrations from "../migrations.js";
 import type * as playerPairs from "../playerPairs.js";
 import type * as players from "../players.js";
 import type * as scoring from "../scoring.js";
@@ -36,6 +37,7 @@ declare const fullApi: ApiFromModules<{
   deletionRequests: typeof deletionRequests;
   http: typeof http;
   matches: typeof matches;
+  migrations: typeof migrations;
   playerPairs: typeof playerPairs;
   players: typeof players;
   scoring: typeof scoring;
@@ -72,4 +74,5 @@ export declare const internal: FilterApi<
 
 export declare const components: {
   betterAuth: import("../betterAuth/_generated/component.js").ComponentApi<"betterAuth">;
+  migrations: import("@convex-dev/migrations/_generated/component.js").ComponentApi<"migrations">;
 };
