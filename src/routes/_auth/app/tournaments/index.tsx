@@ -33,6 +33,9 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 
 export const Route = createFileRoute("/_auth/app/tournaments/")({
   component: TournamentsPage,
+  loader: async (ctx) => {
+    await ctx.context.queryClient.ensureQueryData(convexQuery(api.tournaments.listAll, {}));
+  },
 });
 
 function getStatusBadge(status: string) {
@@ -52,86 +55,6 @@ function getStatusBadge(status: string) {
         <Badge className="bg-green-50 font-normal text-green-600 hover:bg-green-50">Upcoming</Badge>
       );
   }
-}
-
-function TournamentCard({
-  tournament,
-  deleteTournament,
-  formatDate,
-}: {
-  tournament: {
-    _id: Id<"tournaments">;
-    name: string;
-    slug: string;
-    status: string;
-    date: number;
-    organizerName: string;
-    description?: string;
-  };
-  deleteTournament: (args: { tournamentId: Id<"tournaments"> }) => void;
-  formatDate: (timestamp: number) => string;
-}) {
-  return (
-    <Link to="/app/tournaments/$slug" params={{ slug: tournament.slug }}>
-      <Card className="group hover:-translate-y-0.2 overflow-hidden transition-all duration-300 hover:shadow-sm">
-        <CardContent className="">
-          <div className="flex items-center justify-between pb-2">
-            {getStatusBadge(tournament.status)}
-            <AlertDialog>
-              <AlertDialogTrigger
-                render={
-                  <Button variant="destructive" size="icon" onClick={(e) => e.stopPropagation()} />
-                }
-              >
-                <Trash2Icon className="size-4" />
-              </AlertDialogTrigger>
-              <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete Tournament</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Are you sure you want to delete{" "}
-                    <span className="font-semibold">{tournament.name}</span>? This action cannot be
-                    undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    variant="destructive"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteTournament({ tournamentId: tournament._id });
-                    }}
-                  >
-                    Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
-
-          <h3 className="group-hover:text-tournament-blue mb-4 text-lg font-medium tracking-tight text-foreground transition-colors">
-            {tournament.name}
-          </h3>
-          <div className="space-y-2.5 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2.5">
-              <CalendarIcon className="size-4 text-muted-foreground/70" />
-              <span>{formatDate(tournament.date)}</span>
-            </div>
-            <div className="flex items-center gap-2.5">
-              <UsersIcon className="size-4 text-muted-foreground/70" />
-              <span>Organizer: {tournament.organizerName}</span>
-            </div>
-            {tournament.description && <p className="line-clamp-2">{tournament.description}</p>}
-          </div>
-        </CardContent>
-        <CardFooter className="gap-1">
-          View details
-          <ChevronRightIcon className="size-4 transition-transform group-hover:translate-x-1" />
-        </CardFooter>
-      </Card>
-    </Link>
-  );
 }
 
 function TournamentsPage() {
@@ -232,5 +155,85 @@ function TournamentsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+function TournamentCard({
+  tournament,
+  deleteTournament,
+  formatDate,
+}: {
+  tournament: {
+    _id: Id<"tournaments">;
+    name: string;
+    slug: string;
+    status: string;
+    date: number;
+    organizerName: string;
+    description?: string;
+  };
+  deleteTournament: (args: { tournamentId: Id<"tournaments"> }) => void;
+  formatDate: (timestamp: number) => string;
+}) {
+  return (
+    <Link to="/app/tournaments/$slug" params={{ slug: tournament.slug }}>
+      <Card className="group hover:-translate-y-0.2 overflow-hidden transition-all duration-300 hover:shadow-sm">
+        <CardContent className="">
+          <div className="flex items-center justify-between pb-2">
+            {getStatusBadge(tournament.status)}
+            <AlertDialog>
+              <AlertDialogTrigger
+                render={
+                  <Button variant="destructive" size="icon" onClick={(e) => e.stopPropagation()} />
+                }
+              >
+                <Trash2Icon className="size-4" />
+              </AlertDialogTrigger>
+              <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Tournament</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete{" "}
+                    <span className="font-semibold">{tournament.name}</span>? This action cannot be
+                    undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    variant="destructive"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteTournament({ tournamentId: tournament._id });
+                    }}
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+
+          <h3 className="group-hover:text-tournament-blue mb-4 text-lg font-medium tracking-tight text-foreground transition-colors">
+            {tournament.name}
+          </h3>
+          <div className="space-y-2.5 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2.5">
+              <CalendarIcon className="size-4 text-muted-foreground/70" />
+              <span>{formatDate(tournament.date)}</span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <UsersIcon className="size-4 text-muted-foreground/70" />
+              <span>Organizer: {tournament.organizerName}</span>
+            </div>
+            {tournament.description && <p className="line-clamp-2">{tournament.description}</p>}
+          </div>
+        </CardContent>
+        <CardFooter className="gap-1">
+          View details
+          <ChevronRightIcon className="size-4 transition-transform group-hover:translate-x-1" />
+        </CardFooter>
+      </Card>
+    </Link>
   );
 }
