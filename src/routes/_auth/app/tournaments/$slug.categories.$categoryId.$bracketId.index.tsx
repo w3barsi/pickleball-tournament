@@ -168,7 +168,9 @@ function BracketDetailPage() {
         </div>
         {canEdit && (
           <AlertDialog>
-            <AlertDialogTrigger render={<Button variant="destructive" size="icon" />}>
+            <AlertDialogTrigger
+              render={<Button variant="destructive" className="bg-red-100" size="icon" />}
+            >
               <Trash2Icon className="size-4" />
             </AlertDialogTrigger>
             <AlertDialogContent>
@@ -244,25 +246,6 @@ function BracketDetailPage() {
         </Card>
       </div>
 
-      {/* Participants */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold">Participants</h2>
-          {canEdit && unassignedCount > 0 && (
-            <AssignParticipantsDialog
-              bracketId={bracketId as Id<"brackets">}
-              categoryId={categoryId as Id<"categories">}
-            />
-          )}
-        </div>
-        <BracketParticipantList
-          participants={participants}
-          categoryType={category.type}
-          canEdit={!!canEdit}
-          onRemove={handleRemoveParticipant}
-        />
-      </div>
-
       {/* Matches */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -284,8 +267,24 @@ function BracketDetailPage() {
         />
       </div>
 
-      {/* Dialogs */}
-      {canEdit && <></>}
+      {/* Participants */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold">Participants</h2>
+          {canEdit && unassignedCount > 0 && (
+            <AssignParticipantsDialog
+              bracketId={bracketId as Id<"brackets">}
+              categoryId={categoryId as Id<"categories">}
+            />
+          )}
+        </div>
+        <BracketParticipantList
+          participants={participants}
+          categoryType={category.type}
+          canEdit={!!canEdit}
+          onRemove={handleRemoveParticipant}
+        />
+      </div>
     </div>
   );
 }

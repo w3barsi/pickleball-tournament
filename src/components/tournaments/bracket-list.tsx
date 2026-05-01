@@ -130,6 +130,7 @@ export function BracketList({
                   <Button
                     variant="outline"
                     className="flex-1"
+                    nativeButton={false}
                     render={
                       <Link
                         to="/app/tournaments/$slug/categories/$categoryId/$bracketId"
@@ -143,6 +144,7 @@ export function BracketList({
                   {canEdit && unassignedCount > 0 && (
                     <Button
                       variant="ghost"
+                      nativeButton={false}
                       onClick={() => onAutoAssign(bracket._id)}
                       title="Auto-assign remaining participants"
                     >

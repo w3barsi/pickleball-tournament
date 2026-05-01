@@ -59,9 +59,8 @@ function Scoreboard() {
   const team1ServeIndicator = getServeIndicator(team1Serving, match.serverNumber);
   const team2ServeIndicator = getServeIndicator(team2Serving, match.serverNumber);
 
-  // Simple team names for overlay (would ideally come from participant data)
-  const team1Name = "Team 1";
-  const team2Name = "Team 2";
+  const team1Name = match.participant1Name || "Team 1";
+  const team2Name = match.participant2Name || "Team 2";
 
   return (
     <div

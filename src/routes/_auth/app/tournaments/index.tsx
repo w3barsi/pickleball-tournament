@@ -4,29 +4,11 @@ import { Id } from "@convex/_generated/dataModel.js";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
-import {
-  PlusIcon,
-  Trash2Icon,
-  TrophyIcon,
-  CalendarIcon,
-  UsersIcon,
-  ChevronRightIcon,
-} from "lucide-react";
+import { PlusIcon, TrophyIcon, CalendarIcon, UsersIcon, ChevronRightIcon } from "lucide-react";
 import { useState } from "react";
 
 import { HeaderCard, HeaderCardDescription, HeaderCardHeading } from "@/components/header-card";
 import { CreateTournamentDialog } from "@/components/tournaments/create-tournament-dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -60,7 +42,6 @@ function getStatusBadge(status: string) {
 function TournamentsPage() {
   const { data: tournaments } = useQuery(convexQuery(api.tournaments.listAll, {}));
   const createTournament = useMutation(api.tournaments.create);
-  const deleteTournament = useMutation(api.tournaments.remove);
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
@@ -145,12 +126,7 @@ function TournamentsPage() {
       ) : (
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {tournaments.map((tournament) => (
-            <TournamentCard
-              key={tournament._id}
-              tournament={tournament}
-              deleteTournament={deleteTournament}
-              formatDate={formatDate}
-            />
+            <TournamentCard key={tournament._id} tournament={tournament} formatDate={formatDate} />
           ))}
         </div>
       )}
@@ -160,7 +136,6 @@ function TournamentsPage() {
 
 function TournamentCard({
   tournament,
-  deleteTournament,
   formatDate,
 }: {
   tournament: {
@@ -172,7 +147,6 @@ function TournamentCard({
     organizerName: string;
     description?: string;
   };
-  deleteTournament: (args: { tournamentId: Id<"tournaments"> }) => void;
   formatDate: (timestamp: number) => string;
 }) {
   return (
@@ -181,37 +155,6 @@ function TournamentCard({
         <CardContent className="">
           <div className="flex items-center justify-between pb-2">
             {getStatusBadge(tournament.status)}
-            <AlertDialog>
-              <AlertDialogTrigger
-                render={
-                  <Button variant="destructive" size="icon" onClick={(e) => e.stopPropagation()} />
-                }
-              >
-                <Trash2Icon className="size-4" />
-              </AlertDialogTrigger>
-              <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete Tournament</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Are you sure you want to delete{" "}
-                    <span className="font-semibold">{tournament.name}</span>? This action cannot be
-                    undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    variant="destructive"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteTournament({ tournamentId: tournament._id });
-                    }}
-                  >
-                    Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
           </div>
 
           <h3 className="group-hover:text-tournament-blue mb-4 text-lg font-medium tracking-tight text-foreground transition-colors">

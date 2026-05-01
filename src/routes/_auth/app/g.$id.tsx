@@ -1,8 +1,8 @@
 import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@convex/_generated/api.js";
-import { Id } from "@convex/_generated/dataModel.js";
+import { Doc, Id } from "@convex/_generated/dataModel.js";
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import {
   RotateCcwIcon,
@@ -12,201 +12,327 @@ import {
   ArrowLeftIcon,
   RadioIcon,
   PlayIcon,
+  FlagIcon,
 } from "lucide-react";
 import { useState, useCallback } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_auth/app/g/$id")({
-  component: MatchDetailPage,
+  component: ScorerPage,
   loader: async (ctx) => {
     const matchId = ctx.params.id as Id<"matches">;
     await ctx.context.queryClient.ensureQueryData(
-      convexQuery(api.scoring.getMatchWithHistory, { matchId }),
+      convexQuery(api.scoring.getMatchForScorer, { matchId }),
     );
   },
 });
 
-function MatchDetailPage() {
+function getParticipantName(
+  participant:
+    | {
+        player?: { fullName: string } | null;
+        pair?: { teamName?: string } | null;
+        playerOne?: { fullName: string } | null;
+        playerTwo?: { fullName: string } | null;
+      }
+    | null
+    | undefined,
+  categoryType: "singles" | "doubles",
+) {
+  if (!participant) return "TBD";
+  if (categoryType === "singles") {
+    return participant.player?.fullName ?? "Unknown";
+  }
+  if (participant.pair?.teamName) {
+    return `${participant.pair.teamName} (${participant.playerOne?.fullName ?? "Unknown"} / ${participant.playerTwo?.fullName ?? "Unknown"})`;
+  }
+  return `${participant.playerOne?.fullName.split(" ").at(-1) ?? "Unknown"} / ${participant.playerTwo?.fullName.split(" ").at(-1) ?? "Unknown"}`;
+}
+
+// ─── Helpers ───────────────────────────────────────────────────────────────
+
+interface ComputedState {
+  team1Score: number;
+  team2Score: number;
+  servingTeam: 1 | 2;
+  serverNumber: 1 | 2;
+  isFirstServe: boolean;
+  isGameOver: boolean;
+  winner: 1 | 2 | null;
+}
+
+function computeSetState(
+  points: Array<{ pointWinner: 1 | 2 }>,
+  targetScore: number,
+  winByTwo: boolean,
+): ComputedState {
+  let state: ComputedState = {
+    team1Score: 0,
+    team2Score: 0,
+    servingTeam: 1,
+    serverNumber: 2,
+    isFirstServe: true,
+    isGameOver: false,
+    winner: null,
+  };
+
+  for (const point of points) {
+    if (state.isGameOver) break;
+
+    if (point.pointWinner === state.servingTeam) {
+      if (state.servingTeam === 1) {
+        state.team1Score += 1;
+      } else {
+        state.team2Score += 1;
+      }
+
+      const t1Wins =
+        state.team1Score >= targetScore && (!winByTwo || state.team1Score >= state.team2Score + 2);
+      const t2Wins =
+        state.team2Score >= targetScore && (!winByTwo || state.team2Score >= state.team1Score + 2);
+
+      if (t1Wins) {
+        state.isGameOver = true;
+        state.winner = 1;
+      } else if (t2Wins) {
+        state.isGameOver = true;
+        state.winner = 2;
+      }
+
+      state.isFirstServe = false;
+    } else {
+      if (state.isFirstServe) {
+        state.servingTeam = state.servingTeam === 1 ? 2 : 1;
+        state.serverNumber = 2;
+        state.isFirstServe = false;
+      } else {
+        if (state.serverNumber === 1) {
+          state.serverNumber = 2;
+        } else {
+          state.servingTeam = state.servingTeam === 1 ? 2 : 1;
+          state.serverNumber = 1;
+        }
+      }
+    }
+  }
+
+  return state;
+}
+
+// ─── Component ─────────────────────────────────────────────────────────────
+
+function ScorerPage() {
   const { id } = Route.useParams();
   const matchId = id as Id<"matches">;
   const navigate = useNavigate();
 
-  const matchData = useQuery(convexQuery(api.scoring.getMatchWithHistory, { matchId }));
+  const { data: matchData, isLoading } = useQuery(
+    convexQuery(api.scoring.getMatchForScorer, { matchId }),
+  );
 
-  const recordPointMutation = useMutation(api.scoring.recordPoint);
-  const undoPointMutation = useMutation(api.scoring.undoLastPoint);
-  const updateTargetScoreMutation = useMutation(api.scoring.updateTargetScore);
-  const setMatchLiveMutation = useMutation(api.scoring.setMatchLive);
   const startMatchMutation = useMutation(api.scoring.startMatch);
+  const setMatchLiveMutation = useMutation(api.scoring.setMatchLive);
+  const forfeitMatchMutation = useMutation(api.scoring.forfeitMatch);
 
-  const [showHistory, setShowHistory] = useState(false);
+  const recordPoint = useMutation(api.scoring.recordPoint).withOptimisticUpdate(
+    (localStore, args) => {
+      const current = localStore.getQuery(api.scoring.getMatchForScorer, {
+        matchId,
+      });
+      if (!current?.match || !current.currentSet || !current.computedState) return;
 
-  // Local state for team names (display only for now)
-  const [localTeam1Name, setLocalTeam1Name] = useState("Team 1");
-  const [localTeam2Name, setLocalTeam2Name] = useState("Team 2");
+      const pointWinner = args.pointWinner as 1 | 2;
+      const state = current.computedState;
 
-  // Sync local state with server data
-  const match = matchData.data?.match;
-  const points = matchData.data?.points ?? [];
+      const newPoint: Doc<"pickleballPoints"> = {
+        _id: "__optimistic__" as Id<"pickleballPoints">,
+        _creationTime: Date.now(),
+        matchSetId: current.currentSet._id,
+        team1Score: state.team1Score,
+        team2Score: state.team2Score,
+        servingTeam: state.servingTeam,
+        serverNumber: state.serverNumber,
+        isFirstServe: state.isFirstServe,
+        pointWinner,
+        sequenceNumber: current.currentSetPoints.length,
+        timestamp: Date.now(),
+        deletedAt: undefined,
+      };
 
-  const recordPoint = recordPointMutation.withOptimisticUpdate((localStore, args) => {
-    const current = localStore.getQuery(api.scoring.getMatchWithHistory, { matchId });
-    if (!current?.match) return;
+      const newPoints = [...current.currentSetPoints, newPoint];
+      const newState = computeSetState(
+        newPoints.map((p) => ({ pointWinner: p.pointWinner })),
+        current.currentSet.targetScore,
+        current.match.winByTwo,
+      );
 
-    const match = current.match;
-    const pointWinner = args.pointWinner as 1 | 2;
+      localStore.setQuery(
+        api.scoring.getMatchForScorer,
+        { matchId },
+        {
+          ...current,
+          currentSetPoints: newPoints,
+          computedState: newState,
+        },
+      );
+    },
+  );
 
-    // Calculate new state
-    let newState = { ...match };
+  const undoPoint = useMutation(api.scoring.undoLastPoint).withOptimisticUpdate((localStore) => {
+    const current = localStore.getQuery(api.scoring.getMatchForScorer, {
+      matchId,
+    });
+    if (!current?.currentSetPoints.length || !current.currentSet) return;
 
-    if (pointWinner === match.servingTeam) {
-      if (match.servingTeam === 1) {
-        newState.team1Score += 1;
-      } else {
-        newState.team2Score += 1;
-      }
-
-      // Check win condition
-      if (
-        newState.team1Score >= newState.targetScore &&
-        newState.team1Score >= newState.team2Score + 2
-      ) {
-        newState.status = "completed";
-        newState.winnerParticipantId = match.participant1Id;
-      } else if (
-        newState.team2Score >= newState.targetScore &&
-        newState.team2Score >= newState.team1Score + 2
-      ) {
-        newState.status = "completed";
-        newState.winnerParticipantId = match.participant2Id;
-      }
-
-      newState.isFirstServe = false;
-    } else {
-      if (match.isFirstServe) {
-        newState.servingTeam = match.servingTeam === 1 ? 2 : 1;
-        newState.serverNumber = 2;
-        newState.isFirstServe = false;
-      } else {
-        if (match.serverNumber === 1) {
-          newState.serverNumber = 2;
-        } else {
-          newState.servingTeam = match.servingTeam === 1 ? 2 : 1;
-          newState.serverNumber = 1;
-        }
-      }
-    }
+    const newPoints = current.currentSetPoints.slice(0, -1);
+    const newState = computeSetState(
+      newPoints.map((p) => ({ pointWinner: p.pointWinner })),
+      current.currentSet.targetScore,
+      current.match.winByTwo,
+    );
 
     localStore.setQuery(
-      api.scoring.getMatchWithHistory,
+      api.scoring.getMatchForScorer,
       { matchId },
       {
         ...current,
-        match: newState,
+        currentSetPoints: newPoints,
+        computedState: newState,
       },
     );
   });
 
-  const undoPoint = undoPointMutation.withOptimisticUpdate((localStore) => {
-    const current = localStore.getQuery(api.scoring.getMatchWithHistory, { matchId });
-    if (!current?.match || current.points.length === 0) return;
+  const [showHistory, setShowHistory] = useState(false);
+  const [showForfeitChoice, setShowForfeitChoice] = useState(false);
+  const [showForfeitConfirm, setShowForfeitConfirm] = useState<1 | 2 | null>(null);
 
-    const lastPoint = current.points[0];
-    const newState = {
-      ...current.match,
-      team1Score: lastPoint.team1Score,
-      team2Score: lastPoint.team2Score,
-      servingTeam: lastPoint.servingTeam,
-      serverNumber: lastPoint.serverNumber,
-      isFirstServe: lastPoint.isFirstServe,
-      status: "inProgress" as const,
-      winnerParticipantId: undefined,
-    };
+  const match = matchData?.match;
+  const participant1 = matchData?.participant1;
+  const participant2 = matchData?.participant2;
+  const categoryType = matchData?.categoryType ?? "singles";
+  const allSets = matchData?.allSets ?? [];
+  const currentSet = matchData?.currentSet;
+  const currentSetPoints = matchData?.currentSetPoints ?? [];
+  const computedState = matchData?.computedState;
 
-    localStore.setQuery(
-      api.scoring.getMatchWithHistory,
-      { matchId },
-      {
-        match: newState,
-        points: current.points.slice(1),
-      },
-    );
-  });
+  const team1Name = getParticipantName(participant1, categoryType);
+  const team2Name = getParticipantName(participant2, categoryType);
+
+  const isGameOver = match?.status === "completed";
+  const isInProgress = match?.status === "inProgress";
+  const isScheduled = match?.status === "scheduled";
+  const isAbandoned = match?.status === "abandoned";
+
+  const team1SetWins = allSets.filter((s) => s.winnerTeam === 1).length;
+  const team2SetWins = allSets.filter((s) => s.winnerTeam === 2).length;
+
+  const currentSetNumber = currentSet?.setNumber ?? 1;
+  const totalSets = match?.numberOfSets ?? 3;
+
+  const getScoreAnnouncement = useCallback(() => {
+    if (!computedState) return "";
+    const servingScore =
+      computedState.servingTeam === 1 ? computedState.team1Score : computedState.team2Score;
+    const receivingScore =
+      computedState.servingTeam === 1 ? computedState.team2Score : computedState.team1Score;
+    return `${servingScore}-${receivingScore}-${computedState.serverNumber}`;
+  }, [computedState]);
 
   const handlePoint = useCallback(
     async (winningTeam: 1 | 2) => {
-      if (match?.status !== "inProgress") return;
-      await recordPoint({ matchId, pointWinner: winningTeam });
+      if (!isInProgress) return;
+      try {
+        await recordPoint({ matchId, pointWinner: winningTeam });
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Failed to record point");
+      }
     },
-    [matchId, match?.status, recordPoint],
+    [matchId, isInProgress, recordPoint],
   );
 
   const handleUndo = useCallback(async () => {
-    if (points.length === 0) return;
-    await undoPoint({ matchId });
-  }, [matchId, points.length, undoPoint]);
-
-  const handleTargetScoreChange = useCallback(
-    (value: string) => {
-      const num = parseInt(value, 10);
-      if (!isNaN(num) && num >= 1) {
-        updateTargetScoreMutation({ matchId, targetScore: num });
-      }
-    },
-    [matchId, updateTargetScoreMutation],
-  );
-
-  const getScoreAnnouncement = useCallback(() => {
-    if (!match) return "";
-    const servingScore = match.servingTeam === 1 ? match.team1Score : match.team2Score;
-    const receivingScore = match.servingTeam === 1 ? match.team2Score : match.team1Score;
-    return `${servingScore}-${receivingScore}-${match.serverNumber}`;
-  }, [match]);
+    if (currentSetPoints.length === 0) return;
+    try {
+      await undoPoint({ matchId });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to undo");
+    }
+  }, [matchId, currentSetPoints.length, undoPoint]);
 
   const handleStartMatch = useCallback(async () => {
-    await startMatchMutation({ matchId });
+    try {
+      await startMatchMutation({ matchId });
+      toast.success("Match started");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to start match");
+    }
   }, [matchId, startMatchMutation]);
 
-  if (!match) {
+  const handleGoLive = useCallback(async () => {
+    try {
+      await setMatchLiveMutation({ matchId });
+      toast.success(match?.isLive ? "Match is live" : "Match set to live");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to set live");
+    }
+  }, [matchId, match?.isLive, setMatchLiveMutation]);
+
+  const handleForfeit = useCallback(
+    async (team: 1 | 2) => {
+      try {
+        await forfeitMatchMutation({ matchId, forfeitedBy: team });
+        setShowForfeitConfirm(null);
+        toast.success("Match forfeited");
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Failed to forfeit");
+      }
+    },
+    [matchId, forfeitMatchMutation],
+  );
+
+  if (isLoading || !match) {
     return <div className="py-12 text-center text-muted-foreground">Loading match...</div>;
   }
 
-  const isGameOver = match.status === "completed";
-  const isInProgress = match.status === "inProgress";
-  const isScheduled = match.status === "scheduled";
-
-  const handleGoLive = useCallback(async () => {
-    await setMatchLiveMutation({ matchId });
-  }, [matchId, setMatchLiveMutation]);
-
-  // Determine winner for display
   const team1Wins = match.winnerParticipantId === match.participant1Id;
   const team2Wins = match.winnerParticipantId === match.participant2Id;
 
   return (
-    <div className="mx-auto space-y-4">
+    <div className="mx-auto max-w-3xl space-y-4">
+      {/* Header */}
       <div className="flex items-center gap-2">
-        <Button variant="ghost" onClick={() => navigate({ to: "/app/games" })} className="gap-1">
-          <ArrowLeftIcon className="size-4" />
-          Back to Matches
-        </Button>
+        <Button
+          variant="ghost"
+          render={
+            <Link to="/app/tournaments" className="flex items-center gap-1">
+              <ArrowLeftIcon className="size-4" />
+              Tournaments
+            </Link>
+          }
+        />
       </div>
 
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">
-          {localTeam1Name} vs {localTeam2Name}
-        </h1>
-        <div className="flex gap-2">
+        <div>
+          <h1 className="text-xl font-bold md:text-2xl">
+            {team1Name} <span className="text-muted-foreground">vs</span> {team2Name}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Set {currentSetNumber} of {totalSets} · {match.pointsPerGame} points
+            {match.winByTwo ? " (win by 2)" : " (win at target)"}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
           {isInProgress && (
             <Button
               variant="outline"
+              size="sm"
               onClick={handleUndo}
-              disabled={points.length === 0}
+              disabled={currentSetPoints.length === 0}
               className="gap-1"
             >
               <RotateCcwIcon className="size-4" />
@@ -215,6 +341,7 @@ function MatchDetailPage() {
           )}
           <Button
             variant={match.isLive ? "default" : "outline"}
+            size="sm"
             onClick={handleGoLive}
             className="gap-1"
           >
@@ -230,13 +357,57 @@ function MatchDetailPage() {
             <HistoryIcon className="size-4" />
             History
           </Button>
+          {isInProgress && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowForfeitChoice(true)}
+              className="gap-1 text-amber-600"
+            >
+              <FlagIcon className="size-3" />
+              Forfeit
+            </Button>
+          )}
         </div>
       </div>
 
+      {/* Set Progress */}
+      {allSets.length > 0 && (
+        <div className="flex items-center justify-center gap-4">
+          <div className="flex items-center gap-2 text-sm">
+            <span className="font-semibold">{team1Name}</span>
+            <div className="flex gap-1">
+              {Array.from({ length: totalSets }).map((_, i) => {
+                const set = allSets.find((s) => s.setNumber === i + 1);
+                return (
+                  <div
+                    key={i}
+                    className={cn(
+                      "flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold",
+                      set?.winnerTeam === 1
+                        ? "bg-green-500 text-white"
+                        : set?.winnerTeam === 2
+                          ? "bg-slate-200 text-slate-400"
+                          : set?.status === "inProgress"
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-slate-100 text-slate-400",
+                    )}
+                  >
+                    {set?.winnerTeam === 1 ? "W" : set?.winnerTeam === 2 ? "L" : i + 1}
+                  </div>
+                );
+              })}
+            </div>
+            <span className="font-semibold">{team2Name}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Scheduled State */}
       {isScheduled && (
-        <Card className="border-tournament-blue/40 border-4 border-dashed bg-slate-50">
+        <Card className="border-2 border-dashed bg-slate-50">
           <CardContent className="flex flex-col items-center justify-center py-8">
-            <p className="text-tournament-blue text-lg font-bold uppercase">Match Scheduled</p>
+            <p className="text-lg font-bold text-primary uppercase">Match Scheduled</p>
             <p className="text-sm text-muted-foreground">Start the match to begin scoring</p>
             <Button className="mt-4 gap-2" onClick={handleStartMatch}>
               <PlayIcon className="size-4" />
@@ -246,45 +417,52 @@ function MatchDetailPage() {
         </Card>
       )}
 
-      <Card
-        className={cn(
-          "text-primary-foreground",
-          match.servingTeam === 1 ? "bg-orange-400" : "bg-blue-400",
-        )}
-      >
-        <CardContent className="flex flex-col items-center justify-center py-8">
-          <div className="text-sm opacity-80">Score Call</div>
-          <div className="text-5xl font-bold tracking-wider">{getScoreAnnouncement()}</div>
-          <div className="mt-2 text-sm opacity-80">
-            {match.servingTeam === 1 ? localTeam1Name : localTeam2Name} serving
-          </div>
-        </CardContent>
-      </Card>
+      {/* Score Call Banner */}
+      {(isInProgress || isGameOver || isAbandoned) && computedState && (
+        <Card
+          className={cn(
+            "text-primary-foreground",
+            computedState.servingTeam === 1 ? "bg-orange-400" : "bg-blue-400",
+          )}
+        >
+          <CardContent className="flex flex-col items-center justify-center py-8">
+            <div className="text-sm opacity-80">Score Call</div>
+            <div className="text-5xl font-bold tracking-wider">{getScoreAnnouncement()}</div>
+            <div className="mt-2 text-sm opacity-80">
+              {computedState.servingTeam === 1 ? team1Name : team2Name} serving
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
+      {/* Team Score Cards */}
       <div className="grid grid-cols-2 gap-4">
         <Card
           className={cn(
             "relative overflow-hidden border-2 border-transparent transition-all",
             team1Wins
               ? "border-4 border-green-400"
-              : match.servingTeam === 1
+              : computedState?.servingTeam === 1
                 ? "border-primary"
                 : "",
           )}
         >
           <CardHeader className="pb-2">
             <div className="flex items-center gap-2">
-              {match.servingTeam === 1 && (
-                <div className="bg-ballgreen flex size-10 shrink-0 items-center justify-center rounded-full border-green-800/10 text-xs font-bold">
-                  {match.serverNumber}
+              {computedState?.servingTeam === 1 && !isGameOver && !isAbandoned && (
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-green-500 text-xs font-bold text-white">
+                  {computedState.serverNumber}
                 </div>
               )}
-              <span className="text-lg font-semibold">{localTeam1Name}</span>
+              <span className="text-lg leading-tight font-semibold">{team1Name}</span>
             </div>
           </CardHeader>
           <CardContent>
             <div className="text-center">
-              <div className="text-7xl font-bold">{match.team1Score}</div>
+              <div className="text-7xl font-bold">{computedState?.team1Score ?? 0}</div>
+              <div className="mt-1 text-sm text-muted-foreground">
+                {team1SetWins} set{team1SetWins !== 1 ? "s" : ""} won
+              </div>
             </div>
           </CardContent>
           {team1Wins && (
@@ -299,24 +477,27 @@ function MatchDetailPage() {
             "relative overflow-hidden border-2 border-transparent transition-all",
             team2Wins
               ? "border-4 border-green-400"
-              : match.servingTeam === 2
+              : computedState?.servingTeam === 2
                 ? "border-primary"
                 : "",
           )}
         >
           <CardHeader className="pb-2">
             <div className="flex items-center gap-2">
-              {match.servingTeam === 2 && (
-                <div className="bg-ballgreen flex size-10 shrink-0 items-center justify-center rounded-full border-green-800/10 text-xs font-bold">
-                  {match.serverNumber}
+              {computedState?.servingTeam === 2 && !isGameOver && !isAbandoned && (
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-green-500 text-xs font-bold text-white">
+                  {computedState.serverNumber}
                 </div>
               )}
-              <span className="text-lg font-semibold">{localTeam2Name}</span>
+              <span className="text-lg leading-tight font-semibold">{team2Name}</span>
             </div>
           </CardHeader>
           <CardContent>
             <div className="text-center">
-              <div className="text-7xl font-bold">{match.team2Score}</div>
+              <div className="text-7xl font-bold">{computedState?.team2Score ?? 0}</div>
+              <div className="mt-1 text-sm text-muted-foreground">
+                {team2SetWins} set{team2SetWins !== 1 ? "s" : ""} won
+              </div>
             </div>
           </CardContent>
           {team2Wins && (
@@ -327,77 +508,64 @@ function MatchDetailPage() {
         </Card>
       </div>
 
-      {isInProgress && (
+      {/* Point Buttons */}
+      {isInProgress && !computedState?.isGameOver && (
         <div className="grid grid-cols-2 gap-4">
           <Button
             size="lg"
             className="h-24 text-xl"
             onClick={() => handlePoint(1)}
-            variant={match.servingTeam === 1 ? "default" : "outline"}
+            variant={computedState?.servingTeam === 1 ? "default" : "outline"}
           >
             <div className="flex flex-col items-center gap-1">
-              <span>{localTeam1Name} Wins Point</span>
-              {match.servingTeam === 1 && <span className="text-xs opacity-80">+1 point</span>}
+              <span>{team1Name} Wins Point</span>
+              {computedState?.servingTeam === 1 && (
+                <span className="text-xs opacity-80">+1 point</span>
+              )}
             </div>
           </Button>
           <Button
             size="lg"
             className="h-24 text-xl"
             onClick={() => handlePoint(2)}
-            variant={match.servingTeam === 2 ? "default" : "outline"}
+            variant={computedState?.servingTeam === 2 ? "default" : "outline"}
           >
             <div className="flex flex-col items-center gap-1">
-              <span>{localTeam2Name} Wins Point</span>
-              {match.servingTeam === 2 && <span className="text-xs opacity-80">+1 point</span>}
+              <span>{team2Name} Wins Point</span>
+              {computedState?.servingTeam === 2 && (
+                <span className="text-xs opacity-80">+1 point</span>
+              )}
             </div>
           </Button>
         </div>
       )}
 
-      {isGameOver && (
+      {/* Game Over / Abandoned */}
+      {(isGameOver || isAbandoned) && (
         <Card className="border-4 border-green-400 bg-yellow-50">
           <CardContent className="flex flex-col items-center justify-center py-8">
             <TrophyIcon className="mb-2 size-12 text-green-500" />
-            <div className="text-2xl font-bold text-primary-foreground">
-              {team1Wins ? localTeam1Name : localTeam2Name} Wins!
+            <div className="text-2xl font-bold">{team1Wins ? team1Name : team2Name} Wins!</div>
+            <div className="text-muted-foreground">
+              Final Score: {team1SetWins} - {team2SetWins}
             </div>
-            <div className="text-primary-foreground">
-              Final Score: {match.team1Score} - {match.team2Score}
-            </div>
+            {allSets.length > 0 && (
+              <div className="mt-2 text-sm text-muted-foreground">
+                {allSets
+                  .map((s) => `Set ${s.setNumber}: ${s.team1Score}-${s.team2Score}`)
+                  .join(" · ")}
+              </div>
+            )}
             <Button
               className="mt-4"
               variant="secondary"
-              onClick={() => navigate({ to: "/app/games" })}
-            >
-              Back to Matches
-            </Button>
+              render={<Link to="/app/tournaments">Back to Tournaments</Link>}
+            />
           </CardContent>
         </Card>
       )}
 
-      {(isInProgress || isScheduled) && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Match Settings</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-4">
-              <Label htmlFor="targetScore">Winning Score</Label>
-              <Input
-                id="targetScore"
-                type="number"
-                value={match.targetScore}
-                onChange={(e) => handleTargetScoreChange(e.target.value)}
-                className="w-20"
-                min={1}
-                disabled={isGameOver}
-              />
-              <span className="text-sm text-muted-foreground">(Win by 2)</span>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
+      {/* History */}
       {showHistory && (
         <Card>
           <CardHeader>
@@ -405,32 +573,84 @@ function MatchDetailPage() {
           </CardHeader>
           <CardContent>
             <div className="max-h-64 space-y-2 overflow-y-auto">
-              {points.length === 0 ? (
+              {currentSetPoints.length === 0 ? (
                 <div className="py-4 text-center text-muted-foreground">No points scored yet</div>
               ) : (
-                points.map((entry, idx) => (
+                [...currentSetPoints].reverse().map((entry, idx) => (
                   <div
                     key={idx}
                     className="flex items-center justify-between rounded-lg border p-3 text-sm"
                   >
                     <div className="flex items-center gap-2">
-                      <span className="text-muted-foreground">{points.length - idx}.</span>
+                      <span className="text-muted-foreground">
+                        {currentSetPoints.length - idx}.
+                      </span>
                       <span className={entry.pointWinner === 1 ? "font-semibold text-primary" : ""}>
-                        {localTeam1Name}: {entry.team1Score}
+                        {team1Name}: {entry.team1Score}
                       </span>
                       <span className="text-muted-foreground">-</span>
                       <span className={entry.pointWinner === 2 ? "font-semibold text-primary" : ""}>
-                        {localTeam2Name}: {entry.team2Score}
+                        {team2Name}: {entry.team2Score}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <UserIcon className="size-3" />
-                      {entry.servingTeam === 1 ? localTeam1Name : localTeam2Name} (
-                      {entry.serverNumber})
+                      {entry.servingTeam === 1 ? team1Name : team2Name} ({entry.serverNumber})
                     </div>
                   </div>
                 ))
               )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Forfeit Team Choice */}
+      {showForfeitChoice && (
+        <Card className="border-amber-200 bg-amber-50">
+          <CardContent className="flex flex-col items-center gap-3 py-6">
+            <p className="font-semibold text-amber-800">Which team is forfeiting?</p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowForfeitConfirm(1);
+                  setShowForfeitChoice(false);
+                }}
+              >
+                {team1Name}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowForfeitConfirm(2);
+                  setShowForfeitChoice(false);
+                }}
+              >
+                {team2Name}
+              </Button>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => setShowForfeitChoice(false)}>
+              Cancel
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Forfeit Confirmation */}
+      {showForfeitConfirm && (
+        <Card className="border-amber-200 bg-amber-50">
+          <CardContent className="flex flex-col items-center gap-3 py-6">
+            <p className="font-semibold text-amber-800">
+              Forfeit match for {showForfeitConfirm === 1 ? team1Name : team2Name}?
+            </p>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setShowForfeitConfirm(null)}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={() => handleForfeit(showForfeitConfirm)}>
+                Confirm Forfeit
+              </Button>
             </div>
           </CardContent>
         </Card>

@@ -59,7 +59,7 @@ function AppIndex() {
             variant="outline"
             size="lg"
             render={
-              <Link to="/app/games">
+              <Link to="/app/tournaments">
                 <GamepadIcon className="size-5" />
                 VIEW MATCHES
               </Link>
@@ -160,9 +160,9 @@ function AppIndex() {
                   variant="outline"
                   className="mt-3"
                   render={
-                    <Link to="/app/games">
+                    <Link to="/app/tournaments">
                       <PlusIcon className="size-4" />
-                      Start Match
+                      View Tournaments
                     </Link>
                   }
                 />
@@ -195,7 +195,10 @@ function AppIndex() {
                   <Button
                     variant="ghost"
                     className="w-full"
-                    render={<Link to="/app/games">View All {liveMatches.length} Live Matches</Link>}
+                    nativeButton={false}
+                    render={
+                      <Link to="/app/tournaments">View All {liveMatches.length} Live Matches</Link>
+                    }
                   />
                 )}
               </div>

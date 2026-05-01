@@ -13,6 +13,7 @@ import {
   PlayIcon,
   Trash2Icon,
   Loader2Icon,
+  RadioIcon,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -254,6 +255,20 @@ export function MatchList({ bracketId, categoryType, canEdit, slug, categoryId }
                           match.participant1 &&
                           match.participant2 && (
                             <>
+                              <Button
+                                variant="ghost"
+                                className="h-7 px-2 text-xs"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate({
+                                    to: "/app/g/$id",
+                                    params: { id: match._id },
+                                  });
+                                }}
+                              >
+                                <RadioIcon className="mr-1 size-3" />
+                                Scorer
+                              </Button>
                               <Button
                                 variant="ghost"
                                 className="h-7 px-2 text-xs"

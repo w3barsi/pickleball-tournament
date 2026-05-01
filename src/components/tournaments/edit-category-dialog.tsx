@@ -342,7 +342,7 @@ export function EditCategoryDialog({ category, tournamentSlug }: EditCategoryDia
           <AlertDialogFooter>
             <AlertDialogCancel render={<Button variant="outline">Cancel</Button>} />
             <AlertDialogAction
-              className="gap-2 bg-red-600 tracking-wide text-white uppercase hover:bg-red-700"
+              className="gap-2 bg-red-600 tracking-wide text-white hover:bg-red-700"
               onClick={handleDelete}
             >
               <Trash2Icon className="size-4" />

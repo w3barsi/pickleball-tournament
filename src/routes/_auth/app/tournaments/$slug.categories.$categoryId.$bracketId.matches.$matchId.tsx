@@ -303,7 +303,7 @@ function MatchDetailPage() {
               <span className="font-medium">
                 {match.numberOfSets} {match.numberOfSets === 1 ? "set" : "sets"} ·{" "}
                 {match.pointsPerGame} points
-                {!match.winByTwo ? " (win by 2)" : " (Sudden Death)"}
+                {match.winByTwo ? " (win by 2)" : " (win at target)"}
               </span>
             </div>
             <div className="flex justify-between">
