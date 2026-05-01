@@ -28,16 +28,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export const Route = createFileRoute("/_auth/app/tournaments/$slug/categories/$categoryId/")({
   component: CategoryDetailPage,
   loader: async ({ params, context }) => {
-    await context.queryClient.ensureQueryData(
-      convexQuery(api.categoryParticipants.listByCategory, {
-        categoryId: params.categoryId as Id<"categories">,
-      }),
-    );
-    await context.queryClient.ensureQueryData(
-      convexQuery(api.brackets.listByCategory, {
-        categoryId: params.categoryId as Id<"categories">,
-      }),
-    );
+    await Promise.all([
+      context.queryClient.ensureQueryData(
+        convexQuery(api.categoryParticipants.listByCategory, {
+          categoryId: params.categoryId as Id<"categories">,
+        }),
+      ),
+      context.queryClient.ensureQueryData(
+        convexQuery(api.brackets.listByCategory, {
+          categoryId: params.categoryId as Id<"categories">,
+        }),
+      ),
+    ]);
   },
 });
 
