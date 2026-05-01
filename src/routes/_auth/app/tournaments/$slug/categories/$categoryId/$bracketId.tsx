@@ -141,7 +141,6 @@ function BracketDetailPage() {
       <div>
         <Button
           variant="ghost"
-          size="sm"
           render={
             <Link
               to="/app/tournaments/$slug/categories/$categoryId"

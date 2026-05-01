@@ -165,7 +165,6 @@ function CategoryDetailPage() {
       <div>
         <Button
           variant="ghost"
-          size="sm"
           render={
             <Link
               to="/app/tournaments/$slug/categories"
@@ -259,7 +258,6 @@ function CategoryDetailPage() {
               {unassignedCount > 0 && brackets && brackets.length > 0 && (
                 <Button
                   variant="outline"
-                  size="sm"
                   onClick={() => {
                     // Auto-assign to the last bracket
                     const lastBracket = brackets[brackets.length - 1];

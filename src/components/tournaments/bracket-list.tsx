@@ -129,7 +129,6 @@ export function BracketList({
                 <CardFooter>
                   <Button
                     variant="outline"
-                    size="sm"
                     className="flex-1"
                     render={
                       <Link
@@ -144,7 +143,6 @@ export function BracketList({
                   {canEdit && unassignedCount > 0 && (
                     <Button
                       variant="ghost"
-                      size="sm"
                       onClick={() => onAutoAssign(bracket._id)}
                       title="Auto-assign remaining participants"
                     >

@@ -134,7 +134,7 @@ export function EditCategoryDialog({ category, tournamentSlug }: EditCategoryDia
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogTrigger
           render={
-            <Button variant="outline" size="sm">
+            <Button variant="outline">
               <PencilIcon className="size-4" />
               Edit
             </Button>

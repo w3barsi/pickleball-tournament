@@ -191,12 +191,7 @@ function MatchDetailPage() {
   return (
     <div className="mx-auto space-y-4">
       <div className="flex items-center gap-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate({ to: "/app/games" })}
-          className="gap-1"
-        >
+        <Button variant="ghost" onClick={() => navigate({ to: "/app/games" })} className="gap-1">
           <ArrowLeftIcon className="size-4" />
           Back to Matches
         </Button>
@@ -210,7 +205,6 @@ function MatchDetailPage() {
           {isInProgress && (
             <Button
               variant="outline"
-              size="sm"
               onClick={handleUndo}
               disabled={points.length === 0}
               className="gap-1"
@@ -221,7 +215,6 @@ function MatchDetailPage() {
           )}
           <Button
             variant={match.isLive ? "default" : "outline"}
-            size="sm"
             onClick={handleGoLive}
             className="gap-1"
           >
@@ -241,9 +234,9 @@ function MatchDetailPage() {
       </div>
 
       {isScheduled && (
-        <Card className="border-4 border-dashed border-tournament-blue/40 bg-slate-50">
+        <Card className="border-tournament-blue/40 border-4 border-dashed bg-slate-50">
           <CardContent className="flex flex-col items-center justify-center py-8">
-            <p className="text-lg font-bold text-tournament-blue uppercase">Match Scheduled</p>
+            <p className="text-tournament-blue text-lg font-bold uppercase">Match Scheduled</p>
             <p className="text-sm text-muted-foreground">Start the match to begin scoring</p>
             <Button className="mt-4 gap-2" onClick={handleStartMatch}>
               <PlayIcon className="size-4" />
@@ -282,7 +275,7 @@ function MatchDetailPage() {
           <CardHeader className="pb-2">
             <div className="flex items-center gap-2">
               {match.servingTeam === 1 && (
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-full border-green-800/10 bg-ballgreen text-xs font-bold">
+                <div className="bg-ballgreen flex size-10 shrink-0 items-center justify-center rounded-full border-green-800/10 text-xs font-bold">
                   {match.serverNumber}
                 </div>
               )}
@@ -314,7 +307,7 @@ function MatchDetailPage() {
           <CardHeader className="pb-2">
             <div className="flex items-center gap-2">
               {match.servingTeam === 2 && (
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-full border-green-800/10 bg-ballgreen text-xs font-bold">
+                <div className="bg-ballgreen flex size-10 shrink-0 items-center justify-center rounded-full border-green-800/10 text-xs font-bold">
                   {match.serverNumber}
                 </div>
               )}

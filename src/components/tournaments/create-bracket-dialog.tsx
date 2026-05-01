@@ -86,7 +86,7 @@ export function CreateBracketDialog({ open, onOpenChange, onCreate }: CreateBrac
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger
         render={
-          <Button variant="secondary" size="sm">
+          <Button variant="secondary">
             <PlusIcon className="size-4" />
             Create Bracket
           </Button>
