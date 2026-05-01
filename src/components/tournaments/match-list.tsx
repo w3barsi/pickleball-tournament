@@ -108,10 +108,18 @@ function getParticipantName(
   if (categoryType === "singles") {
     return participant.player?.fullName ?? "Unknown";
   }
-  return (
-    participant.pair?.teamName ??
-    `${participant.playerOne?.fullName ?? "Unknown"} / ${participant.playerTwo?.fullName ?? "Unknown"}`
-  );
+  if (participant.pair?.teamName) {
+    return (
+      <span>
+        {participant.pair.teamName}{" "}
+        <span className="text-xs text-muted-foreground">
+          ({participant.playerOne?.fullName ?? "Unknown"} /{" "}
+          {participant.playerTwo?.fullName ?? "Unknown"})
+        </span>
+      </span>
+    );
+  }
+  return `${participant.playerOne?.fullName ?? "Unknown"} / ${participant.playerTwo?.fullName ?? "Unknown"}`;
 }
 
 function getMatchScore(match: MatchItem) {
@@ -176,15 +184,15 @@ export function MatchList({ bracketId, categoryType, canEdit }: MatchListProps) 
 
   return (
     <div className="space-y-4">
-      <div className="rounded-lg border">
+      <div className="overflow-x-auto rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Match</TableHead>
+              <TableHead className="w-24 whitespace-nowrap">Match</TableHead>
               <TableHead>Participants</TableHead>
-              <TableHead>Score</TableHead>
-              <TableHead>Status</TableHead>
-              {canEdit && <TableHead className="w-24" />}
+              <TableHead className="w-20 text-center">Score</TableHead>
+              <TableHead className="w-28">Status</TableHead>
+              {canEdit && <TableHead className="w-32" />}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -196,34 +204,45 @@ export function MatchList({ bracketId, categoryType, canEdit }: MatchListProps) 
 
               return (
                 <TableRow key={match._id}>
-                  <TableCell className="font-medium">
-                    {match.roundNumber ? `R${match.roundNumber}` : "—"}
-                    {match.matchOrder ? ` · M${match.matchOrder}` : ""}
-                    {match.courtNumber ? (
-                      <span className="ml-1 text-xs text-muted-foreground">
-                        (Court {match.courtNumber})
+                  <TableCell className="font-medium whitespace-nowrap">
+                    <div className="flex flex-col gap-0.5">
+                      <span>
+                        {match.roundNumber ? `R${match.roundNumber}` : "—"}
+                        {match.matchOrder ? ` · M${match.matchOrder}` : ""}
                       </span>
-                    ) : null}
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <div className={isP1Winner ? "font-bold text-green-700" : ""}>{p1Name}</div>
-                      <div className="text-xs text-muted-foreground">vs</div>
-                      <div className={isP2Winner ? "font-bold text-green-700" : ""}>{p2Name}</div>
+                      {match.courtNumber ? (
+                        <span className="text-xs text-muted-foreground">
+                          Court {match.courtNumber}
+                        </span>
+                      ) : null}
                     </div>
                   </TableCell>
-                  <TableCell className="font-mono text-lg">{getMatchScore(match)}</TableCell>
+                  <TableCell className="flex items-center gap-2">
+                    <div className="text-[10px] font-medium tracking-wider text-muted-foreground uppercase">
+                      vs
+                    </div>
+                    <div className="space-y-1">
+                      <div className={isP1Winner ? "font-semibold text-green-700" : ""}>
+                        {p1Name}
+                      </div>
+                      <div className={isP2Winner ? "font-semibold text-green-700" : ""}>
+                        {p2Name}
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center font-mono text-lg font-semibold">
+                    {getMatchScore(match)}
+                  </TableCell>
                   <TableCell>{getStatusBadge(match.status)}</TableCell>
                   {canEdit && (
                     <TableCell>
-                      <div className="flex items-center gap-1">
+                      <div className="flex flex-wrap items-center justify-end gap-1">
                         {match.status !== "completed" &&
                           match.participant1 &&
                           match.participant2 && (
                             <>
                               <Button
                                 variant="ghost"
-                                size="sm"
                                 className="h-7 px-2 text-xs"
                                 onClick={() => handleSetWinner(match._id, match.participant1!._id)}
                               >
@@ -231,7 +250,6 @@ export function MatchList({ bracketId, categoryType, canEdit }: MatchListProps) 
                               </Button>
                               <Button
                                 variant="ghost"
-                                size="sm"
                                 className="h-7 px-2 text-xs"
                                 onClick={() => handleSetWinner(match._id, match.participant2!._id)}
                               >
@@ -245,7 +263,7 @@ export function MatchList({ bracketId, categoryType, canEdit }: MatchListProps) 
                           className="size-7 text-red-600 hover:bg-red-50 hover:text-red-700"
                           onClick={() => setDeleteTarget(match._id)}
                         >
-                          <Trash2Icon className="size-3" />
+                          <Trash2Icon className="size-3.5" />
                         </Button>
                       </div>
                     </TableCell>
