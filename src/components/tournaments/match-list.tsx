@@ -4,6 +4,7 @@ import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@convex/_generated/api.js";
 import { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import {
   SwordsIcon,
@@ -70,6 +71,8 @@ interface MatchListProps {
   bracketId: Id<"brackets">;
   categoryType: "singles" | "doubles";
   canEdit: boolean;
+  slug: string;
+  categoryId: Id<"categories">;
 }
 
 function getStatusBadge(status: string) {
@@ -134,11 +137,12 @@ function getMatchScore(match: MatchItem) {
   return "—";
 }
 
-export function MatchList({ bracketId, categoryType, canEdit }: MatchListProps) {
+export function MatchList({ bracketId, categoryType, canEdit, slug, categoryId }: MatchListProps) {
   const { data: matches } = useQuery(convexQuery(api.matches.listByBracket, { bracketId }));
 
   const removeMatch = useMutation(api.matches.remove);
   const updateResult = useMutation(api.matches.updateResult);
+  const navigate = useNavigate();
 
   const [deleteTarget, setDeleteTarget] = useState<Id<"matches"> | null>(null);
 
@@ -203,7 +207,16 @@ export function MatchList({ bracketId, categoryType, canEdit }: MatchListProps) 
               const isP2Winner = match.winnerParticipantId === match.participant2?._id;
 
               return (
-                <TableRow key={match._id}>
+                <TableRow
+                  key={match._id}
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() =>
+                    navigate({
+                      to: "/app/tournaments/$slug/categories/$categoryId/$bracketId/matches/$matchId",
+                      params: { slug, categoryId, bracketId, matchId: match._id },
+                    })
+                  }
+                >
                   <TableCell className="font-medium whitespace-nowrap">
                     <div className="flex flex-col gap-0.5">
                       <span>
@@ -244,14 +257,20 @@ export function MatchList({ bracketId, categoryType, canEdit }: MatchListProps) 
                               <Button
                                 variant="ghost"
                                 className="h-7 px-2 text-xs"
-                                onClick={() => handleSetWinner(match._id, match.participant1!._id)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSetWinner(match._id, match.participant1!._id);
+                                }}
                               >
                                 P1 Wins
                               </Button>
                               <Button
                                 variant="ghost"
                                 className="h-7 px-2 text-xs"
-                                onClick={() => handleSetWinner(match._id, match.participant2!._id)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSetWinner(match._id, match.participant2!._id);
+                                }}
                               >
                                 P2 Wins
                               </Button>
@@ -261,7 +280,10 @@ export function MatchList({ bracketId, categoryType, canEdit }: MatchListProps) 
                           variant="ghost"
                           size="icon"
                           className="size-7 text-red-600 hover:bg-red-50 hover:text-red-700"
-                          onClick={() => setDeleteTarget(match._id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleteTarget(match._id);
+                          }}
                         >
                           <Trash2Icon className="size-3.5" />
                         </Button>

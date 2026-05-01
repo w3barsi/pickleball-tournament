@@ -132,6 +132,74 @@ export const get = query({
   },
 });
 
+export const getWithDetails = query({
+  args: {
+    matchId: v.id("matches"),
+  },
+  handler: async (ctx, args) => {
+    const match = await ctx.db.get(args.matchId);
+    if (!match) return null;
+
+    const bracket = await ctx.db.get(match.bracketId);
+    const category = bracket ? await ctx.db.get(bracket.categoryId) : null;
+    const tournament = category ? await ctx.db.get(category.tournamentId) : null;
+
+    const p1 = await ctx.db.get(match.participant1Id);
+    const p2 = await ctx.db.get(match.participant2Id);
+
+    let participant1 = null;
+    let participant2 = null;
+
+    if (p1 && category) {
+      if (category.type === "singles") {
+        const player = p1.playerId ? await ctx.db.get(p1.playerId) : null;
+        participant1 = { ...p1, player };
+      } else {
+        const pair = p1.pairId ? await ctx.db.get(p1.pairId) : null;
+        let playerOne = null;
+        let playerTwo = null;
+        if (pair) {
+          playerOne = await ctx.db.get(pair.playerOne);
+          playerTwo = await ctx.db.get(pair.playerTwo);
+        }
+        participant1 = { ...p1, pair, playerOne, playerTwo };
+      }
+    }
+
+    if (p2 && category) {
+      if (category.type === "singles") {
+        const player = p2.playerId ? await ctx.db.get(p2.playerId) : null;
+        participant2 = { ...p2, player };
+      } else {
+        const pair = p2.pairId ? await ctx.db.get(p2.pairId) : null;
+        let playerOne = null;
+        let playerTwo = null;
+        if (pair) {
+          playerOne = await ctx.db.get(pair.playerOne);
+          playerTwo = await ctx.db.get(pair.playerTwo);
+        }
+        participant2 = { ...p2, pair, playerOne, playerTwo };
+      }
+    }
+
+    const matchSets = await ctx.db
+      .query("matchSets")
+      .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
+      .order("asc")
+      .collect();
+
+    return {
+      match,
+      bracket,
+      category,
+      tournament,
+      participant1,
+      participant2,
+      matchSets,
+    };
+  },
+});
+
 // ─── Mutations ─────────────────────────────────────────────────────────────
 
 export const create = mutation({
@@ -222,6 +290,9 @@ export const update = mutation({
     matchNotes: v.optional(v.string()),
     roundNumber: v.optional(v.number()),
     matchOrder: v.optional(v.number()),
+    numberOfSets: v.optional(v.number()),
+    pointsPerGame: v.optional(v.number()),
+    winByTwo: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const match = await ctx.db.get(args.matchId);
