@@ -1,5 +1,6 @@
 import { Autocomplete as AutocompletePrimitive } from "@base-ui/react/autocomplete";
 import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { AlertTriangleIcon, Trash2Icon } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import {
@@ -13,7 +14,28 @@ import {
   AutocompleteGroup,
   AutocompleteGroupLabel,
 } from "@/components/reui/autocomplete";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -256,6 +278,12 @@ function ShowcasePage() {
 
         {/* Select Section */}
         <SelectShowcase />
+
+        {/* Alert Dialog Section */}
+        <AlertDialogShowcase />
+
+        {/* Dialog with AlertDialog Section */}
+        <DialogWithAlertDialogShowcase />
 
         {/* Footer */}
         <footer className="border-t pt-8 text-center text-sm text-muted-foreground">
@@ -680,6 +708,147 @@ function SelectShowcase() {
           </Select>
         </div>
       </div>
+    </section>
+  );
+}
+
+function AlertDialogShowcase() {
+  return (
+    <section className="space-y-6">
+      <h2 className="text-2xl font-bold text-foreground">Alert Dialog</h2>
+
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {/* Destructive Alert */}
+        <div className="space-y-2">
+          <h3 className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+            Destructive
+          </h3>
+          <AlertDialog>
+            <AlertDialogTrigger render={<Button variant="destructive">Delete Account</Button>} />
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogMedia>
+                  <Trash2Icon className="text-destructive" />
+                </AlertDialogMedia>
+                <AlertDialogTitle>Delete account?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. All your data will be permanently removed.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction variant="destructive">Delete</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+
+        {/* Warning Alert */}
+        <div className="space-y-2">
+          <h3 className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+            Warning
+          </h3>
+          <AlertDialog>
+            <AlertDialogTrigger render={<Button variant="outline">Leave Page</Button>} />
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogMedia>
+                  <AlertTriangleIcon className="text-amber-500" />
+                </AlertDialogMedia>
+                <AlertDialogTitle>Unsaved changes</AlertDialogTitle>
+                <AlertDialogDescription>
+                  You have unsaved changes. Are you sure you want to leave this page?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Stay</AlertDialogCancel>
+                <AlertDialogAction variant="secondary">Leave</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+
+        {/* Small Size */}
+        <div className="space-y-2">
+          <h3 className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+            Small
+          </h3>
+          <AlertDialog>
+            <AlertDialogTrigger render={<Button variant="ghost">Clear Data</Button>} />
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Clear all data?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently delete all local data.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction variant="destructive">Clear</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function DialogWithAlertDialogShowcase() {
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [alertOpen, setAlertOpen] = useState(false);
+
+  return (
+    <section className="space-y-6">
+      <h2 className="text-2xl font-bold text-foreground">Alert Dialog inside Dialog</h2>
+      <p className="text-sm text-muted-foreground">
+        An AlertDialog can be triggered from within a Dialog by nesting their triggers.
+      </p>
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogTrigger render={<Button variant="outline">Open Settings</Button>} />
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Settings</DialogTitle>
+            <DialogDescription>Manage your account settings and preferences.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="rounded-lg border p-3">
+              <h4 className="text-sm font-medium">Danger Zone</h4>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Irreversible actions for your account.
+              </p>
+              <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
+                <AlertDialogTrigger
+                  render={<Button variant="destructive" size="sm" className="mt-3" />}
+                >
+                  <Trash2Icon />
+                  Delete Account
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogMedia>
+                      <Trash2Icon className="text-destructive" />
+                    </AlertDialogMedia>
+                    <AlertDialogTitle>Delete account?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. All your data will be permanently removed.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction variant="destructive" onClick={() => setDialogOpen(false)}>
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </div>
+          <DialogFooter>
+            <DialogTrigger render={<Button variant="outline">Close</Button>} />
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }
