@@ -1,3 +1,7 @@
+import { convexQuery } from "@convex-dev/react-query";
+import { api } from "@convex/_generated/api.js";
+import { Id } from "@convex/_generated/dataModel.js";
+import { useQuery } from "@tanstack/react-query";
 import { useMatch } from "@tanstack/react-router";
 import { HomeIcon, TrophyIcon, UserPlusIcon, UsersIcon } from "lucide-react";
 
@@ -8,13 +12,46 @@ import { cn } from "@/lib/utils";
 import { BaseSidebar, SidebarMenuLinkItem } from "../sidebar/base-sidebar";
 import { TournamentSidebar } from "../tournaments/tournament-sidebar";
 
-export function AppSidebar() {
-  const { isAdmin } = useAuthSuspense();
+function useTournamentSlug(): string | null {
   const tournamentMatch = useMatch({
     from: "/_auth/app/tournaments/$slug",
     shouldThrow: false,
   });
-  const isOnTournamentPage = !!tournamentMatch;
+  const bracketMatch = useMatch({
+    from: "/_auth/app/brackets/$bracketId/",
+    shouldThrow: false,
+  });
+  const matchMatch = useMatch({
+    from: "/_auth/app/matches/$matchId",
+    shouldThrow: false,
+  });
+
+  const { data: bracketData } = useQuery(
+    convexQuery(
+      api.brackets.getWithParticipants,
+      tournamentMatch || !bracketMatch?.params.bracketId
+        ? "skip"
+        : { bracketId: bracketMatch.params.bracketId as Id<"brackets"> },
+    ),
+  );
+  const { data: matchData } = useQuery(
+    convexQuery(
+      api.matches.getWithDetails,
+      tournamentMatch || !matchMatch?.params.matchId
+        ? "skip"
+        : { matchId: matchMatch.params.matchId as Id<"matches"> },
+    ),
+  );
+
+  if (tournamentMatch) return tournamentMatch.params.slug;
+  if (bracketData?.tournament?.slug) return bracketData.tournament.slug;
+  if (matchData?.tournament?.slug) return matchData.tournament.slug;
+  return null;
+}
+
+export function AppSidebar() {
+  const { isAdmin } = useAuthSuspense();
+  const tournamentSlug = useTournamentSlug();
 
   return (
     <BaseSidebar
@@ -61,9 +98,7 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarGroup>
 
-      {isOnTournamentPage && tournamentMatch && (
-        <TournamentSidebar slug={tournamentMatch.params.slug} />
-      )}
+      {tournamentSlug && <TournamentSidebar slug={tournamentSlug} />}
     </BaseSidebar>
   );
 }

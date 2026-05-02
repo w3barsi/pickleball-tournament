@@ -104,6 +104,8 @@ export const getWithParticipants = query({
       throw new Error("Category not found");
     }
 
+    const tournament = category ? await ctx.db.get(category.tournamentId) : null;
+
     const bracketParticipants = await ctx.db
       .query("bracketParticipants")
       .withIndex("by_bracket", (q) => q.eq("bracketId", args.bracketId))
@@ -151,6 +153,7 @@ export const getWithParticipants = query({
     return {
       bracket,
       category,
+      tournament,
       participants,
     };
   },

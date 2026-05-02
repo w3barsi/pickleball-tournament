@@ -290,8 +290,6 @@ function CategoryDetailPage() {
         ) : (
           <BracketList
             brackets={brackets}
-            slug={slug}
-            categoryId={categoryId}
             canEdit={!!canEdit}
             unassignedCount={unassignedCount}
             onAutoAssign={handleAutoAssign}

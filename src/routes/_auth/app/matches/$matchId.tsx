@@ -23,9 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export const Route = createFileRoute(
-  "/_auth/app/tournaments/$slug/categories/$categoryId/$bracketId/matches/$matchId",
-)({
+export const Route = createFileRoute("/_auth/app/matches/$matchId")({
   component: MatchDetailPage,
   loader: async ({ params, context }) => {
     await context.queryClient.ensureQueryData(
@@ -97,13 +95,15 @@ function formatDate(ts: number | undefined) {
 }
 
 function MatchDetailPage() {
-  const { slug, categoryId, bracketId, matchId } = Route.useParams();
+  const { matchId } = Route.useParams();
   const { data: matchData } = useQuery(
     convexQuery(api.matches.getWithDetails, { matchId: matchId as Id<"matches"> }),
   );
-  const { data: tournament } = useQuery(convexQuery(api.tournaments.getBySlug, { slug }));
   const { data: canEdit } = useQuery(
-    convexQuery(api.categories.canEdit, tournament ? { tournamentId: tournament._id } : "skip"),
+    convexQuery(
+      api.categories.canEdit,
+      matchData?.tournament ? { tournamentId: matchData.tournament._id } : "skip",
+    ),
   );
 
   if (!matchData) {
@@ -138,8 +138,8 @@ function MatchDetailPage() {
           variant="ghost"
           render={
             <Link
-              to="/app/tournaments/$slug/categories/$categoryId/$bracketId"
-              params={{ slug, categoryId, bracketId }}
+              to="/app/brackets/$bracketId"
+              params={{ bracketId: bracket?._id ?? "" }}
               className="flex items-center gap-1 text-muted-foreground"
             >
               <ChevronLeftIcon className="size-4" />
@@ -160,8 +160,8 @@ function MatchDetailPage() {
             {getStatusBadge(match.status)}
           </div>
           <HeaderCardDescription>
-            {matchTournament?.name ?? tournament?.name ?? "Tournament"} ·{" "}
-            {category?.name ?? "Category"} · {bracket?.name ?? "Bracket"}
+            {matchTournament?.name ?? "Tournament"} · {category?.name ?? "Category"} ·{" "}
+            {bracket?.name ?? "Bracket"}
           </HeaderCardDescription>
         </div>
         <div className="flex items-center gap-2">

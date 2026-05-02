@@ -67,8 +67,6 @@ interface MatchListProps {
   bracketId: Id<"brackets">;
   categoryType: "singles" | "doubles";
   canEdit: boolean;
-  slug: string;
-  categoryId: Id<"categories">;
 }
 
 function getStatusBadge(status: string) {
@@ -133,7 +131,7 @@ function getMatchScore(match: MatchItem) {
   return "—";
 }
 
-export function MatchList({ bracketId, categoryType, canEdit, slug, categoryId }: MatchListProps) {
+export function MatchList({ bracketId, categoryType, canEdit }: MatchListProps) {
   const { data: matches } = useQuery(convexQuery(api.matches.listByBracket, { bracketId }));
 
   const updateResult = useMutation(api.matches.updateResult);
@@ -193,8 +191,8 @@ export function MatchList({ bracketId, categoryType, canEdit, slug, categoryId }
                   className="cursor-pointer hover:bg-muted/50"
                   onClick={() =>
                     navigate({
-                      to: "/app/tournaments/$slug/categories/$categoryId/$bracketId/matches/$matchId",
-                      params: { slug, categoryId, bracketId, matchId: match._id },
+                      to: "/app/matches/$matchId",
+                      params: { matchId: match._id },
                     })
                   }
                 >

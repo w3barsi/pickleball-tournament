@@ -29,8 +29,6 @@ interface BracketItem {
 
 interface BracketListProps {
   brackets: BracketItem[];
-  slug: string;
-  categoryId: string;
   canEdit: boolean;
   unassignedCount: number;
   onAutoAssign: (bracketId: Id<"brackets">) => void;
@@ -60,8 +58,6 @@ function getStatusBadge(status: string) {
 
 export function BracketList({
   brackets,
-  slug,
-  categoryId,
   canEdit,
   unassignedCount,
   onAutoAssign,
@@ -132,10 +128,7 @@ export function BracketList({
                     className="flex-1"
                     nativeButton={false}
                     render={
-                      <Link
-                        to="/app/tournaments/$slug/categories/$categoryId/$bracketId"
-                        params={{ slug, categoryId, bracketId: bracket._id }}
-                      >
+                      <Link to="/app/brackets/$bracketId" params={{ bracketId: bracket._id }}>
                         View Bracket
                         <ArrowRightIcon className="ml-1 size-3" />
                       </Link>

@@ -37,9 +37,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export const Route = createFileRoute(
-  "/_auth/app/tournaments/$slug/categories/$categoryId/$bracketId/",
-)({
+export const Route = createFileRoute("/_auth/app/brackets/$bracketId/")({
   component: BracketDetailPage,
   loader: async ({ params, context }) => {
     await context.queryClient.ensureQueryData(
@@ -51,32 +49,32 @@ export const Route = createFileRoute(
 });
 
 function BracketDetailPage() {
-  const { slug, categoryId, bracketId } = Route.useParams();
-  const { data: tournament } = useQuery(convexQuery(api.tournaments.getBySlug, { slug }));
-  const { data: category } = useQuery(
-    convexQuery(api.categories.get, { categoryId: categoryId as Id<"categories"> }),
-  );
-  const { data: canEdit } = useQuery(
-    convexQuery(api.categories.canEdit, tournament ? { tournamentId: tournament._id } : "skip"),
-  );
+  const { bracketId } = Route.useParams();
+  const navigate = useNavigate();
   const { data: bracketData } = useQuery(
     convexQuery(api.brackets.getWithParticipants, {
       bracketId: bracketId as Id<"brackets">,
     }),
   );
+  const { data: canEdit } = useQuery(
+    convexQuery(
+      api.categories.canEdit,
+      bracketData?.tournament ? { tournamentId: bracketData.tournament._id } : "skip",
+    ),
+  );
   const { data: unassignedParticipants } = useQuery(
-    convexQuery(api.brackets.getUnassignedParticipants, {
-      categoryId: categoryId as Id<"categories">,
-    }),
+    convexQuery(
+      api.brackets.getUnassignedParticipants,
+      bracketData?.category ? { categoryId: bracketData.category._id as Id<"categories"> } : "skip",
+    ),
   );
 
   const removeParticipant = useMutation(api.brackets.removeParticipant);
   const removeBracket = useMutation(api.brackets.remove);
-  const navigate = useNavigate();
 
   const [isDeleting, setIsDeleting] = useState(false);
 
-  if (!bracketData || !category || !tournament) {
+  if (!bracketData || !bracketData.tournament) {
     return (
       <div className="py-20 text-center">
         <Loader2Icon className="mx-auto size-10 animate-spin text-slate-400" />
@@ -85,7 +83,7 @@ function BracketDetailPage() {
     );
   }
 
-  const { bracket, participants } = bracketData;
+  const { bracket, category, tournament, participants } = bracketData;
 
   const getFormatLabel = (format: string) => {
     switch (format) {
@@ -125,7 +123,7 @@ function BracketDetailPage() {
       toast.success("Bracket deleted");
       navigate({
         to: "/app/tournaments/$slug/categories/$categoryId",
-        params: { slug, categoryId },
+        params: { slug: tournament.slug, categoryId: category._id },
       });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to delete bracket");
@@ -144,7 +142,7 @@ function BracketDetailPage() {
           render={
             <Link
               to="/app/tournaments/$slug/categories/$categoryId"
-              params={{ slug, categoryId }}
+              params={{ slug: tournament.slug, categoryId: category._id }}
               className="flex items-center gap-1 text-muted-foreground"
             >
               <ChevronLeftIcon className="size-4" />
@@ -262,8 +260,6 @@ function BracketDetailPage() {
           bracketId={bracketId as Id<"brackets">}
           categoryType={category.type}
           canEdit={!!canEdit}
-          slug={slug}
-          categoryId={categoryId as Id<"categories">}
         />
       </div>
 
@@ -274,7 +270,7 @@ function BracketDetailPage() {
           {canEdit && unassignedCount > 0 && (
             <AssignParticipantsDialog
               bracketId={bracketId as Id<"brackets">}
-              categoryId={categoryId as Id<"categories">}
+              categoryId={category._id as Id<"categories">}
             />
           )}
         </div>
