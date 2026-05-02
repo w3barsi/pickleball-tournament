@@ -11,25 +11,20 @@ import {
   CheckCircle2Icon,
   ClockIcon,
   PlayIcon,
-  Trash2Icon,
   Loader2Icon,
   RadioIcon,
+  ChevronDownIcon,
 } from "lucide-react";
-import { useState } from "react";
 import { toast } from "sonner";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -141,23 +136,8 @@ function getMatchScore(match: MatchItem) {
 export function MatchList({ bracketId, categoryType, canEdit, slug, categoryId }: MatchListProps) {
   const { data: matches } = useQuery(convexQuery(api.matches.listByBracket, { bracketId }));
 
-  const removeMatch = useMutation(api.matches.remove);
   const updateResult = useMutation(api.matches.updateResult);
   const navigate = useNavigate();
-
-  const [deleteTarget, setDeleteTarget] = useState<Id<"matches"> | null>(null);
-
-  const handleDelete = async () => {
-    if (!deleteTarget) return;
-    try {
-      await removeMatch({ matchId: deleteTarget });
-      toast.success("Match deleted");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to delete match");
-    } finally {
-      setDeleteTarget(null);
-    }
-  };
 
   const handleSetWinner = async (matchId: Id<"matches">, winnerId: Id<"categoryParticipants">) => {
     try {
@@ -231,16 +211,18 @@ export function MatchList({ bracketId, categoryType, canEdit, slug, categoryId }
                       ) : null}
                     </div>
                   </TableCell>
-                  <TableCell className="flex items-center gap-2">
-                    <div className="text-[10px] font-medium tracking-wider text-muted-foreground uppercase">
-                      vs
-                    </div>
-                    <div className="space-y-1">
-                      <div className={isP1Winner ? "font-semibold text-green-700" : ""}>
-                        {p1Name}
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <div className="text-[10px] font-medium tracking-wider text-muted-foreground uppercase">
+                        vs
                       </div>
-                      <div className={isP2Winner ? "font-semibold text-green-700" : ""}>
-                        {p2Name}
+                      <div className="space-y-1">
+                        <div className={isP1Winner ? "font-semibold text-green-700" : ""}>
+                          {p1Name}
+                        </div>
+                        <div className={isP2Winner ? "font-semibold text-green-700" : ""}>
+                          {p2Name}
+                        </div>
                       </div>
                     </div>
                   </TableCell>
@@ -269,39 +251,40 @@ export function MatchList({ bracketId, categoryType, canEdit, slug, categoryId }
                                 <RadioIcon className="mr-1 size-3" />
                                 Scorer
                               </Button>
-                              <Button
-                                variant="ghost"
-                                className="h-7 px-2 text-xs"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleSetWinner(match._id, match.participant1!._id);
-                                }}
-                              >
-                                P1 Wins
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                className="h-7 px-2 text-xs"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleSetWinner(match._id, match.participant2!._id);
-                                }}
-                              >
-                                P2 Wins
-                              </Button>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger
+                                  render={
+                                    <Button
+                                      variant="ghost"
+                                      className="h-7 px-2 text-xs"
+                                      onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                                    >
+                                      Set Winner
+                                      <ChevronDownIcon className="ml-1 size-3" />
+                                    </Button>
+                                  }
+                                />
+                                <DropdownMenuContent align="end" className="w-full">
+                                  <DropdownMenuItem
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleSetWinner(match._id, match.participant1!._id);
+                                    }}
+                                  >
+                                    {p1Name}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleSetWinner(match._id, match.participant2!._id);
+                                    }}
+                                  >
+                                    {p2Name}
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </>
                           )}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="size-7 text-red-600 hover:bg-red-50 hover:text-red-700"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setDeleteTarget(match._id);
-                          }}
-                        >
-                          <Trash2Icon className="size-3.5" />
-                        </Button>
                       </div>
                     </TableCell>
                   )}
@@ -311,27 +294,6 @@ export function MatchList({ bracketId, categoryType, canEdit, slug, categoryId }
           </TableBody>
         </Table>
       </div>
-
-      <AlertDialog open={deleteTarget !== null} onOpenChange={() => setDeleteTarget(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Match</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this match? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              render={
-                <Button variant="destructive" onClick={handleDelete}>
-                  Delete
-                </Button>
-              }
-            />
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
