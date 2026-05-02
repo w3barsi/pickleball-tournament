@@ -181,7 +181,7 @@ function TournamentDetailPage() {
                         </Button>
                       }
                     />
-                    <AlertDialogContent size="sm">
+                    <AlertDialogContent>
                       <AlertDialogHeader>
                         <AlertDialogTitle>Delete Tournament</AlertDialogTitle>
                         <AlertDialogDescription>
