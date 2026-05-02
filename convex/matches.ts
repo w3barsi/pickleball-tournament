@@ -364,6 +364,73 @@ export const updateResult = mutation({
   },
 });
 
+export const reset = mutation({
+  args: {
+    matchId: v.id("matches"),
+  },
+  handler: async (ctx, args) => {
+    const match = await ctx.db.get(args.matchId);
+    if (!match) {
+      throw new Error("Match not found");
+    }
+
+    await requireManageTournament(ctx, match.tournamentId);
+
+    // If match was completed, revert win/loss records
+    if (match.status === "completed" && match.winnerParticipantId) {
+      const loserId =
+        match.winnerParticipantId === match.participant1Id
+          ? match.participant2Id
+          : match.participant1Id;
+
+      const winner = await ctx.db.get(match.winnerParticipantId);
+      const loser = await ctx.db.get(loserId);
+
+      if (winner && winner.wins > 0) {
+        await ctx.db.patch(match.winnerParticipantId, {
+          wins: winner.wins - 1,
+        });
+      }
+      if (loser && loser.losses > 0) {
+        await ctx.db.patch(loserId, {
+          losses: loser.losses - 1,
+        });
+      }
+    }
+
+    // Delete match sets and points
+    const matchSets = await ctx.db
+      .query("matchSets")
+      .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
+      .collect();
+
+    for (const matchSet of matchSets) {
+      const points = await ctx.db
+        .query("pickleballPoints")
+        .withIndex("by_match_set", (q) => q.eq("matchSetId", matchSet._id))
+        .collect();
+
+      for (const point of points) {
+        await ctx.db.delete(point._id);
+      }
+
+      await ctx.db.delete(matchSet._id);
+    }
+
+    await ctx.db.patch(args.matchId, {
+      status: "scheduled",
+      winnerParticipantId: undefined,
+      completedAt: undefined,
+      startedAt: undefined,
+      isLive: undefined,
+      forfeitedBy: undefined,
+      lastUpdatedAt: Date.now(),
+    });
+
+    return { success: true };
+  },
+});
+
 export const remove = mutation({
   args: {
     matchId: v.id("matches"),

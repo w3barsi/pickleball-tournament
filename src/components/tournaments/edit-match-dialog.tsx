@@ -1,13 +1,22 @@
-"use client";
-
 import { api } from "@convex/_generated/api";
 import { Doc, Id } from "@convex/_generated/dataModel";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
-import { CircleAlertIcon, Loader2Icon, PencilIcon } from "lucide-react";
+import { CircleAlertIcon, Loader2Icon, PencilIcon, RotateCcwIcon } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -19,8 +28,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -29,6 +38,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 
 interface EditMatchDialogProps {
@@ -41,6 +51,63 @@ const STATUS_OPTIONS = [
   { value: "completed", label: "Completed" },
   { value: "abandoned", label: "Abandoned" },
 ] as const;
+
+function ResetMatchDialog({ matchId }: { matchId: Id<"matches"> }) {
+  const [open, setOpen] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+
+  const resetMatch = useMutation(api.matches.reset);
+
+  const handleReset = async () => {
+    setIsResetting(true);
+    try {
+      await resetMatch({ matchId });
+      toast.success("Match reset");
+      setOpen(false);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      toast.error(`Failed to reset match: ${message}`);
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
+  return (
+    <AlertDialog open={open} onOpenChange={setOpen}>
+      <p className="text-xs text-muted-foreground">Scores, sets, and results will be cleared.</p>
+      <AlertDialogTrigger
+        render={
+          <Button type="button" variant="outline" className="w-full">
+            <RotateCcwIcon className="size-4" />
+            Reset
+          </Button>
+        }
+      />
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Reset Match</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to reset this match? This will clear all scores, sets, and
+            results. This action cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={() => setOpen(false)}>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={handleReset} disabled={isResetting} variant="destructive">
+            {isResetting ? (
+              <>
+                <Loader2Icon className="size-4 animate-spin" />
+                Resetting...
+              </>
+            ) : (
+              "Reset Match"
+            )}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
 
 export function EditMatchDialog({ match }: EditMatchDialogProps) {
   const [open, setOpen] = useState(false);
@@ -116,6 +183,9 @@ export function EditMatchDialog({ match }: EditMatchDialogProps) {
           <DialogDescription>Update the details of this match.</DialogDescription>
         </DialogHeader>
 
+        <ResetMatchDialog matchId={match._id} />
+        <Separator className="my-2" />
+
         <form
           id="edit-match"
           onSubmit={(e) => {
@@ -124,11 +194,11 @@ export function EditMatchDialog({ match }: EditMatchDialogProps) {
             void form.handleSubmit();
           }}
         >
-          <div className="grid gap-4 py-2">
+          <FieldGroup className="">
             <form.Field name="status">
               {(field) => (
-                <div className="space-y-2">
-                  <Label>Status</Label>
+                <Field>
+                  <FieldLabel>Status</FieldLabel>
                   <Select
                     value={field.state.value}
                     onValueChange={(v) =>
@@ -152,15 +222,15 @@ export function EditMatchDialog({ match }: EditMatchDialogProps) {
                       </SelectGroup>
                     </SelectContent>
                   </Select>
-                </div>
+                </Field>
               )}
             </form.Field>
 
-            <div className="grid grid-cols-2 gap-4">
+            <FieldGroup className="grid grid-cols-2 gap-4">
               <form.Field name="courtNumber">
                 {(field) => (
-                  <div className="space-y-2">
-                    <Label htmlFor={field.name}>Court Number</Label>
+                  <Field>
+                    <FieldLabel>Court Number</FieldLabel>
                     <Input
                       id={field.name}
                       name={field.name}
@@ -171,14 +241,14 @@ export function EditMatchDialog({ match }: EditMatchDialogProps) {
                       onBlur={field.handleBlur}
                       placeholder="Optional"
                     />
-                  </div>
+                  </Field>
                 )}
               </form.Field>
 
               <form.Field name="roundNumber">
                 {(field) => (
-                  <div className="space-y-2">
-                    <Label htmlFor={field.name}>Round</Label>
+                  <Field>
+                    <FieldLabel>Round</FieldLabel>
                     <Input
                       id={field.name}
                       name={field.name}
@@ -189,16 +259,16 @@ export function EditMatchDialog({ match }: EditMatchDialogProps) {
                       onBlur={field.handleBlur}
                       placeholder="Optional"
                     />
-                  </div>
+                  </Field>
                 )}
               </form.Field>
-            </div>
+            </FieldGroup>
 
-            <div className="grid grid-cols-2 gap-4">
+            <FieldGroup className="grid grid-cols-2 gap-4">
               <form.Field name="scheduledAt">
                 {(field) => (
-                  <div className="space-y-2">
-                    <Label htmlFor={field.name}>Scheduled At</Label>
+                  <Field>
+                    <FieldLabel>Scheduled At</FieldLabel>
                     <Input
                       id={field.name}
                       name={field.name}
@@ -207,14 +277,14 @@ export function EditMatchDialog({ match }: EditMatchDialogProps) {
                       onChange={(e) => field.handleChange(e.target.value)}
                       onBlur={field.handleBlur}
                     />
-                  </div>
+                  </Field>
                 )}
               </form.Field>
 
               <form.Field name="matchOrder">
                 {(field) => (
-                  <div className="space-y-2">
-                    <Label htmlFor={field.name}>Match Order</Label>
+                  <Field>
+                    <FieldLabel>Match Order</FieldLabel>
                     <Input
                       id={field.name}
                       name={field.name}
@@ -225,15 +295,15 @@ export function EditMatchDialog({ match }: EditMatchDialogProps) {
                       onBlur={field.handleBlur}
                       placeholder="Optional"
                     />
-                  </div>
+                  </Field>
                 )}
               </form.Field>
-            </div>
+            </FieldGroup>
 
             <form.Field name="refereeName">
               {(field) => (
-                <div className="space-y-2">
-                  <Label htmlFor={field.name}>Referee Name</Label>
+                <Field>
+                  <FieldLabel>Referee Name</FieldLabel>
                   <Input
                     id={field.name}
                     name={field.name}
@@ -243,14 +313,14 @@ export function EditMatchDialog({ match }: EditMatchDialogProps) {
                     onBlur={field.handleBlur}
                     placeholder="Optional"
                   />
-                </div>
+                </Field>
               )}
             </form.Field>
 
             <form.Field name="matchNotes">
               {(field) => (
-                <div className="space-y-2">
-                  <Label htmlFor={field.name}>Match Notes</Label>
+                <Field>
+                  <FieldLabel>Match Notes</FieldLabel>
                   <Textarea
                     id={field.name}
                     name={field.name}
@@ -259,15 +329,15 @@ export function EditMatchDialog({ match }: EditMatchDialogProps) {
                     onBlur={field.handleBlur}
                     placeholder="Optional notes about this match"
                   />
-                </div>
+                </Field>
               )}
             </form.Field>
 
-            <div className="grid grid-cols-2 gap-4">
+            <FieldGroup className="grid grid-cols-2 gap-4">
               <form.Field name="numberOfSets">
                 {(field) => (
-                  <div className="space-y-2">
-                    <Label htmlFor={field.name}>Number of Sets</Label>
+                  <Field>
+                    <FieldLabel>Number of Sets</FieldLabel>
                     <Input
                       id={field.name}
                       name={field.name}
@@ -277,14 +347,14 @@ export function EditMatchDialog({ match }: EditMatchDialogProps) {
                       onChange={(e) => field.handleChange(e.target.value)}
                       onBlur={field.handleBlur}
                     />
-                  </div>
+                  </Field>
                 )}
               </form.Field>
 
               <form.Field name="pointsPerGame">
                 {(field) => (
-                  <div className="space-y-2">
-                    <Label htmlFor={field.name}>Points Per Game</Label>
+                  <Field>
+                    <FieldLabel>Points Per Game</FieldLabel>
                     <Input
                       id={field.name}
                       name={field.name}
@@ -294,24 +364,24 @@ export function EditMatchDialog({ match }: EditMatchDialogProps) {
                       onChange={(e) => field.handleChange(e.target.value)}
                       onBlur={field.handleBlur}
                     />
-                  </div>
+                  </Field>
                 )}
               </form.Field>
-            </div>
+            </FieldGroup>
 
             <form.Field name="winByTwo">
               {(field) => (
-                <div className="flex items-center gap-2">
+                <Field orientation="horizontal">
                   <Checkbox
                     id={field.name}
                     name={field.name}
                     checked={field.state.value}
                     onCheckedChange={(checked) => field.handleChange(checked === true)}
                   />
-                  <Label htmlFor={field.name} className="cursor-pointer">
+                  <FieldLabel htmlFor={field.name} className="cursor-pointer">
                     Win by two (slide-2 scoring)
-                  </Label>
-                </div>
+                  </FieldLabel>
+                </Field>
               )}
             </form.Field>
 
@@ -320,7 +390,7 @@ export function EditMatchDialog({ match }: EditMatchDialogProps) {
                 <CircleAlertIcon /> {serverError}
               </div>
             )}
-          </div>
+          </FieldGroup>
         </form>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
