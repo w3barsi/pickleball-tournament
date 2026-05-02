@@ -216,6 +216,61 @@ export const register = mutation({
   },
 });
 
+export const resyncRecords = mutation({
+  args: {
+    categoryId: v.id("categories"),
+  },
+  handler: async (ctx, args) => {
+    const category = await ctx.db.get(args.categoryId);
+    if (!category) {
+      throw new Error("Category not found");
+    }
+
+    await requireManageTournament(ctx, category.tournamentId);
+
+    // Fetch all completed matches with a winner for this category
+    const matches = await ctx.db
+      .query("matches")
+      .withIndex("by_category", (q) => q.eq("categoryId", args.categoryId))
+      .filter((q) => q.eq(q.field("status"), "completed"))
+      .collect();
+
+    // Count wins and losses per participant
+    const winCounts: Record<string, number> = {};
+    const lossCounts: Record<string, number> = {};
+
+    for (const match of matches) {
+      if (!match.winnerParticipantId) continue;
+
+      const loserId =
+        match.winnerParticipantId === match.participant1Id
+          ? match.participant2Id
+          : match.participant1Id;
+
+      winCounts[match.winnerParticipantId] = (winCounts[match.winnerParticipantId] ?? 0) + 1;
+      lossCounts[loserId] = (lossCounts[loserId] ?? 0) + 1;
+    }
+
+    // Fetch all participants in this category
+    const participants = await ctx.db
+      .query("categoryParticipants")
+      .withIndex("by_category", (q) => q.eq("categoryId", args.categoryId))
+      .collect();
+
+    // Update each participant's wins and losses
+    for (const participant of participants) {
+      const wins = winCounts[participant._id] ?? 0;
+      const losses = lossCounts[participant._id] ?? 0;
+
+      if (participant.wins !== wins || participant.losses !== losses) {
+        await ctx.db.patch(participant._id, { wins, losses });
+      }
+    }
+
+    return { success: true };
+  },
+});
+
 export const unregister = mutation({
   args: {
     categoryParticipantId: v.id("categoryParticipants"),

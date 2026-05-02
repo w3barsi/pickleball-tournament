@@ -11,6 +11,7 @@ import {
   UsersIcon,
   TrophyIcon,
   ShuffleIcon,
+  RefreshCwIcon,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -69,6 +70,7 @@ function CategoryDetailPage() {
   );
 
   const unregister = useMutation(api.categoryParticipants.unregister);
+  const resyncRecords = useMutation(api.categoryParticipants.resyncRecords);
   const createBracket = useMutation(api.brackets.create);
   const autoAssign = useMutation(api.brackets.autoAssignRemaining);
 
@@ -302,10 +304,26 @@ function CategoryDetailPage() {
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold">Participants</h2>
           {canEdit && (
-            <RegisterParticipantDialog
-              categoryId={categoryId as Id<"categories">}
-              categoryType={category.type}
-            />
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  toast.promise(resyncRecords({ categoryId: categoryId as Id<"categories"> }), {
+                    loading: "Resyncing records...",
+                    success: "Records resynced",
+                    error: (err) =>
+                      err instanceof Error ? err.message : "Failed to resync records",
+                  });
+                }}
+              >
+                <RefreshCwIcon className="size-4" />
+                Resync Records
+              </Button>
+              <RegisterParticipantDialog
+                categoryId={categoryId as Id<"categories">}
+                categoryType={category.type}
+              />
+            </div>
           )}
         </div>
         {participants === undefined ? (
