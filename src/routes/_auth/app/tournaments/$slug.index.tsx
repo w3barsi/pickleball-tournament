@@ -6,6 +6,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   Loader2Icon,
   UsersIcon,
+  UserIcon,
   SwordsIcon,
   TrophyIcon,
   LayoutGridIcon,
@@ -15,6 +16,7 @@ import {
   CheckCircle2Icon,
   ChevronRightIcon,
   CalendarIcon,
+  MoveRight,
 } from "lucide-react";
 
 import { HeaderCard, HeaderCardDescription, HeaderCardHeading } from "@/components/header-card";
@@ -122,6 +124,57 @@ function formatDate(ts: number | undefined) {
     day: "numeric",
     year: "numeric",
   });
+}
+
+function SinglePlayerRow({
+  participant,
+}: {
+  participant: { player?: { fullName: string } | null };
+}) {
+  const name = participant.player?.fullName ?? "Unknown";
+  return (
+    <div className="flex items-center gap-3 rounded-lg px-3 transition-colors hover:bg-muted/50">
+      <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted">
+        <UserIcon className="size-4 text-muted-foreground" />
+      </div>
+      <p className="text-sm font-medium">{name}</p>
+    </div>
+  );
+}
+
+function DoublesPlayerRow({
+  participant,
+}: {
+  participant: {
+    pair?: { teamName?: string } | null;
+    playerOne?: { fullName: string } | null;
+    playerTwo?: { fullName: string } | null;
+  };
+}) {
+  const playerNames = `${participant.playerOne?.fullName ?? "Unknown"} / ${participant.playerTwo?.fullName ?? "Unknown"}`;
+
+  return (
+    <div className="flex items-center gap-3 rounded-lg transition-colors">
+      {participant.pair?.teamName ? (
+        <>
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted">
+            <UsersIcon className="size-4 text-muted-foreground" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-medium">{participant.pair.teamName}</p>
+            <p className="text-xs text-muted-foreground">{playerNames}</p>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted">
+            <UsersIcon className="size-4 text-muted-foreground" />
+          </div>
+          <p className="text-sm font-medium">{playerNames}</p>
+        </>
+      )}
+    </div>
+  );
 }
 
 function TournamentDetailPage() {
@@ -298,7 +351,7 @@ function TournamentDetailPage() {
             nativeButton={false}
             render={
               <Link to="/app/tournaments/$slug/categories" params={{ slug }}>
-                View all categories
+                View all categories <ChevronRightIcon />
               </Link>
             }
           >
@@ -397,7 +450,7 @@ function TournamentDetailPage() {
             nativeButton={false}
             render={
               <Link to="/app/tournaments/$slug/categories" params={{ slug }}>
-                View all
+                View all <ChevronRightIcon />
               </Link>
             }
           >
@@ -437,7 +490,7 @@ function TournamentDetailPage() {
                             to="/app/tournaments/$slug/categories/$categoryId"
                             params={{ slug, categoryId: category._id }}
                           >
-                            View
+                            View <ChevronRightIcon />
                           </Link>
                         }
                       >
@@ -514,10 +567,10 @@ function TournamentDetailPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {categoryParticipants.map(({ category, participants }) => (
               <Card key={category._id}>
-                <CardHeader className="pb-2">
+                <CardHeader className="">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-base font-semibold">{category.name}</CardTitle>
                     <Badge variant="secondary">{participants.length} registered</Badge>
@@ -527,37 +580,30 @@ function TournamentDetailPage() {
                   {participants.length === 0 ? (
                     <p className="text-sm text-muted-foreground">No participants registered yet</p>
                   ) : (
-                    <div className="flex flex-wrap gap-2">
-                      {participants.slice(0, 20).map((p) => {
-                        const name =
-                          category.type === "singles"
-                            ? ((p as { player?: { fullName: string } | null }).player?.fullName ??
-                              "Unknown")
-                            : (() => {
-                                const dp = p as {
-                                  pair?: { teamName?: string } | null;
-                                  playerOne?: { fullName: string } | null;
-                                  playerTwo?: { fullName: string } | null;
-                                };
-                                if (dp.pair?.teamName) {
-                                  return dp.pair.teamName;
-                                }
-                                return `${dp.playerOne?.fullName ?? "Unknown"} / ${dp.playerTwo?.fullName ?? "Unknown"}`;
-                              })();
-                        return (
-                          <Badge
+                    <div className="grid gap-2">
+                      {participants.map((p) =>
+                        category.type === "singles" ? (
+                          <SinglePlayerRow
                             key={p._id}
-                            variant="outline"
-                            className="px-2 py-1 text-sm font-normal"
-                          >
-                            {name}
-                          </Badge>
-                        );
-                      })}
+                            participant={p as { player?: { fullName: string } | null }}
+                          />
+                        ) : (
+                          <DoublesPlayerRow
+                            key={p._id}
+                            participant={
+                              p as {
+                                pair?: { teamName?: string } | null;
+                                playerOne?: { fullName: string } | null;
+                                playerTwo?: { fullName: string } | null;
+                              }
+                            }
+                          />
+                        ),
+                      )}
                       {participants.length > 20 && (
-                        <Badge variant="secondary" className="px-2 py-1 text-sm">
-                          +{participants.length - 20} more
-                        </Badge>
+                        <div className="flex items-center justify-center rounded-lg px-3 py-2.5 text-muted-foreground">
+                          <p className="text-sm font-medium">+{participants.length - 20} more</p>
+                        </div>
                       )}
                     </div>
                   )}
