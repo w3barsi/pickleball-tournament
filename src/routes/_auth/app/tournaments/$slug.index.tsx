@@ -16,7 +16,6 @@ import {
   CheckCircle2Icon,
   ChevronRightIcon,
   CalendarIcon,
-  MoveRight,
 } from "lucide-react";
 
 import { HeaderCard, HeaderCardDescription, HeaderCardHeading } from "@/components/header-card";
@@ -45,137 +44,6 @@ export const Route = createFileRoute("/_auth/app/tournaments/$slug/")({
     }
   },
 });
-
-function getMatchStatusBadge(status: string, isLive?: boolean | null) {
-  if (isLive) {
-    return (
-      <Badge className="bg-red-100 text-red-700 hover:bg-red-100">
-        <RadioIcon className="mr-1 size-3" />
-        Live
-      </Badge>
-    );
-  }
-  switch (status) {
-    case "inProgress":
-      return (
-        <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100">
-          <PlayIcon className="mr-1 size-3" />
-          Live
-        </Badge>
-      );
-    case "completed":
-      return (
-        <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
-          <CheckCircle2Icon className="mr-1 size-3" />
-          Completed
-        </Badge>
-      );
-    case "abandoned":
-      return <Badge variant="destructive">Abandoned</Badge>;
-    default:
-      return (
-        <Badge className="bg-slate-100 text-slate-700 hover:bg-slate-100">
-          <ClockIcon className="mr-1 size-3" />
-          Scheduled
-        </Badge>
-      );
-  }
-}
-
-function getParticipantName(
-  participant: {
-    player?: { fullName: string } | null;
-    pair?: { teamName?: string } | null;
-    playerOne?: { fullName: string } | null;
-    playerTwo?: { fullName: string } | null;
-  } | null,
-  categoryType: "singles" | "doubles",
-) {
-  if (!participant) return "TBD";
-  if (categoryType === "singles") {
-    return participant.player?.fullName ?? "Unknown";
-  }
-  if (participant.pair?.teamName) {
-    return `${participant.pair.teamName} (${participant.playerOne?.fullName ?? "Unknown"} / ${participant.playerTwo?.fullName ?? "Unknown"})`;
-  }
-  return `${participant.playerOne?.fullName ?? "Unknown"} / ${participant.playerTwo?.fullName ?? "Unknown"}`;
-}
-
-function getMatchScore(match: {
-  matchSets: { winnerTeam?: 1 | 2 | null }[];
-  status: string;
-  winnerParticipantId?: Id<"categoryParticipants"> | null;
-}) {
-  if (match.matchSets.length > 0) {
-    const p1Wins = match.matchSets.filter((s) => s.winnerTeam === 1).length;
-    const p2Wins = match.matchSets.filter((s) => s.winnerTeam === 2).length;
-    return `${p1Wins} - ${p2Wins}`;
-  }
-  if (match.status === "completed" && match.winnerParticipantId) {
-    return "W - L";
-  }
-  return "—";
-}
-
-function formatDate(ts: number | undefined) {
-  if (!ts) return "—";
-  return new Date(ts).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function SinglePlayerRow({
-  participant,
-}: {
-  participant: { player?: { fullName: string } | null };
-}) {
-  const name = participant.player?.fullName ?? "Unknown";
-  return (
-    <div className="flex items-center gap-3 rounded-lg px-3 transition-colors hover:bg-muted/50">
-      <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted">
-        <UserIcon className="size-4 text-muted-foreground" />
-      </div>
-      <p className="text-sm font-medium">{name}</p>
-    </div>
-  );
-}
-
-function DoublesPlayerRow({
-  participant,
-}: {
-  participant: {
-    pair?: { teamName?: string } | null;
-    playerOne?: { fullName: string } | null;
-    playerTwo?: { fullName: string } | null;
-  };
-}) {
-  const playerNames = `${participant.playerOne?.fullName ?? "Unknown"} / ${participant.playerTwo?.fullName ?? "Unknown"}`;
-
-  return (
-    <div className="flex items-center gap-3 rounded-lg transition-colors">
-      {participant.pair?.teamName ? (
-        <>
-          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted">
-            <UsersIcon className="size-4 text-muted-foreground" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-sm font-medium">{participant.pair.teamName}</p>
-            <p className="text-xs text-muted-foreground">{playerNames}</p>
-          </div>
-        </>
-      ) : (
-        <>
-          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted">
-            <UsersIcon className="size-4 text-muted-foreground" />
-          </div>
-          <p className="text-sm font-medium">{playerNames}</p>
-        </>
-      )}
-    </div>
-  );
-}
 
 function TournamentDetailPage() {
   const { slug } = Route.useParams();
@@ -613,6 +481,137 @@ function TournamentDetailPage() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function getMatchStatusBadge(status: string, isLive?: boolean | null) {
+  if (isLive) {
+    return (
+      <Badge className="bg-red-100 text-red-700 hover:bg-red-100">
+        <RadioIcon className="mr-1 size-3" />
+        Live
+      </Badge>
+    );
+  }
+  switch (status) {
+    case "inProgress":
+      return (
+        <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100">
+          <PlayIcon className="mr-1 size-3" />
+          Live
+        </Badge>
+      );
+    case "completed":
+      return (
+        <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
+          <CheckCircle2Icon className="mr-1 size-3" />
+          Completed
+        </Badge>
+      );
+    case "abandoned":
+      return <Badge variant="destructive">Abandoned</Badge>;
+    default:
+      return (
+        <Badge className="bg-slate-100 text-slate-700 hover:bg-slate-100">
+          <ClockIcon className="mr-1 size-3" />
+          Scheduled
+        </Badge>
+      );
+  }
+}
+
+function getParticipantName(
+  participant: {
+    player?: { fullName: string } | null;
+    pair?: { teamName?: string } | null;
+    playerOne?: { fullName: string } | null;
+    playerTwo?: { fullName: string } | null;
+  } | null,
+  categoryType: "singles" | "doubles",
+) {
+  if (!participant) return "TBD";
+  if (categoryType === "singles") {
+    return participant.player?.fullName ?? "Unknown";
+  }
+  if (participant.pair?.teamName) {
+    return `${participant.pair.teamName} (${participant.playerOne?.fullName ?? "Unknown"} / ${participant.playerTwo?.fullName ?? "Unknown"})`;
+  }
+  return `${participant.playerOne?.fullName ?? "Unknown"} / ${participant.playerTwo?.fullName ?? "Unknown"}`;
+}
+
+function getMatchScore(match: {
+  matchSets: { winnerTeam?: 1 | 2 | null }[];
+  status: string;
+  winnerParticipantId?: Id<"categoryParticipants"> | null;
+}) {
+  if (match.matchSets.length > 0) {
+    const p1Wins = match.matchSets.filter((s) => s.winnerTeam === 1).length;
+    const p2Wins = match.matchSets.filter((s) => s.winnerTeam === 2).length;
+    return `${p1Wins} - ${p2Wins}`;
+  }
+  if (match.status === "completed" && match.winnerParticipantId) {
+    return "W - L";
+  }
+  return "—";
+}
+
+function formatDate(ts: number | undefined) {
+  if (!ts) return "—";
+  return new Date(ts).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function SinglePlayerRow({
+  participant,
+}: {
+  participant: { player?: { fullName: string } | null };
+}) {
+  const name = participant.player?.fullName ?? "Unknown";
+  return (
+    <div className="flex items-center gap-3 rounded-lg px-3 transition-colors hover:bg-muted/50">
+      <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted">
+        <UserIcon className="size-4 text-muted-foreground" />
+      </div>
+      <p className="text-sm font-medium">{name}</p>
+    </div>
+  );
+}
+
+function DoublesPlayerRow({
+  participant,
+}: {
+  participant: {
+    pair?: { teamName?: string } | null;
+    playerOne?: { fullName: string } | null;
+    playerTwo?: { fullName: string } | null;
+  };
+}) {
+  const playerNames = `${participant.playerOne?.fullName ?? "Unknown"} / ${participant.playerTwo?.fullName ?? "Unknown"}`;
+
+  return (
+    <div className="flex items-center gap-3 rounded-lg transition-colors">
+      {participant.pair?.teamName ? (
+        <>
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted">
+            <UsersIcon className="size-4 text-muted-foreground" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-medium">{participant.pair.teamName}</p>
+            <p className="text-xs text-muted-foreground">{playerNames}</p>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted">
+            <UsersIcon className="size-4 text-muted-foreground" />
+          </div>
+          <p className="text-sm font-medium">{playerNames}</p>
+        </>
+      )}
     </div>
   );
 }

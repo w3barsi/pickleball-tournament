@@ -8,6 +8,11 @@
 - For TanStack libraries, consult latest docs via `pnpm tanstack <command>` (see [Workflow](.agents/workflow.md#tanstack-cli)).
 - Don't build after every little change. If `pnpm lint` passes; assume changes work.
 
+## Route File Structure
+
+- In route files, place the `Route` export first, then the main page component, then any helper components or utility functions at the bottom.
+- Do not insert helper components or utility functions between the `Route` export and the main component.
+
 ## Convex
 
 - **Queries**: Use `@convex-dev/react-query` with `convexQuery` helper and `useQuery` from `@tanstack/react-query` for read operations.
