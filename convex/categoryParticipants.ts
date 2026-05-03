@@ -86,6 +86,71 @@ export const listByCategory = query({
   },
 });
 
+export const listByTournament = query({
+  args: {
+    tournamentId: v.id("tournaments"),
+  },
+  handler: async (ctx, args) => {
+    const tournament = await ctx.db.get(args.tournamentId);
+    if (!tournament) {
+      throw new Error("Tournament not found");
+    }
+
+    // Get all categories for this tournament
+    const categories = await ctx.db
+      .query("categories")
+      .withIndex("by_tournament", (q) => q.eq("tournamentId", args.tournamentId))
+      .collect();
+
+    const results = [];
+    for (const category of categories) {
+      const participants = await ctx.db
+        .query("categoryParticipants")
+        .withIndex("by_category", (q) => q.eq("categoryId", category._id))
+        .order("asc")
+        .take(100);
+
+      if (category.type === "singles") {
+        const categoryParticipants = [];
+        for (const p of participants) {
+          const player = p.playerId ? await ctx.db.get(p.playerId) : null;
+          categoryParticipants.push({
+            ...p,
+            player,
+          });
+        }
+        results.push({
+          category,
+          participants: categoryParticipants,
+        });
+      } else {
+        const categoryParticipants = [];
+        for (const p of participants) {
+          const pair = p.pairId ? await ctx.db.get(p.pairId) : null;
+          let playerOne = null;
+          let playerTwo = null;
+          if (pair) {
+            playerOne = await ctx.db.get(pair.playerOne);
+            playerTwo = await ctx.db.get(pair.playerTwo);
+          }
+          categoryParticipants.push({
+            ...p,
+            pair,
+            playerOne,
+            playerTwo,
+          });
+        }
+        results.push({
+          category,
+          participants: categoryParticipants,
+        });
+      }
+    }
+
+    return results;
+  },
+});
+
 // ─── Mutations ─────────────────────────────────────────────────────────────
 
 export const register = mutation({

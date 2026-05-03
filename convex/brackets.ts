@@ -159,6 +159,56 @@ export const getWithParticipants = query({
   },
 });
 
+export const listByTournament = query({
+  args: {
+    tournamentId: v.id("tournaments"),
+  },
+  handler: async (ctx, args) => {
+    const tournament = await ctx.db.get(args.tournamentId);
+    if (!tournament) {
+      throw new Error("Tournament not found");
+    }
+
+    // Get all categories for this tournament
+    const categories = await ctx.db
+      .query("categories")
+      .withIndex("by_tournament", (q) => q.eq("tournamentId", args.tournamentId))
+      .collect();
+
+    const results = [];
+    for (const category of categories) {
+      const brackets = await ctx.db
+        .query("brackets")
+        .withIndex("by_category", (q) => q.eq("categoryId", category._id))
+        .order("asc")
+        .collect();
+
+      for (const bracket of brackets) {
+        const participantCount = await ctx.db
+          .query("bracketParticipants")
+          .withIndex("by_bracket", (q) => q.eq("bracketId", bracket._id))
+          .take(1000)
+          .then((bps) => bps.length);
+
+        const matchCount = await ctx.db
+          .query("matches")
+          .withIndex("by_bracket", (q) => q.eq("bracketId", bracket._id))
+          .take(1000)
+          .then((ms) => ms.length);
+
+        results.push({
+          ...bracket,
+          category,
+          participantCount,
+          matchCount,
+        });
+      }
+    }
+
+    return results;
+  },
+});
+
 export const getUnassignedParticipants = query({
   args: {
     categoryId: v.id("categories"),
