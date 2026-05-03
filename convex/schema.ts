@@ -147,6 +147,7 @@ export default defineSchema({
     deletedAt: v.optional(v.number()),
   })
     .index("by_tournament", ["tournamentId"])
+    .index("by_tournament_live", ["tournamentId", "isLive"])
     .index("by_bracket", ["bracketId"])
     .index("by_category", ["categoryId"])
     .index("by_status", ["status"])

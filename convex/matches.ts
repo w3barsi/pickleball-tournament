@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 
-import { Id } from "./_generated/dataModel";
+import { Doc, Id } from "./_generated/dataModel";
 import { query, mutation, QueryCtx } from "./_generated/server";
 import { authComponent } from "./auth";
 
@@ -30,6 +30,64 @@ async function requireManageTournament(ctx: QueryCtx, tournamentId: Id<"tourname
 async function getCategoryTournamentId(ctx: QueryCtx, categoryId: Id<"categories">) {
   const category = await ctx.db.get(categoryId);
   return category?.tournamentId ?? null;
+}
+
+async function hydrateMatch(ctx: QueryCtx, match: Doc<"matches">) {
+  const bracket = await ctx.db.get(match.bracketId);
+  const category = bracket ? await ctx.db.get(bracket.categoryId) : null;
+
+  const p1 = await ctx.db.get(match.participant1Id);
+  const p2 = await ctx.db.get(match.participant2Id);
+
+  let participant1 = null;
+  let participant2 = null;
+
+  if (p1 && category) {
+    if (category.type === "singles") {
+      const player = p1.playerId ? await ctx.db.get(p1.playerId) : null;
+      participant1 = { ...p1, player };
+    } else {
+      const pair = p1.pairId ? await ctx.db.get(p1.pairId) : null;
+      let playerOne = null;
+      let playerTwo = null;
+      if (pair) {
+        playerOne = await ctx.db.get(pair.playerOne);
+        playerTwo = await ctx.db.get(pair.playerTwo);
+      }
+      participant1 = { ...p1, pair, playerOne, playerTwo };
+    }
+  }
+
+  if (p2 && category) {
+    if (category.type === "singles") {
+      const player = p2.playerId ? await ctx.db.get(p2.playerId) : null;
+      participant2 = { ...p2, player };
+    } else {
+      const pair = p2.pairId ? await ctx.db.get(p2.pairId) : null;
+      let playerOne = null;
+      let playerTwo = null;
+      if (pair) {
+        playerOne = await ctx.db.get(pair.playerOne);
+        playerTwo = await ctx.db.get(pair.playerTwo);
+      }
+      participant2 = { ...p2, pair, playerOne, playerTwo };
+    }
+  }
+
+  const matchSets = await ctx.db
+    .query("matchSets")
+    .withIndex("by_match", (q) => q.eq("matchId", match._id))
+    .order("asc")
+    .collect();
+
+  return {
+    ...match,
+    bracket,
+    category,
+    participant1,
+    participant2,
+    matchSets,
+  };
 }
 
 // ─── Queries ───────────────────────────────────────────────────────────────
@@ -141,61 +199,33 @@ export const listByTournament = query({
 
     const results = [];
     for (const match of matches) {
-      const bracket = await ctx.db.get(match.bracketId);
-      const category = bracket ? await ctx.db.get(bracket.categoryId) : null;
+      results.push(await hydrateMatch(ctx, match));
+    }
 
-      const p1 = await ctx.db.get(match.participant1Id);
-      const p2 = await ctx.db.get(match.participant2Id);
+    return results;
+  },
+});
 
-      let participant1 = null;
-      let participant2 = null;
+export const listLiveByTournament = query({
+  args: {
+    tournamentId: v.id("tournaments"),
+  },
+  handler: async (ctx, args) => {
+    const tournament = await ctx.db.get(args.tournamentId);
+    if (!tournament) {
+      throw new Error("Tournament not found");
+    }
 
-      if (p1 && category) {
-        if (category.type === "singles") {
-          const player = p1.playerId ? await ctx.db.get(p1.playerId) : null;
-          participant1 = { ...p1, player };
-        } else {
-          const pair = p1.pairId ? await ctx.db.get(p1.pairId) : null;
-          let playerOne = null;
-          let playerTwo = null;
-          if (pair) {
-            playerOne = await ctx.db.get(pair.playerOne);
-            playerTwo = await ctx.db.get(pair.playerTwo);
-          }
-          participant1 = { ...p1, pair, playerOne, playerTwo };
-        }
+    const matches = await ctx.db
+      .query("matches")
+      .withIndex("by_tournament", (q) => q.eq("tournamentId", args.tournamentId))
+      .collect();
+
+    const results = [];
+    for (const match of matches) {
+      if (match.isLive || match.status === "inProgress") {
+        results.push(await hydrateMatch(ctx, match));
       }
-
-      if (p2 && category) {
-        if (category.type === "singles") {
-          const player = p2.playerId ? await ctx.db.get(p2.playerId) : null;
-          participant2 = { ...p2, player };
-        } else {
-          const pair = p2.pairId ? await ctx.db.get(p2.pairId) : null;
-          let playerOne = null;
-          let playerTwo = null;
-          if (pair) {
-            playerOne = await ctx.db.get(pair.playerOne);
-            playerTwo = await ctx.db.get(pair.playerTwo);
-          }
-          participant2 = { ...p2, pair, playerOne, playerTwo };
-        }
-      }
-
-      const matchSets = await ctx.db
-        .query("matchSets")
-        .withIndex("by_match", (q) => q.eq("matchId", match._id))
-        .order("asc")
-        .collect();
-
-      results.push({
-        ...match,
-        bracket,
-        category,
-        participant1,
-        participant2,
-        matchSets,
-      });
     }
 
     return results;

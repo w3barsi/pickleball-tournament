@@ -56,9 +56,9 @@ function TournamentDetailPage() {
   const { slug } = Route.useParams();
   const navigate = useNavigate();
   const { data: tournament } = useQuery(convexQuery(api.tournaments.getBySlug, { slug }));
-  const { data: matches } = useQuery(
+  const { data: liveMatches } = useQuery(
     convexQuery(
-      api.matches.listByTournament,
+      api.matches.listLiveByTournament,
       tournament ? { tournamentId: tournament._id } : "skip",
     ),
   );
@@ -89,9 +89,6 @@ function TournamentDetailPage() {
       </div>
     );
   }
-
-  const liveMatches = matches?.filter((m) => m.isLive || m.status === "inProgress") ?? [];
-  const completedMatches = matches?.filter((m) => m.status === "completed") ?? [];
 
   const totalParticipants =
     categoryParticipants?.reduce((sum, cp) => sum + cp.participants.length, 0) ?? 0;
@@ -142,12 +139,12 @@ function TournamentDetailPage() {
             <CardTitle className="text-sm font-medium">Matches</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-black">{matches?.length ?? 0}</p>
+            <p className="text-2xl font-black">{liveMatches?.length ?? 0}</p>
             <p className="text-sm text-muted-foreground">
-              {liveMatches.length > 0 ? (
+              {liveMatches && liveMatches.length > 0 ? (
                 <span className="font-medium text-red-600">{liveMatches.length} live</span>
               ) : (
-                `${completedMatches.length} completed`
+                "No live matches"
               )}
             </p>
           </CardContent>
@@ -168,12 +165,26 @@ function TournamentDetailPage() {
       </div>
 
       {/* Live Matches */}
-      {liveMatches.length > 0 && (
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <RadioIcon className="size-5 text-red-500" />
-            <h2 className="text-lg font-bold">Live Matches</h2>
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <RadioIcon className="size-5 text-red-500" />
+          <h2 className="text-lg font-bold">Live Matches</h2>
+        </div>
+
+        {liveMatches === undefined ? (
+          <div className="py-12 text-center">
+            <Loader2Icon className="mx-auto size-8 animate-spin text-slate-400" />
+            <p className="mt-2 text-muted-foreground">Loading matches...</p>
           </div>
+        ) : liveMatches.length === 0 ? (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <RadioIcon className="mx-auto size-8 text-muted-foreground" />
+              <p className="mt-4 text-lg font-bold">No live matches</p>
+              <p className="text-sm text-muted-foreground">There are currently no live matches</p>
+            </CardContent>
+          </Card>
+        ) : (
           <div className="grid gap-4 md:grid-cols-2">
             {liveMatches.map((match) => (
               <Card
@@ -212,105 +223,6 @@ function TournamentDetailPage() {
                 </CardContent>
               </Card>
             ))}
-          </div>
-        </div>
-      )}
-
-      {/* Matches */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold">Matches</h2>
-          <Button
-            variant="ghost"
-            size="sm"
-            nativeButton={false}
-            render={
-              <Link to="/app/tournaments/$slug/categories" params={{ slug }}>
-                View all categories <ChevronRightIcon />
-              </Link>
-            }
-          >
-            <ChevronRightIcon className="size-4" />
-          </Button>
-        </div>
-
-        {matches === undefined ? (
-          <div className="py-12 text-center">
-            <Loader2Icon className="mx-auto size-8 animate-spin text-slate-400" />
-            <p className="mt-2 text-muted-foreground">Loading matches...</p>
-          </div>
-        ) : matches.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <SwordsIcon className="mx-auto size-8 text-muted-foreground" />
-              <p className="mt-4 text-lg font-bold">No matches yet</p>
-              <p className="text-sm text-muted-foreground">
-                Create categories and brackets to start adding matches
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-3">
-            {/* Recent completed + upcoming scheduled */}
-            {matches
-              .filter((m) => m.status === "completed" || m.status === "scheduled")
-              .slice(0, 10)
-              .map((match) => {
-                const isP1Winner = match.winnerParticipantId === match.participant1?._id;
-                const isP2Winner = match.winnerParticipantId === match.participant2?._id;
-                return (
-                  <Card
-                    key={match._id}
-                    className="cursor-pointer transition-shadow hover:shadow-sm"
-                    onClick={() =>
-                      navigate({ to: "/app/matches/$matchId", params: { matchId: match._id } })
-                    }
-                  >
-                    <CardContent className="flex items-center gap-4 py-4">
-                      <div className="w-24 shrink-0">
-                        {getMatchStatusBadge(match.status, match.isLive)}
-                      </div>
-                      <div className="flex flex-1 items-center justify-between gap-4">
-                        <div className="flex-1">
-                          <p className="text-xs text-muted-foreground">
-                            {match.category?.name ?? "Category"} ·{" "}
-                            {match.bracket?.name ?? "Bracket"}
-                          </p>
-                          <div className="mt-1 flex items-center gap-2">
-                            <span className={isP1Winner ? "font-semibold text-green-700" : ""}>
-                              {getParticipantName(
-                                match.participant1,
-                                match.category?.type ?? "singles",
-                              )}
-                            </span>
-                            <span className="text-xs text-muted-foreground">vs</span>
-                            <span className={isP2Winner ? "font-semibold text-green-700" : ""}>
-                              {getParticipantName(
-                                match.participant2,
-                                match.category?.type ?? "singles",
-                              )}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="shrink-0 text-right">
-                          <p className="font-mono text-lg font-semibold">{getMatchScore(match)}</p>
-                          {match.courtNumber && (
-                            <p className="text-xs text-muted-foreground">
-                              Court {match.courtNumber}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-
-            {matches.length > 10 && (
-              <p className="text-center text-sm text-muted-foreground">
-                +{matches.length - 10} more matches
-              </p>
-            )}
           </div>
         )}
       </div>
