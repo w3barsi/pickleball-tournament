@@ -98,16 +98,6 @@ export default defineSchema({
     .index("by_category_and_pair", ["categoryId", "pairId"])
     .index("by_deletedAt", ["deletedAt"]),
 
-  // ========== COURTS ==========
-  courts: defineTable({
-    tournamentId: v.id("tournaments"),
-    name: v.string(),
-    number: v.optional(v.number()),
-    deletedAt: v.optional(v.number()),
-  })
-    .index("by_tournament", ["tournamentId"])
-    .index("by_deletedAt", ["deletedAt"]),
-
   // Brackets = group stages within a category
   brackets: defineTable({
     categoryId: v.id("categories"),

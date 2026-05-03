@@ -14,7 +14,7 @@ import { TournamentSidebar } from "../tournaments/tournament-sidebar";
 
 function useTournamentSlug(): string | null {
   const tournamentMatch = useMatch({
-    from: "/_auth/app/tournaments/$slug",
+    from: "/_auth/app/tournaments/$slug/",
     shouldThrow: false,
   });
   const bracketMatch = useMatch({

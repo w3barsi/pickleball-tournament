@@ -31,6 +31,12 @@ export const Route = createFileRoute("/_auth/app/tournaments/$slug/categories/$c
   loader: async ({ params, context }) => {
     await Promise.all([
       context.queryClient.ensureQueryData(
+        convexQuery(api.tournaments.getBySlug, { slug: params.slug }),
+      ),
+      context.queryClient.ensureQueryData(
+        convexQuery(api.categories.get, { categoryId: params.categoryId as Id<"categories"> }),
+      ),
+      context.queryClient.ensureQueryData(
         convexQuery(api.categoryParticipants.listByCategory, {
           categoryId: params.categoryId as Id<"categories">,
         }),

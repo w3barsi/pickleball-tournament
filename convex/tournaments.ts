@@ -323,16 +323,6 @@ export const remove = mutation({
       await ctx.db.delete(category._id);
     }
 
-    // Delete all courts
-    const courts = await ctx.db
-      .query("courts")
-      .withIndex("by_tournament", (q) => q.eq("tournamentId", args.tournamentId))
-      .collect();
-
-    for (const court of courts) {
-      await ctx.db.delete(court._id);
-    }
-
     // Delete all managers
     const managers = await ctx.db
       .query("tournamentManagers")
