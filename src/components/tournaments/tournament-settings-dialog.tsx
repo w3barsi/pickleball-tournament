@@ -1,13 +1,10 @@
-import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@convex/_generated/api.js";
 import { Id } from "@convex/_generated/dataModel.js";
-import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
-import { Loader2Icon, SettingsIcon, Trash2Icon, UserIcon, UsersIcon } from "lucide-react";
+import { Loader2Icon, SettingsIcon, Trash2Icon } from "lucide-react";
 import { useState } from "react";
 
-import { InviteManagerForm } from "@/components/tournaments/invite-manager-form";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,7 +26,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { useAuth } from "@/lib/auth/hooks";
 
 interface TournamentSettingsDialogProps {
   tournamentId: Id<"tournaments">;
@@ -40,30 +36,12 @@ export function TournamentSettingsDialog({
   tournamentId,
   tournamentName,
 }: TournamentSettingsDialogProps) {
-  const { user } = useAuth();
   const navigate = useNavigate();
 
-  const { data: managers } = useQuery(convexQuery(api.tournaments.listManagers, { tournamentId }));
-  const { data: canEdit } = useQuery(convexQuery(api.tournaments.canEdit, { tournamentId }));
-
-  const removeManager = useMutation(api.tournaments.removeManager);
   const deleteTournament = useMutation(api.tournaments.remove);
 
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
-
-  if (!canEdit) return null;
-
-  const handleRemoveManager = async (targetUserId: string) => {
-    try {
-      await removeManager({
-        tournamentId,
-        userId: targetUserId,
-      });
-    } catch {
-      // ignore
-    }
-  };
 
   return (
     <Dialog
@@ -80,51 +58,11 @@ export function TournamentSettingsDialog({
       />
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <UsersIcon className="size-5" />
-            Tournament Managers
-          </DialogTitle>
-          <DialogDescription>Manage who can edit this tournament.</DialogDescription>
+          <DialogTitle>Tournament Settings</DialogTitle>
+          <DialogDescription>Configure your tournament.</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
-          {/* Manager List */}
-          <div className="space-y-2">
-            {managers?.length === 0 && (
-              <p className="text-sm text-muted-foreground">No managers found.</p>
-            )}
-            {managers?.map((manager) => (
-              <div
-                key={manager._id}
-                className="flex items-center justify-between rounded-lg border px-4 py-3"
-              >
-                <div className="flex items-center gap-3">
-                  <UserIcon className="size-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-semibold">{manager.userId}</p>
-                    <p className="text-xs text-muted-foreground capitalize">
-                      {manager.role}
-                      {manager.userId === user?._id && " (you)"}
-                    </p>
-                  </div>
-                </div>
-                {manager.role !== "owner" && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-8 text-red-500 hover:bg-red-50 hover:text-red-600"
-                    onClick={() => handleRemoveManager(manager.userId)}
-                  >
-                    <Trash2Icon className="size-4" />
-                  </Button>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* Invite Form */}
-          <InviteManagerForm tournamentId={tournamentId} />
-
           {/* Danger Zone */}
           <div className="-mx-4 -my-6 mt-4 flex flex-col gap-2 rounded-b-xl bg-destructive/10 p-4">
             <div>
@@ -133,7 +71,7 @@ export function TournamentSettingsDialog({
 
             <div className="flex flex-col gap-2 pb-2">
               <p className="text-sm text-muted-foreground">
-                Please type <span className="font-semibold">{tournamentName}</span> to confirm.
+                Please type "<span className="font-semibold">{tournamentName}</span>" to confirm.
               </p>
               <Input
                 className="bg-primary-foreground"

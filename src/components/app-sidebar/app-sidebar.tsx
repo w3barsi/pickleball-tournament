@@ -3,7 +3,14 @@ import { api } from "@convex/_generated/api.js";
 import { Id } from "@convex/_generated/dataModel.js";
 import { useQuery } from "@tanstack/react-query";
 import { useMatch } from "@tanstack/react-router";
-import { HomeIcon, TrophyIcon, UserPlusIcon, UsersIcon } from "lucide-react";
+import {
+  HomeIcon,
+  TrophyIcon,
+  UserIcon,
+  UserPlusIcon,
+  UsersIcon,
+  UserStarIcon,
+} from "lucide-react";
 
 import { SidebarGroup, SidebarGroupLabel, SidebarMenu } from "@/components/ui/sidebar";
 import { useAuthSuspense } from "@/lib/auth/hooks";
@@ -66,7 +73,7 @@ export function AppSidebar() {
           <SidebarMenuLinkItem to="/app" icon={HomeIcon} label="Home" matchFrom="/_auth/app" />
           <SidebarMenuLinkItem
             to="/app/players"
-            icon={UsersIcon}
+            icon={UserIcon}
             label="Players"
             matchFrom="/_auth/app/players"
           />
@@ -78,7 +85,7 @@ export function AppSidebar() {
           />
           <SidebarMenuLinkItem
             to="/admin"
-            icon={HomeIcon}
+            icon={UserStarIcon}
             label="Admin"
             matchFrom="/_auth/admin"
             condition={isAdmin}

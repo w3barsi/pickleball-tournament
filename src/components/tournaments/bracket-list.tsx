@@ -29,7 +29,6 @@ interface BracketItem {
 
 interface BracketListProps {
   brackets: BracketItem[];
-  canEdit: boolean;
   unassignedCount: number;
   onAutoAssign: (bracketId: Id<"brackets">) => void;
 }
@@ -56,12 +55,7 @@ function getStatusBadge(status: string) {
   }
 }
 
-export function BracketList({
-  brackets,
-  canEdit,
-  unassignedCount,
-  onAutoAssign,
-}: BracketListProps) {
+export function BracketList({ brackets, unassignedCount, onAutoAssign }: BracketListProps) {
   if (brackets.length === 0) {
     return (
       <Card className="overflow-hidden">
@@ -134,7 +128,7 @@ export function BracketList({
                       </Link>
                     }
                   />
-                  {canEdit && unassignedCount > 0 && (
+                  {unassignedCount > 0 && (
                     <Button
                       variant="ghost"
                       nativeButton={false}

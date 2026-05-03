@@ -23,7 +23,6 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 interface CategoryCardProps {
   category: Doc<"categories">;
   slug: string;
-  canEdit: boolean | undefined;
 }
 
 function getTypeLabel(type: string) {
@@ -88,7 +87,7 @@ function getRatingBadge(rating: string) {
   }
 }
 
-export function CategoryCard({ category, slug, canEdit }: CategoryCardProps) {
+export function CategoryCard({ category, slug }: CategoryCardProps) {
   const deleteCategory = useMutation(api.categories.remove);
   return (
     <Link

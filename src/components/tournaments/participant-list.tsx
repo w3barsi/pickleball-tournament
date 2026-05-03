@@ -48,7 +48,6 @@ interface DoublesParticipant {
 interface ParticipantListProps {
   participants: SinglesParticipant[] | DoublesParticipant[];
   categoryType: "singles" | "doubles";
-  canEdit: boolean;
   onRemove: (participantId: Id<"categoryParticipants">) => void;
 }
 
@@ -65,12 +64,7 @@ function getStatusBadge(status: string) {
   }
 }
 
-export function ParticipantList({
-  participants,
-  categoryType,
-  canEdit,
-  onRemove,
-}: ParticipantListProps) {
+export function ParticipantList({ participants, categoryType, onRemove }: ParticipantListProps) {
   const [removeTarget, setRemoveTarget] = useState<Id<"categoryParticipants"> | null>(null);
 
   const handleConfirmRemove = () => {
@@ -89,16 +83,13 @@ export function ParticipantList({
               <TableHead>Participant</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Record</TableHead>
-              {canEdit && <TableHead className="w-16" />}
+              <TableHead className="w-16" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {participants.length === 0 ? (
               <TableRow>
-                <TableCell
-                  colSpan={canEdit ? 4 : 3}
-                  className="py-8 text-center text-muted-foreground"
-                >
+                <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
                   No participants registered yet
                 </TableCell>
               </TableRow>
@@ -126,18 +117,16 @@ export function ParticipantList({
                   <TableCell>
                     {p.wins} - {p.losses}
                   </TableCell>
-                  {canEdit && (
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-red-600 hover:bg-red-50 hover:text-red-700"
-                        onClick={() => setRemoveTarget(p._id)}
-                      >
-                        <Trash2Icon className="size-4" />
-                      </Button>
-                    </TableCell>
-                  )}
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                      onClick={() => setRemoveTarget(p._id)}
+                    >
+                      <Trash2Icon className="size-4" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))
             )}

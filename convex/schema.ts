@@ -51,18 +51,6 @@ export default defineSchema({
     .index("by_createdBy", ["createdBy"])
     .index("by_deletedAt", ["deletedAt"]),
 
-  tournamentManagers: defineTable({
-    tournamentId: v.id("tournaments"),
-    userId: v.string(),
-    role: v.union(v.literal("owner"), v.literal("manager")),
-    invitedAt: v.number(),
-    deletedAt: v.optional(v.number()),
-  })
-    .index("by_tournament", ["tournamentId"])
-    .index("by_user", ["userId"])
-    .index("by_tournament_user", ["tournamentId", "userId"])
-    .index("by_deletedAt", ["deletedAt"]),
-
   categories: defineTable({
     tournamentId: v.id("tournaments"),
     name: v.string(),

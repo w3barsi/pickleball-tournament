@@ -25,16 +25,7 @@ async function canManageTournament(ctx: QueryCtx, tournamentId: Id<"tournaments"
   const tournament = await ctx.db.get(tournamentId);
   if (!tournament) return false;
 
-  if (tournament.createdBy === user._id) return true;
-
-  const manager = await ctx.db
-    .query("tournamentManagers")
-    .withIndex("by_tournament_user", (q) =>
-      q.eq("tournamentId", tournamentId).eq("userId", user._id),
-    )
-    .unique();
-
-  return manager !== null;
+  return tournament.createdBy === user._id;
 }
 
 async function requireManageTournament(ctx: QueryCtx, tournamentId: Id<"tournaments">) {
@@ -67,15 +58,6 @@ export const get = query({
   },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.categoryId);
-  },
-});
-
-export const canEdit = query({
-  args: {
-    tournamentId: v.id("tournaments"),
-  },
-  handler: async (ctx, args) => {
-    return await canManageTournament(ctx, args.tournamentId);
   },
 });
 

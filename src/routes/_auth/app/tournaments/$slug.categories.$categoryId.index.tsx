@@ -56,9 +56,6 @@ function CategoryDetailPage() {
   const { data: category } = useQuery(
     convexQuery(api.categories.get, { categoryId: categoryId as Id<"categories"> }),
   );
-  const { data: canEdit } = useQuery(
-    convexQuery(api.categories.canEdit, tournament ? { tournamentId: tournament._id } : "skip"),
-  );
   const { data: participants } = useQuery(
     convexQuery(api.categoryParticipants.listByCategory, {
       categoryId: categoryId as Id<"categories">,
@@ -200,7 +197,7 @@ function CategoryDetailPage() {
             {getTypeLabel(category.type)}
           </HeaderCardDescription>
         </div>
-        {canEdit && <EditCategoryDialog category={category} tournamentSlug={slug} />}
+        <EditCategoryDialog category={category} tournamentSlug={slug} />
       </HeaderCard>
 
       {/* Category Info Cards */}
@@ -263,30 +260,27 @@ function CategoryDetailPage() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold">Brackets</h2>
-          {canEdit && (
-            <div className="flex items-center gap-2">
-              {unassignedCount > 0 && brackets && brackets.length > 0 && (
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    // Auto-assign to the last bracket
-                    const lastBracket = brackets[brackets.length - 1];
-                    if (lastBracket) {
-                      handleAutoAssign(lastBracket._id);
-                    }
-                  }}
-                >
-                  <ShuffleIcon className="size-4" />
-                  Auto Assign Remaining
-                </Button>
-              )}
-              <CreateBracketDialog
-                open={isCreateBracketOpen}
-                onOpenChange={setIsCreateBracketOpen}
-                onCreate={handleCreateBracket}
-              />
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            {unassignedCount > 0 && brackets && brackets.length > 0 && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const lastBracket = brackets[brackets.length - 1];
+                  if (lastBracket) {
+                    handleAutoAssign(lastBracket._id);
+                  }
+                }}
+              >
+                <ShuffleIcon className="size-4" />
+                Auto Assign Remaining
+              </Button>
+            )}
+            <CreateBracketDialog
+              open={isCreateBracketOpen}
+              onOpenChange={setIsCreateBracketOpen}
+              onCreate={handleCreateBracket}
+            />
+          </div>
         </div>
         {brackets === undefined ? (
           <div className="py-12 text-center">
@@ -296,7 +290,6 @@ function CategoryDetailPage() {
         ) : (
           <BracketList
             brackets={brackets}
-            canEdit={!!canEdit}
             unassignedCount={unassignedCount}
             onAutoAssign={handleAutoAssign}
           />
@@ -307,28 +300,25 @@ function CategoryDetailPage() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold">Participants</h2>
-          {canEdit && (
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  toast.promise(resyncRecords({ categoryId: categoryId as Id<"categories"> }), {
-                    loading: "Resyncing records...",
-                    success: "Records resynced",
-                    error: (err) =>
-                      err instanceof Error ? err.message : "Failed to resync records",
-                  });
-                }}
-              >
-                <RefreshCwIcon className="size-4" />
-                Resync Records
-              </Button>
-              <RegisterParticipantDialog
-                categoryId={categoryId as Id<"categories">}
-                categoryType={category.type}
-              />
-            </div>
-          )}
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                toast.promise(resyncRecords({ categoryId: categoryId as Id<"categories"> }), {
+                  loading: "Resyncing records...",
+                  success: "Records resynced",
+                  error: (err) => (err instanceof Error ? err.message : "Failed to resync records"),
+                });
+              }}
+            >
+              <RefreshCwIcon className="size-4" />
+              Resync Records
+            </Button>
+            <RegisterParticipantDialog
+              categoryId={categoryId as Id<"categories">}
+              categoryType={category.type}
+            />
+          </div>
         </div>
         {participants === undefined ? (
           <div className="py-12 text-center">
@@ -339,7 +329,6 @@ function CategoryDetailPage() {
           <ParticipantList
             participants={participants}
             categoryType={category.type}
-            canEdit={!!canEdit}
             onRemove={handleRemove}
           />
         )}

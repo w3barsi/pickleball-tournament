@@ -56,12 +56,6 @@ function BracketDetailPage() {
       bracketId: bracketId as Id<"brackets">,
     }),
   );
-  const { data: canEdit } = useQuery(
-    convexQuery(
-      api.categories.canEdit,
-      bracketData?.tournament ? { tournamentId: bracketData.tournament._id } : "skip",
-    ),
-  );
   const { data: unassignedParticipants } = useQuery(
     convexQuery(
       api.brackets.getUnassignedParticipants,
@@ -164,35 +158,33 @@ function BracketDetailPage() {
             {getFormatLabel(bracket.format)}
           </HeaderCardDescription>
         </div>
-        {canEdit && (
-          <AlertDialog>
-            <AlertDialogTrigger
-              render={<Button variant="destructive" className="bg-red-100" size="icon" />}
-            >
-              <Trash2Icon className="size-4" />
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete Bracket</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Are you sure you want to delete{" "}
-                  <span className="font-semibold">{bracket.name}</span>? This action cannot be
-                  undone and will also remove all participants and matches.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  variant="destructive"
-                  disabled={isDeleting}
-                  onClick={handleDeleteBracket}
-                >
-                  {isDeleting ? "Deleting..." : "Delete"}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        )}
+        <AlertDialog>
+          <AlertDialogTrigger
+            render={<Button variant="destructive" className="bg-red-100" size="icon" />}
+          >
+            <Trash2Icon className="size-4" />
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Bracket</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete{" "}
+                <span className="font-semibold">{bracket.name}</span>? This action cannot be undone
+                and will also remove all participants and matches.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                variant="destructive"
+                disabled={isDeleting}
+                onClick={handleDeleteBracket}
+              >
+                {isDeleting ? "Deleting..." : "Delete"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </HeaderCard>
 
       {/* Bracket Info Cards */}
@@ -248,7 +240,7 @@ function BracketDetailPage() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold">Matches</h2>
-          {canEdit && participants.length >= 2 && (
+          {participants.length >= 2 && (
             <CreateMatchDialog
               bracketId={bracketId as Id<"brackets">}
               bracketParticipants={participants}
@@ -256,18 +248,14 @@ function BracketDetailPage() {
             />
           )}
         </div>
-        <MatchList
-          bracketId={bracketId as Id<"brackets">}
-          categoryType={category.type}
-          canEdit={!!canEdit}
-        />
+        <MatchList bracketId={bracketId as Id<"brackets">} categoryType={category.type} />
       </div>
 
       {/* Participants */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold">Participants</h2>
-          {canEdit && unassignedCount > 0 && (
+          {unassignedCount > 0 && (
             <AssignParticipantsDialog
               bracketId={bracketId as Id<"brackets">}
               categoryId={category._id as Id<"categories">}
@@ -277,7 +265,6 @@ function BracketDetailPage() {
         <BracketParticipantList
           participants={participants}
           categoryType={category.type}
-          canEdit={!!canEdit}
           onRemove={handleRemoveParticipant}
         />
       </div>

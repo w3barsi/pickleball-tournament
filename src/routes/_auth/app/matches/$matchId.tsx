@@ -99,13 +99,6 @@ function MatchDetailPage() {
   const { data: matchData } = useQuery(
     convexQuery(api.matches.getWithDetails, { matchId: matchId as Id<"matches"> }),
   );
-  const { data: canEdit } = useQuery(
-    convexQuery(
-      api.categories.canEdit,
-      matchData?.tournament ? { tournamentId: matchData.tournament._id } : "skip",
-    ),
-  );
-
   if (!matchData) {
     return (
       <div className="py-20 text-center">
@@ -174,7 +167,7 @@ function MatchDetailPage() {
               </Link>
             }
           />
-          {canEdit && match && <EditMatchDialog match={match} />}
+          {match && <EditMatchDialog match={match} />}
         </div>
       </HeaderCard>
 

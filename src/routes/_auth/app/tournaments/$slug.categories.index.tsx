@@ -35,10 +35,6 @@ function CategoriesPage() {
       tournament ? { tournamentId: tournament._id } : "skip",
     ),
   );
-  const { data: canEdit } = useQuery(
-    convexQuery(api.categories.canEdit, tournament ? { tournamentId: tournament._id } : "skip"),
-  );
-
   const createCategory = useMutation(api.categories.create);
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -70,13 +66,11 @@ function CategoriesPage() {
             {tournament ? tournament.name : "Loading..."}
           </HeaderCardDescription>
         </div>
-        {canEdit && (
-          <CreateCategoryDialog
-            open={isCreateOpen}
-            onOpenChange={setIsCreateOpen}
-            onCreate={handleCreate}
-          />
-        )}
+        <CreateCategoryDialog
+          open={isCreateOpen}
+          onOpenChange={setIsCreateOpen}
+          onCreate={handleCreate}
+        />
       </HeaderCard>
 
       {/* Categories List */}
@@ -99,18 +93,16 @@ function CategoriesPage() {
             <p className="text-sm text-muted-foreground">
               Create your first category to get started
             </p>
-            {canEdit && (
-              <Button className="mt-4" variant="secondary" onClick={() => setIsCreateOpen(true)}>
-                <PlusIcon className="size-4" />
-                Create Category
-              </Button>
-            )}
+            <Button className="mt-4" variant="secondary" onClick={() => setIsCreateOpen(true)}>
+              <PlusIcon className="size-4" />
+              Create Category
+            </Button>
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {categories.map((cat) => (
-            <CategoryCard key={cat._id} category={cat} slug={slug} canEdit={canEdit} />
+            <CategoryCard key={cat._id} category={cat} slug={slug} />
           ))}
         </div>
       )}

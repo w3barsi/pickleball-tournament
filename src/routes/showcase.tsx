@@ -191,9 +191,12 @@ function ShowcasePage() {
                   </h3>
                   <div className="flex flex-wrap items-center gap-2">
                     {textSizes.map((size) => (
-                      <Button key={size} variant={variant} size={size}>
-                        {size === "default" ? variant : size}
-                      </Button>
+                      <div className="flex flex-col items-center gap-2">
+                        <Button key={size} variant={variant} size={size}>
+                          Create Button
+                        </Button>
+                        <p className="text-xs text-muted-foreground">{size}</p>
+                      </div>
                     ))}
                   </div>
                 </div>

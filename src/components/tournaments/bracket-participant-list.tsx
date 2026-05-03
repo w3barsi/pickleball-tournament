@@ -43,7 +43,6 @@ interface BracketParticipant {
 interface BracketParticipantListProps {
   participants: BracketParticipant[];
   categoryType: "singles" | "doubles";
-  canEdit: boolean;
   onRemove: (bracketParticipantId: Id<"bracketParticipants">) => void;
 }
 
@@ -63,7 +62,6 @@ function getStatusBadge(status: string) {
 export function BracketParticipantList({
   participants,
   categoryType,
-  canEdit,
   onRemove,
 }: BracketParticipantListProps) {
   const [removeTarget, setRemoveTarget] = useState<Id<"bracketParticipants"> | null>(null);
@@ -84,16 +82,13 @@ export function BracketParticipantList({
               <TableHead>Participant</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Record</TableHead>
-              {canEdit && <TableHead className="w-16" />}
+              <TableHead className="w-16" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {participants.length === 0 ? (
               <TableRow>
-                <TableCell
-                  colSpan={canEdit ? 4 : 3}
-                  className="py-8 text-center text-muted-foreground"
-                >
+                <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
                   No participants in this bracket yet
                 </TableCell>
               </TableRow>
@@ -122,18 +117,16 @@ export function BracketParticipantList({
                     <TableCell>
                       {cp.wins} - {cp.losses}
                     </TableCell>
-                    {canEdit && (
-                      <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-red-600 hover:bg-red-50 hover:text-red-700"
-                          onClick={() => setRemoveTarget(bp._id)}
-                        >
-                          <Trash2Icon className="size-4" />
-                        </Button>
-                      </TableCell>
-                    )}
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                        onClick={() => setRemoveTarget(bp._id)}
+                      >
+                        <Trash2Icon className="size-4" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 );
               })

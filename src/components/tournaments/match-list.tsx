@@ -66,7 +66,6 @@ interface MatchItem {
 interface MatchListProps {
   bracketId: Id<"brackets">;
   categoryType: "singles" | "doubles";
-  canEdit: boolean;
 }
 
 function getStatusBadge(status: string) {
@@ -131,7 +130,7 @@ function getMatchScore(match: MatchItem) {
   return "—";
 }
 
-export function MatchList({ bracketId, categoryType, canEdit }: MatchListProps) {
+export function MatchList({ bracketId, categoryType }: MatchListProps) {
   const { data: matches } = useQuery(convexQuery(api.matches.listByBracket, { bracketId }));
 
   const updateResult = useMutation(api.matches.updateResult);
@@ -175,7 +174,7 @@ export function MatchList({ bracketId, categoryType, canEdit }: MatchListProps) 
               <TableHead>Participants</TableHead>
               <TableHead className="w-20 text-center">Score</TableHead>
               <TableHead className="w-28">Status</TableHead>
-              {canEdit && <TableHead className="w-32" />}
+              <TableHead className="w-32" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -228,64 +227,60 @@ export function MatchList({ bracketId, categoryType, canEdit }: MatchListProps) 
                     {getMatchScore(match)}
                   </TableCell>
                   <TableCell>{getStatusBadge(match.status)}</TableCell>
-                  {canEdit && (
-                    <TableCell>
-                      <div className="flex flex-wrap items-center justify-end gap-1">
-                        {match.status !== "completed" &&
-                          match.participant1 &&
-                          match.participant2 && (
-                            <>
-                              <Button
-                                variant="ghost"
-                                className="h-7 px-2 text-xs"
+                  <TableCell>
+                    <div className="flex flex-wrap items-center justify-end gap-1">
+                      {match.status !== "completed" && match.participant1 && match.participant2 && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            className="h-7 px-2 text-xs"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate({
+                                to: "/app/g/$id",
+                                params: { id: match._id },
+                              });
+                            }}
+                          >
+                            <RadioIcon className="mr-1 size-3" />
+                            Scorer
+                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger
+                              render={
+                                <Button
+                                  variant="ghost"
+                                  className="h-7 px-2 text-xs"
+                                  onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                                >
+                                  Set Winner
+                                  <ChevronDownIcon className="ml-1 size-3" />
+                                </Button>
+                              }
+                            />
+                            <DropdownMenuContent align="end" className="w-full">
+                              <DropdownMenuItem
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  navigate({
-                                    to: "/app/g/$id",
-                                    params: { id: match._id },
-                                  });
+                                  handleSetWinner(match._id, match.participant1!._id);
                                 }}
                               >
-                                <RadioIcon className="mr-1 size-3" />
-                                Scorer
-                              </Button>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger
-                                  render={
-                                    <Button
-                                      variant="ghost"
-                                      className="h-7 px-2 text-xs"
-                                      onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                                    >
-                                      Set Winner
-                                      <ChevronDownIcon className="ml-1 size-3" />
-                                    </Button>
-                                  }
-                                />
-                                <DropdownMenuContent align="end" className="w-full">
-                                  <DropdownMenuItem
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleSetWinner(match._id, match.participant1!._id);
-                                    }}
-                                  >
-                                    {p1Name}
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleSetWinner(match._id, match.participant2!._id);
-                                    }}
-                                  >
-                                    {p2Name}
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </>
-                          )}
-                      </div>
-                    </TableCell>
-                  )}
+                                {p1Name}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSetWinner(match._id, match.participant2!._id);
+                                }}
+                              >
+                                {p2Name}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </>
+                      )}
+                    </div>
+                  </TableCell>
                 </TableRow>
               );
             })}

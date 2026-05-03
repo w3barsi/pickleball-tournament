@@ -17,16 +17,7 @@ async function canManageTournament(ctx: QueryCtx, tournamentId: Id<"tournaments"
   const tournament = await ctx.db.get(tournamentId);
   if (!tournament) return false;
 
-  if (tournament.createdBy === user._id) return true;
-
-  const manager = await ctx.db
-    .query("tournamentManagers")
-    .withIndex("by_tournament_user", (q) =>
-      q.eq("tournamentId", tournamentId).eq("userId", user._id),
-    )
-    .unique();
-
-  return manager !== null;
+  return tournament.createdBy === user._id;
 }
 
 async function requireManageTournament(ctx: QueryCtx, tournamentId: Id<"tournaments">) {
