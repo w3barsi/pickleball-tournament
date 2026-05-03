@@ -22,7 +22,14 @@ import { HeaderCard, HeaderCardDescription, HeaderCardHeading } from "@/componen
 import { TournamentSettingsDialog } from "@/components/tournaments/tournament-settings-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export const Route = createFileRoute("/_auth/app/tournaments/$slug/")({
   component: TournamentDetailPage,
@@ -340,74 +347,34 @@ function TournamentDetailPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-4">
             {categories.map((category) => {
               const categoryBrackets =
                 brackets?.filter((b) => b.category._id === category._id) ?? [];
               return (
                 <Card key={category._id}>
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-base font-semibold">{category.name}</CardTitle>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        nativeButton={false}
-                        render={
-                          <Link
-                            to="/app/tournaments/$slug/categories/$categoryId"
-                            params={{ slug, categoryId: category._id }}
-                          >
-                            View <ChevronRightIcon />
-                          </Link>
-                        }
-                      >
-                        <ChevronRightIcon className="size-4" />
-                      </Button>
-                    </div>
+                  <CardHeader>
+                    <CardTitle>{category.name}</CardTitle>
+                    <CardDescription>
+                      {categoryBrackets.reduce((sum, b) => sum + b.participantCount, 0)}{" "}
+                      participants
+                    </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-3">
-                    {categoryBrackets.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">No brackets yet</p>
-                    ) : (
-                      <div className="space-y-2">
-                        {categoryBrackets.map((bracket) => (
-                          <Button
-                            key={bracket._id}
-                            variant="outline"
-                            className="h-auto w-full justify-between px-3 py-2"
-                            nativeButton={false}
-                            render={
-                              <Link
-                                to="/app/brackets/$bracketId"
-                                params={{ bracketId: bracket._id }}
-                              />
-                            }
-                          >
-                            <div className="flex flex-col items-start">
-                              <span className="text-sm font-medium">{bracket.name}</span>
-                              <span className="text-xs text-muted-foreground">
-                                Stage {bracket.stage} ·{" "}
-                                {bracket.format === "roundRobin"
-                                  ? "Round Robin"
-                                  : "Single Elimination"}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                              <span className="flex items-center gap-1">
-                                <UsersIcon className="size-3" />
-                                {bracket.participantCount}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <SwordsIcon className="size-3" />
-                                {bracket.matchCount}
-                              </span>
-                            </div>
-                          </Button>
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
+                  <CardFooter>
+                    <Button
+                      variant="default"
+                      className="w-full bg-blue-500 hover:bg-blue-600"
+                      nativeButton={false}
+                      render={
+                        <Link
+                          to="/app/tournaments/$slug/categories/$categoryId"
+                          params={{ slug, categoryId: category._id }}
+                        />
+                      }
+                    >
+                      View Brackets
+                    </Button>
+                  </CardFooter>
                 </Card>
               );
             })}
