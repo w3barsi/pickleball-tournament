@@ -33,7 +33,7 @@ export function TournamentHeader({ tournament }: { tournament: Doc<"tournaments"
     convexQuery(api.categoryParticipants.listByTournament, { tournamentId: tournament._id }),
   );
   const { data: liveMatches } = useQuery(
-    convexQuery(api.matches.listLiveByTournament, { tournamentId: tournament._id }),
+    convexQuery(api.matches.listLiveMatchIdsByTournament, { tournamentId: tournament._id }),
   );
 
   const totalParticipants =

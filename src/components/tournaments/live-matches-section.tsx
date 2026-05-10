@@ -62,29 +62,82 @@ function getParticipantName(
   return `${participant.playerOne?.fullName ?? "Unknown"} / ${participant.playerTwo?.fullName ?? "Unknown"}`;
 }
 
-function getMatchScore(match: {
-  matchSets: { winnerTeam?: 1 | 2 | null }[];
+function formatMatchScore(match: {
+  matchSets: {
+    setNumber: number;
+    team1Score: number;
+    team2Score: number;
+    winnerTeam?: 1 | 2 | null;
+    status: string;
+  }[];
   status: string;
   winnerParticipantId?: Id<"categoryParticipants"> | null;
 }) {
-  if (match.matchSets.length > 0) {
-    const p1Wins = match.matchSets.filter((s) => s.winnerTeam === 1).length;
-    const p2Wins = match.matchSets.filter((s) => s.winnerTeam === 2).length;
-    return `${p1Wins} - ${p2Wins}`;
+  const completedSets = match.matchSets.filter((s) => s.status === "completed");
+  const inProgressSet = match.matchSets.find((s) => s.status === "inProgress");
+
+  const p1Wins = completedSets.filter((s) => s.winnerTeam === 1).length;
+  const p2Wins = completedSets.filter((s) => s.winnerTeam === 2).length;
+
+  if (completedSets.length === 0 && !inProgressSet) {
+    if (match.status === "completed" && match.winnerParticipantId) return "W - L";
+    return "—";
   }
-  if (match.status === "completed" && match.winnerParticipantId) {
-    return "W - L";
+
+  const setWins = `${p1Wins} - ${p2Wins}`;
+  if (inProgressSet) {
+    return (
+      <>
+        <span className="">
+          {inProgressSet.team1Score} – {inProgressSet.team2Score}
+        </span>
+      </>
+    );
   }
-  return "—";
+
+  return setWins;
+}
+
+function LiveMatchCard({ matchId }: { matchId: Id<"matches"> }) {
+  const navigate = useNavigate();
+  const { data: match } = useQuery(convexQuery(api.matches.getLiveMatchDetails, { matchId }));
+
+  if (!match) return null;
+
+  return (
+    <div
+      className="cursor-pointer rounded-xl border border-red-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
+      onClick={() => navigate({ to: "/app/matches/$matchId", params: { matchId: match._id } })}
+    >
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-muted-foreground">
+          {match.category?.name ?? "Category"} · {match.bracket?.name ?? "Bracket"}
+        </span>
+        {getMatchStatusBadge(match.status, match.isLive)}
+      </div>
+      <div className="mt-3 grid grid-cols-3 items-center justify-between">
+        <span className="font-medium">
+          {getParticipantName(match.participant1, match.category?.type ?? "singles")}
+        </span>
+        <span className="text-center text-xs text-muted-foreground">vs</span>
+        <span className="text-right font-medium">
+          {getParticipantName(match.participant2, match.category?.type ?? "singles")}
+        </span>
+      </div>
+      <div className="mt-2 text-center font-mono text-2xl font-bold">{formatMatchScore(match)}</div>
+      {match.courtNumber && (
+        <p className="mt-1 text-center text-xs text-muted-foreground">Court {match.courtNumber}</p>
+      )}
+    </div>
+  );
 }
 
 export function LiveMatchesSection({ tournamentId }: { tournamentId: Id<"tournaments"> }) {
-  const navigate = useNavigate();
-  const { data: liveMatches } = useQuery(
-    convexQuery(api.matches.listLiveByTournament, { tournamentId }),
+  const { data: liveMatchIds } = useQuery(
+    convexQuery(api.matches.listLiveMatchIdsByTournament, { tournamentId }),
   );
 
-  if (!liveMatches || liveMatches.length === 0) return null;
+  if (!liveMatchIds || liveMatchIds.length === 0) return null;
 
   return (
     <section className="space-y-3">
@@ -94,38 +147,8 @@ export function LiveMatchesSection({ tournamentId }: { tournamentId: Id<"tournam
       </div>
 
       <div className="grid gap-3 md:grid-cols-2">
-        {liveMatches.map((match) => (
-          <div
-            key={match._id}
-            className="cursor-pointer rounded-xl border border-red-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
-            onClick={() =>
-              navigate({ to: "/app/matches/$matchId", params: { matchId: match._id } })
-            }
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-muted-foreground">
-                {match.category?.name ?? "Category"} · {match.bracket?.name ?? "Bracket"}
-              </span>
-              {getMatchStatusBadge(match.status, match.isLive)}
-            </div>
-            <div className="mt-3 flex items-center justify-between">
-              <span className="font-medium">
-                {getParticipantName(match.participant1, match.category?.type ?? "singles")}
-              </span>
-              <span className="text-xs text-muted-foreground">vs</span>
-              <span className="text-right font-medium">
-                {getParticipantName(match.participant2, match.category?.type ?? "singles")}
-              </span>
-            </div>
-            <div className="mt-2 text-center font-mono text-2xl font-bold">
-              {getMatchScore(match)}
-            </div>
-            {match.courtNumber && (
-              <p className="mt-1 text-center text-xs text-muted-foreground">
-                Court {match.courtNumber}
-              </p>
-            )}
-          </div>
+        {liveMatchIds.map((match) => (
+          <LiveMatchCard key={match._id} matchId={match._id} />
         ))}
       </div>
     </section>

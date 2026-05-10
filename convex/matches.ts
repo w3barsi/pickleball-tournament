@@ -206,7 +206,7 @@ export const listByTournament = query({
   },
 });
 
-export const listLiveByTournament = query({
+export const listLiveMatchIdsByTournament = query({
   args: {
     tournamentId: v.id("tournaments"),
   },
@@ -221,14 +221,21 @@ export const listLiveByTournament = query({
       .withIndex("by_tournament", (q) => q.eq("tournamentId", args.tournamentId))
       .collect();
 
-    const results = [];
-    for (const match of matches) {
-      if (match.isLive || match.status === "inProgress") {
-        results.push(await hydrateMatch(ctx, match));
-      }
-    }
+    return matches
+      .filter((m) => m.isLive || m.status === "inProgress")
+      .map((m) => ({ _id: m._id, isLive: m.isLive, status: m.status }));
+  },
+});
 
-    return results;
+export const getLiveMatchDetails = query({
+  args: {
+    matchId: v.id("matches"),
+  },
+  handler: async (ctx, args) => {
+    const match = await ctx.db.get(args.matchId);
+    if (!match) return null;
+    if (!match.isLive && match.status !== "inProgress") return null;
+    return await hydrateMatch(ctx, match);
   },
 });
 
