@@ -93,11 +93,15 @@ function formatMatchScore(match: {
   const setWins = `${p1Wins} - ${p2Wins}`;
   if (inProgressSet) {
     return (
-      <>
+      <div className="flex w-full flex-col">
+        <div className="flex flex-col text-sm text-muted-foreground">
+          <span>{setWins}</span>
+          <span className="-mt-2">Set/s won</span>
+        </div>
         <span className="">
           {inProgressSet.team1Score} – {inProgressSet.team2Score}
         </span>
-      </>
+      </div>
     );
   }
 

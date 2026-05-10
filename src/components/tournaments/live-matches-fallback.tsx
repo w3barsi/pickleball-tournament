@@ -16,7 +16,7 @@ export function LiveMatchesFallback() {
             <Skeleton className="mx-auto h-3 w-6" />
             <Skeleton className="ml-auto h-7 w-20" />
           </div>
-          <Skeleton className="mx-auto mt-2 h-7 w-16" />
+          <Skeleton className="mx-auto mt-2 h-15 w-16" />
         </div>
       ))}
     </>
