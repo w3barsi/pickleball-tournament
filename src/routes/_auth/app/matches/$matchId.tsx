@@ -161,7 +161,7 @@ function MatchDetailPage() {
           <Button
             variant="outline"
             render={
-              <Link to="/app/g/$id" params={{ id: matchId }}>
+              <Link to="/g/$id" params={{ id: matchId }}>
                 <RadioIcon className="mr-1 size-4" />
                 Go to Scorer
               </Link>

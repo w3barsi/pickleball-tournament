@@ -34,7 +34,7 @@ function MatchesPage() {
   }) => {
     const matchId = await createMatch(data);
     setIsCreateOpen(false);
-    navigate({ to: "/app/g/$id", params: { id: matchId } });
+    navigate({ to: "/g/$id", params: { id: matchId } });
   };
 
   const handleDelete = async () => {
@@ -197,7 +197,7 @@ function MatchesPage() {
               </div>
 
               <CardContent className="p-5">
-                <Link to="/app/g/$id" params={{ id: match._id }} className="group block">
+                <Link to="/g/$id" params={{ id: match._id }} className="group block">
                   {/* Match Title */}
                   <div className="mb-4 text-center">
                     <h3 className="text-lg font-bold tracking-wide text-slate-700 uppercase">

@@ -237,7 +237,7 @@ export function MatchList({ bracketId, categoryType }: MatchListProps) {
                             onClick={(e) => {
                               e.stopPropagation();
                               navigate({
-                                to: "/app/g/$id",
+                                to: "/g/$id",
                                 params: { id: match._id },
                               });
                             }}

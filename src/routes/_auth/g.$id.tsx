@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/_auth/app/g/$id")({
+export const Route = createFileRoute("/_auth/g/$id")({
   component: ScorerPage,
   loader: async (ctx) => {
     const matchId = ctx.params.id as Id<"matches">;
@@ -314,15 +314,19 @@ function ScorerPage() {
   const team2Wins = match.winnerParticipantId === match.participant2Id;
 
   return (
-    <div className="mx-auto max-w-3xl space-y-4">
+    <div className="mx-auto max-w-3xl space-y-4 pt-4">
       {/* Header */}
       <div className="flex items-center gap-2">
         <Button
           variant="ghost"
           render={
-            <Link to="/app/tournaments" className="flex items-center gap-1">
+            <Link
+              to="/app/brackets/$bracketId"
+              params={{ bracketId: match.bracketId }}
+              className="flex items-center gap-1"
+            >
               <ArrowLeftIcon className="size-4" />
-              Tournaments
+              Brackets
             </Link>
           }
         />

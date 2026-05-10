@@ -172,7 +172,7 @@ function AppIndex() {
                 {liveMatches.slice(0, 3).map((match) => (
                   <Link
                     key={match._id}
-                    to="/app/g/$id"
+                    to="/g/$id"
                     params={{ id: match._id }}
                     className="group flex items-center justify-between rounded-xl border bg-muted/50 p-3 transition-colors hover:bg-muted"
                   >
