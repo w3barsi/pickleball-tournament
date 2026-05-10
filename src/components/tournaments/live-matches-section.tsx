@@ -1,7 +1,7 @@
 import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@convex/_generated/api.js";
 import { Id } from "@convex/_generated/dataModel.js";
-import { useQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { RadioIcon, PlayIcon, ClockIcon, CheckCircle2Icon } from "lucide-react";
 
@@ -43,6 +43,12 @@ function getMatchStatusBadge(status: string, isLive?: boolean | null) {
   }
 }
 
+function lastName(fullName: string | null | undefined) {
+  if (!fullName) return "Unknown";
+  const parts = fullName.trim().split(/\s+/);
+  return parts[parts.length - 1];
+}
+
 function getParticipantName(
   participant: {
     player?: { fullName: string } | null;
@@ -54,12 +60,12 @@ function getParticipantName(
 ) {
   if (!participant) return "TBD";
   if (categoryType === "singles") {
-    return participant.player?.fullName ?? "Unknown";
+    return lastName(participant.player?.fullName);
   }
   if (participant.pair?.teamName) {
-    return `${participant.pair.teamName} (${participant.playerOne?.fullName ?? "Unknown"} / ${participant.playerTwo?.fullName ?? "Unknown"})`;
+    return `${participant.pair.teamName} (${lastName(participant.playerOne?.fullName)} / ${lastName(participant.playerTwo?.fullName)})`;
   }
-  return `${participant.playerOne?.fullName ?? "Unknown"} / ${participant.playerTwo?.fullName ?? "Unknown"}`;
+  return `${lastName(participant.playerOne?.fullName)} / ${lastName(participant.playerTwo?.fullName)}`;
 }
 
 function formatMatchScore(match: {
@@ -100,7 +106,9 @@ function formatMatchScore(match: {
 
 function LiveMatchCard({ matchId }: { matchId: Id<"matches"> }) {
   const navigate = useNavigate();
-  const { data: match } = useQuery(convexQuery(api.matches.getLiveMatchDetails, { matchId }));
+  const { data: match } = useSuspenseQuery(
+    convexQuery(api.matches.getLiveMatchDetails, { matchId }),
+  );
 
   if (!match) return null;
 
@@ -133,24 +141,15 @@ function LiveMatchCard({ matchId }: { matchId: Id<"matches"> }) {
 }
 
 export function LiveMatchesSection({ tournamentId }: { tournamentId: Id<"tournaments"> }) {
-  const { data: liveMatchIds } = useQuery(
+  const { data: liveMatchIds } = useSuspenseQuery(
     convexQuery(api.matches.listLiveMatchIdsByTournament, { tournamentId }),
   );
 
-  if (!liveMatchIds || liveMatchIds.length === 0) return null;
-
   return (
-    <section className="space-y-3">
-      <div className="flex items-center gap-2">
-        <RadioIcon className="size-5 text-red-500" />
-        <h2 className="text-lg font-bold">Live Matches</h2>
-      </div>
-
-      <div className="grid gap-3 md:grid-cols-2">
-        {liveMatchIds.map((match) => (
-          <LiveMatchCard key={match._id} matchId={match._id} />
-        ))}
-      </div>
-    </section>
+    <>
+      {liveMatchIds.map((match) => (
+        <LiveMatchCard key={match._id} matchId={match._id} />
+      ))}
+    </>
   );
 }
