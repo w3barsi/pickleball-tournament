@@ -4,8 +4,87 @@ import { Id } from "@convex/_generated/dataModel.js";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { RadioIcon, PlayIcon, ClockIcon, CheckCircle2Icon } from "lucide-react";
+import { Suspense } from "react";
 
 import { Badge } from "@/components/ui/badge";
+
+import { LiveMatchesFallback } from "./live-matches-fallback";
+
+export function LiveMatchesSection({ tournamentId }: { tournamentId: Id<"tournaments"> }) {
+  return (
+    <section className="space-y-3">
+      <div className="flex items-center gap-2">
+        <RadioIcon className="size-5 text-red-500" />
+        <h2 className="text-lg font-bold">Live Matches</h2>
+      </div>
+      <div className="grid gap-3 md:grid-cols-2">
+        <Suspense fallback={<LiveMatchesFallback />}>
+          <LiveMatchesSectionInner tournamentId={tournamentId} />
+        </Suspense>
+      </div>
+    </section>
+  );
+}
+
+export function LiveMatchesSectionInner({ tournamentId }: { tournamentId: Id<"tournaments"> }) {
+  const { data: liveMatchIds } = useSuspenseQuery(
+    convexQuery(api.matches.listLiveMatchIdsByTournament, { tournamentId }),
+  );
+
+  return (
+    <>
+      {liveMatchIds.map((match) => (
+        <LiveMatchCard key={match._id} matchId={match._id} />
+      ))}
+    </>
+  );
+}
+
+export function LiveMatchesSectionLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <section className="space-y-3">
+      <div className="flex items-center gap-2">
+        <RadioIcon className="size-5 text-red-500" />
+        <h2 className="text-lg font-bold">Live Matches</h2>
+      </div>
+      <div className="grid gap-3 md:grid-cols-2">{children}</div>
+    </section>
+  );
+}
+
+function LiveMatchCard({ matchId }: { matchId: Id<"matches"> }) {
+  const navigate = useNavigate();
+  const { data: match } = useSuspenseQuery(
+    convexQuery(api.matches.getLiveMatchDetails, { matchId }),
+  );
+
+  if (!match) return null;
+
+  return (
+    <div
+      className="cursor-pointer rounded-xl border border-red-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
+      onClick={() => navigate({ to: "/app/matches/$matchId", params: { matchId: match._id } })}
+    >
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-muted-foreground">
+          {match.category?.name ?? "Category"} · {match.bracket?.name ?? "Bracket"}
+          {!match.courtNumber && <> · Court {match.courtNumber}</>}
+        </span>
+        {getMatchStatusBadge(match.status, match.isLive)}
+      </div>
+      <div className="mt-3 grid grid-cols-3 items-center justify-between">
+        <span className="font-medium">
+          {getParticipantName(match.participant1, match.category?.type ?? "singles")}
+        </span>
+        <span className="text-center text-xs text-muted-foreground">vs</span>
+        <span className="text-right font-medium">
+          {getParticipantName(match.participant2, match.category?.type ?? "singles")}
+        </span>
+      </div>
+      <div className="mt-2 text-center font-mono text-2xl font-bold">{formatMatchScore(match)}</div>
+    </div>
+  );
+}
 
 function getMatchStatusBadge(status: string, isLive?: boolean | null) {
   if (isLive) {
@@ -106,54 +185,4 @@ function formatMatchScore(match: {
   }
 
   return setWins;
-}
-
-function LiveMatchCard({ matchId }: { matchId: Id<"matches"> }) {
-  const navigate = useNavigate();
-  const { data: match } = useSuspenseQuery(
-    convexQuery(api.matches.getLiveMatchDetails, { matchId }),
-  );
-
-  if (!match) return null;
-
-  return (
-    <div
-      className="cursor-pointer rounded-xl border border-red-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
-      onClick={() => navigate({ to: "/app/matches/$matchId", params: { matchId: match._id } })}
-    >
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-muted-foreground">
-          {match.category?.name ?? "Category"} · {match.bracket?.name ?? "Bracket"}
-        </span>
-        {getMatchStatusBadge(match.status, match.isLive)}
-      </div>
-      <div className="mt-3 grid grid-cols-3 items-center justify-between">
-        <span className="font-medium">
-          {getParticipantName(match.participant1, match.category?.type ?? "singles")}
-        </span>
-        <span className="text-center text-xs text-muted-foreground">vs</span>
-        <span className="text-right font-medium">
-          {getParticipantName(match.participant2, match.category?.type ?? "singles")}
-        </span>
-      </div>
-      <div className="mt-2 text-center font-mono text-2xl font-bold">{formatMatchScore(match)}</div>
-      {match.courtNumber && (
-        <p className="mt-1 text-center text-xs text-muted-foreground">Court {match.courtNumber}</p>
-      )}
-    </div>
-  );
-}
-
-export function LiveMatchesSection({ tournamentId }: { tournamentId: Id<"tournaments"> }) {
-  const { data: liveMatchIds } = useSuspenseQuery(
-    convexQuery(api.matches.listLiveMatchIdsByTournament, { tournamentId }),
-  );
-
-  return (
-    <>
-      {liveMatchIds.map((match) => (
-        <LiveMatchCard key={match._id} matchId={match._id} />
-      ))}
-    </>
-  );
 }

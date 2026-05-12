@@ -1,11 +1,13 @@
 import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@convex/_generated/api.js";
 import { Id } from "@convex/_generated/dataModel.js";
-import { useQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { TrophyIcon, ChevronRightIcon, EyeIcon, Loader2Icon } from "lucide-react";
+import { TrophyIcon, ChevronRightIcon, EyeIcon } from "lucide-react";
+import { Suspense } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -22,11 +24,6 @@ export function CategoriesSection({
   slug: string;
   tournamentId: Id<"tournaments">;
 }) {
-  const { data: categories } = useQuery(
-    convexQuery(api.categories.listByTournament, { tournamentId }),
-  );
-  const { data: brackets } = useQuery(convexQuery(api.brackets.listByTournament, { tournamentId }));
-
   return (
     <section className="space-y-3">
       <div className="flex items-center justify-between">
@@ -44,13 +41,30 @@ export function CategoriesSection({
           <ChevronRightIcon className="size-4" />
         </Button>
       </div>
+      <Suspense fallback={<CategoriesFallback />}>
+        <CategoriesSectionInner slug={slug} tournamentId={tournamentId} />
+      </Suspense>
+    </section>
+  );
+}
 
-      {categories === undefined ? (
-        <div className="py-12 text-center">
-          <Loader2Icon className="mx-auto size-8 animate-spin text-slate-400" />
-          <p className="mt-2 text-muted-foreground">Loading categories...</p>
-        </div>
-      ) : categories.length === 0 ? (
+export function CategoriesSectionInner({
+  slug,
+  tournamentId,
+}: {
+  slug: string;
+  tournamentId: Id<"tournaments">;
+}) {
+  const { data: categories } = useSuspenseQuery(
+    convexQuery(api.categories.listByTournament, { tournamentId }),
+  );
+  const { data: brackets } = useSuspenseQuery(
+    convexQuery(api.brackets.listByTournament, { tournamentId }),
+  );
+
+  return (
+    <>
+      {categories.length === 0 ? (
         <div className="rounded-xl border border-dashed py-12 text-center">
           <TrophyIcon className="mx-auto size-8 text-muted-foreground" />
           <p className="mt-4 text-lg font-bold">No categories yet</p>
@@ -71,8 +85,7 @@ export function CategoriesSection({
             </TableHeader>
             <TableBody>
               {categories.map((category) => {
-                const categoryBrackets =
-                  brackets?.filter((b) => b.category._id === category._id) ?? [];
+                const categoryBrackets = brackets.filter((b) => b.category._id === category._id);
                 const categoryParticipantCount = categoryBrackets.reduce(
                   (sum, b) => sum + b.participantCount,
                   0,
@@ -107,6 +120,49 @@ export function CategoriesSection({
           </Table>
         </div>
       )}
-    </section>
+    </>
+  );
+}
+
+export function CategoriesFallback() {
+  return (
+    <div className="overflow-hidden rounded-xl border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead>Rating</TableHead>
+            <TableHead>Brackets</TableHead>
+            <TableHead>Participants</TableHead>
+            <TableHead className="text-right">Action</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {Array.from({ length: 3 }).map((_, i) => (
+            <TableRow key={i}>
+              <TableCell>
+                <Skeleton className="h-5 w-28" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-5 w-16" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-5 w-16" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-5 w-8" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-5 w-8" />
+              </TableCell>
+              <TableCell className="text-right">
+                <Skeleton className="ml-auto h-7 w-14" />
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 }
