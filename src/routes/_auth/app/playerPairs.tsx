@@ -35,13 +35,13 @@ import { useAuthSuspense } from "@/lib/auth/hooks";
 export const Route = createFileRoute("/_auth/app/playerPairs")({
   component: PlayerPairsPage,
   loader: async (ctx) => {
-    await ctx.context.queryClient.ensureQueryData(convexQuery(api.playerPairs.listAll, {}));
+    await ctx.context.queryClient.ensureQueryData(convexQuery(api.app.playerPairs.listAll, {}));
   },
 });
 
 function PlayerPairsPage() {
-  const { data: pairs } = useQuery(convexQuery(api.playerPairs.listAll, {}));
-  const deletePair = useMutation(api.playerPairs.remove);
+  const { data: pairs } = useQuery(convexQuery(api.app.playerPairs.listAll, {}));
+  const deletePair = useMutation(api.app.playerPairs.remove);
   const [pairToDelete, setPairToDelete] = useState<Id<"playerPair"> | null>(null);
   const [pairToRequestDelete, setPairToRequestDelete] = useState<{
     id: string;

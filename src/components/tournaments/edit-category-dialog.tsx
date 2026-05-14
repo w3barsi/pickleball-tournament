@@ -68,8 +68,8 @@ export function EditCategoryDialog({ category, tournamentSlug }: EditCategoryDia
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
-  const updateCategory = useMutation(api.categories.update);
-  const deleteCategory = useMutation(api.categories.remove);
+  const updateCategory = useMutation(api.app.categories.update);
+  const deleteCategory = useMutation(api.app.categories.remove);
   const navigate = useNavigate();
 
   const form = useForm({

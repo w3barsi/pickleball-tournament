@@ -41,7 +41,7 @@ export const Route = createFileRoute("/_auth/app/brackets/$bracketId/")({
   component: BracketDetailPage,
   loader: async ({ params, context }) => {
     await context.queryClient.ensureQueryData(
-      convexQuery(api.brackets.getWithParticipants, {
+      convexQuery(api.app.brackets.getWithParticipants, {
         bracketId: params.bracketId as Id<"brackets">,
       }),
     );
@@ -52,19 +52,19 @@ function BracketDetailPage() {
   const { bracketId } = Route.useParams();
   const navigate = useNavigate();
   const { data: bracketData } = useQuery(
-    convexQuery(api.brackets.getWithParticipants, {
+    convexQuery(api.app.brackets.getWithParticipants, {
       bracketId: bracketId as Id<"brackets">,
     }),
   );
   const { data: unassignedParticipants } = useQuery(
     convexQuery(
-      api.brackets.getUnassignedParticipants,
+      api.app.brackets.getUnassignedParticipants,
       bracketData?.category ? { categoryId: bracketData.category._id as Id<"categories"> } : "skip",
     ),
   );
 
-  const removeParticipant = useMutation(api.brackets.removeParticipant);
-  const removeBracket = useMutation(api.brackets.remove);
+  const removeParticipant = useMutation(api.app.brackets.removeParticipant);
+  const removeBracket = useMutation(api.app.brackets.remove);
 
   const [isDeleting, setIsDeleting] = useState(false);
 

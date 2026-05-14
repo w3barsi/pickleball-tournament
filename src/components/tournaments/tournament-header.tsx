@@ -24,16 +24,16 @@ function formatDate(ts: number | undefined) {
 
 export function TournamentHeader({ tournament }: { tournament: Doc<"tournaments"> }) {
   const { data: categories } = useQuery(
-    convexQuery(api.categories.listByTournament, { tournamentId: tournament._id }),
+    convexQuery(api.app.categories.listByTournament, { tournamentId: tournament._id }),
   );
   const { data: brackets } = useQuery(
-    convexQuery(api.brackets.listByTournament, { tournamentId: tournament._id }),
+    convexQuery(api.app.brackets.listByTournament, { tournamentId: tournament._id }),
   );
   const { data: categoryParticipants } = useQuery(
-    convexQuery(api.categoryParticipants.listByTournament, { tournamentId: tournament._id }),
+    convexQuery(api.app.categoryParticipants.listByTournament, { tournamentId: tournament._id }),
   );
   const { data: liveMatches } = useQuery(
-    convexQuery(api.matches.listLiveMatchIdsByTournament, { tournamentId: tournament._id }),
+    convexQuery(api.app.matches.listLiveMatchIdsByTournament, { tournamentId: tournament._id }),
   );
 
   const totalParticipants =

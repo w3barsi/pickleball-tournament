@@ -26,7 +26,7 @@ const createPlayerSchema = z.object({
 type CreatePlayerFormData = z.infer<typeof createPlayerSchema>;
 
 export function CreatePlayerDialog() {
-  const createPlayer = useMutation(api.players.create);
+  const createPlayer = useMutation(api.app.players.create);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const form = useForm({

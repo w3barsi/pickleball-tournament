@@ -27,7 +27,7 @@ export const Route = createFileRoute("/_auth/app/matches/$matchId")({
   component: MatchDetailPage,
   loader: async ({ params, context }) => {
     await context.queryClient.ensureQueryData(
-      convexQuery(api.matches.getWithDetails, {
+      convexQuery(api.app.matches.getWithDetails, {
         matchId: params.matchId as Id<"matches">,
       }),
     );
@@ -97,7 +97,7 @@ function formatDate(ts: number | undefined) {
 function MatchDetailPage() {
   const { matchId } = Route.useParams();
   const { data: matchData } = useQuery(
-    convexQuery(api.matches.getWithDetails, { matchId: matchId as Id<"matches"> }),
+    convexQuery(api.app.matches.getWithDetails, { matchId: matchId as Id<"matches"> }),
   );
   if (!matchData) {
     return (

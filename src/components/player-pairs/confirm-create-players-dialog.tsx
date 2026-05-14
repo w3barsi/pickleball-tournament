@@ -38,7 +38,7 @@ export function ConfirmCreatePlayersDialog({
   pending,
   onConfirm,
 }: ConfirmCreatePlayersDialogProps) {
-  const createPlayer = useMutation(api.players.create);
+  const createPlayer = useMutation(api.app.players.create);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const missingNames: string[] = [];

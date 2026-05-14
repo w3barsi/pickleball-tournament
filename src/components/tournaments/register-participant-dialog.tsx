@@ -73,8 +73,8 @@ export function RegisterParticipantDialog({
   categoryType,
   onSuccess,
 }: RegisterParticipantDialogProps) {
-  const register = useMutation(api.categoryParticipants.register);
-  const createPlayer = useMutation(api.players.create);
+  const register = useMutation(api.app.categoryParticipants.register);
+  const createPlayer = useMutation(api.app.players.create);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   // Singles state
@@ -92,15 +92,15 @@ export function RegisterParticipantDialog({
   const debouncedP2 = useDebouncedValue(p2Query);
 
   const { data: playerResults = [] } = useQuery({
-    ...convexQuery(api.players.search, { query: debouncedPlayer }),
+    ...convexQuery(api.app.players.search, { query: debouncedPlayer }),
     placeholderData: keepPreviousData,
   });
   const { data: p1Results = [] } = useQuery({
-    ...convexQuery(api.players.search, { query: debouncedP1 }),
+    ...convexQuery(api.app.players.search, { query: debouncedP1 }),
     placeholderData: keepPreviousData,
   });
   const { data: p2Results = [] } = useQuery({
-    ...convexQuery(api.players.search, { query: debouncedP2 }),
+    ...convexQuery(api.app.players.search, { query: debouncedP2 }),
     placeholderData: keepPreviousData,
   });
 

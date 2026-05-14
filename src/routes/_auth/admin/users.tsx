@@ -29,8 +29,8 @@ export const Route = createFileRoute("/_auth/admin/users")({
 });
 
 function UsersPage() {
-  const { data: users, isLoading } = useQuery(convexQuery(api.users.list, {}));
-  const updateRole = useMutation(api.users.updateRole);
+  const { data: users, isLoading } = useQuery(convexQuery(api.admin.users.list, {}));
+  const updateRole = useMutation(api.admin.users.updateRole);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   const handleRoleChange = async (userId: string, role: "user" | "admin") => {

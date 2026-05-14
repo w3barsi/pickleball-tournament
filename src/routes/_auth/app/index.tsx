@@ -20,8 +20,8 @@ export const Route = createFileRoute("/_auth/app/")({
 });
 
 function AppIndex() {
-  const { data: tournaments } = useQuery(convexQuery(api.tournaments.listAll, {}));
-  const { data: matches } = useQuery(convexQuery(api.scoring.listAllMatches, {}));
+  const { data: tournaments } = useQuery(convexQuery(api.app.tournaments.listAll, {}));
+  const { data: matches } = useQuery(convexQuery(api.app.scoring.listAllMatches, {}));
 
   const upcomingTournaments = tournaments?.filter((t) => t.status === "upcoming") || [];
   const liveMatches = matches?.filter((m) => m.status === "inProgress") || [];

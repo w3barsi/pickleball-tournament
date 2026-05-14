@@ -56,7 +56,7 @@ function ResetMatchDialog({ matchId }: { matchId: Id<"matches"> }) {
   const [open, setOpen] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
 
-  const resetMatch = useMutation(api.matches.reset);
+  const resetMatch = useMutation(api.app.matches.reset);
 
   const handleReset = async () => {
     setIsResetting(true);
@@ -113,7 +113,7 @@ export function EditMatchDialog({ match }: EditMatchDialogProps) {
   const [open, setOpen] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
-  const updateMatch = useMutation(api.matches.update);
+  const updateMatch = useMutation(api.app.matches.update);
 
   const form = useForm({
     defaultValues: {

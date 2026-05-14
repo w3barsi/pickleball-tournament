@@ -1,8 +1,8 @@
 import { v } from "convex/values";
 
-import { components } from "./_generated/api";
-import { query, mutation } from "./_generated/server";
-import { authComponent } from "./auth";
+import { components } from "../_generated/api";
+import { query, mutation } from "../_generated/server";
+import { authComponent } from "../auth";
 
 // List all users
 export const list = query({

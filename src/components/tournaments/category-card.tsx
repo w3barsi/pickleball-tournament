@@ -88,7 +88,7 @@ function getRatingBadge(rating: string) {
 }
 
 export function CategoryCard({ category, slug }: CategoryCardProps) {
-  const deleteCategory = useMutation(api.categories.remove);
+  const deleteCategory = useMutation(api.app.categories.remove);
   return (
     <Link
       to="/app/tournaments/$slug/categories/$categoryId"

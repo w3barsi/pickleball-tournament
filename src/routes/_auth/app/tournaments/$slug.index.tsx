@@ -13,7 +13,7 @@ export const Route = createFileRoute("/_auth/app/tournaments/$slug/")({
   component: TournamentDetailPage,
   loader: async ({ params, context }) => {
     const tournament = await context.queryClient.ensureQueryData(
-      convexQuery(api.tournaments.getBySlug, { slug: params.slug }),
+      convexQuery(api.app.tournaments.getBySlug, { slug: params.slug }),
     );
 
     if (!tournament) throw notFound();
@@ -27,7 +27,7 @@ function TournamentDetailPage() {
   const { slug } = Route.useParams();
   const { tournamentId } = Route.useLoaderData();
   const { data: tournament, isLoading } = useQuery(
-    convexQuery(api.tournaments.getBySlug, { slug }),
+    convexQuery(api.app.tournaments.getBySlug, { slug }),
   );
 
   if (isLoading || !tournament) {

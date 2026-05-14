@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 
-import { Doc, Id } from "./_generated/dataModel";
-import { query, mutation, QueryCtx, MutationCtx } from "./_generated/server";
+import { Doc, Id } from "../_generated/dataModel";
+import { query, mutation, QueryCtx, MutationCtx } from "../_generated/server";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 

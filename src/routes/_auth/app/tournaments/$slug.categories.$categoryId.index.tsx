@@ -31,18 +31,18 @@ export const Route = createFileRoute("/_auth/app/tournaments/$slug/categories/$c
   loader: async ({ params, context }) => {
     await Promise.all([
       context.queryClient.ensureQueryData(
-        convexQuery(api.tournaments.getBySlug, { slug: params.slug }),
+        convexQuery(api.app.tournaments.getBySlug, { slug: params.slug }),
       ),
       context.queryClient.ensureQueryData(
-        convexQuery(api.categories.get, { categoryId: params.categoryId as Id<"categories"> }),
+        convexQuery(api.app.categories.get, { categoryId: params.categoryId as Id<"categories"> }),
       ),
       context.queryClient.ensureQueryData(
-        convexQuery(api.categoryParticipants.listByCategory, {
+        convexQuery(api.app.categoryParticipants.listByCategory, {
           categoryId: params.categoryId as Id<"categories">,
         }),
       ),
       context.queryClient.ensureQueryData(
-        convexQuery(api.brackets.listByCategory, {
+        convexQuery(api.app.brackets.listByCategory, {
           categoryId: params.categoryId as Id<"categories">,
         }),
       ),
@@ -52,30 +52,30 @@ export const Route = createFileRoute("/_auth/app/tournaments/$slug/categories/$c
 
 function CategoryDetailPage() {
   const { slug, categoryId } = Route.useParams();
-  const { data: tournament } = useQuery(convexQuery(api.tournaments.getBySlug, { slug }));
+  const { data: tournament } = useQuery(convexQuery(api.app.tournaments.getBySlug, { slug }));
   const { data: category } = useQuery(
-    convexQuery(api.categories.get, { categoryId: categoryId as Id<"categories"> }),
+    convexQuery(api.app.categories.get, { categoryId: categoryId as Id<"categories"> }),
   );
   const { data: participants } = useQuery(
-    convexQuery(api.categoryParticipants.listByCategory, {
+    convexQuery(api.app.categoryParticipants.listByCategory, {
       categoryId: categoryId as Id<"categories">,
     }),
   );
   const { data: brackets } = useQuery(
-    convexQuery(api.brackets.listByCategory, {
+    convexQuery(api.app.brackets.listByCategory, {
       categoryId: categoryId as Id<"categories">,
     }),
   );
   const { data: unassignedParticipants } = useQuery(
-    convexQuery(api.brackets.getUnassignedParticipants, {
+    convexQuery(api.app.brackets.getUnassignedParticipants, {
       categoryId: categoryId as Id<"categories">,
     }),
   );
 
-  const unregister = useMutation(api.categoryParticipants.unregister);
-  const resyncRecords = useMutation(api.categoryParticipants.resyncRecords);
-  const createBracket = useMutation(api.brackets.create);
-  const autoAssign = useMutation(api.brackets.autoAssignRemaining);
+  const unregister = useMutation(api.app.categoryParticipants.unregister);
+  const resyncRecords = useMutation(api.app.categoryParticipants.resyncRecords);
+  const createBracket = useMutation(api.app.brackets.create);
+  const autoAssign = useMutation(api.app.brackets.autoAssignRemaining);
 
   const [isCreateBracketOpen, setIsCreateBracketOpen] = useState(false);
 

@@ -18,9 +18,9 @@ export const Route = createFileRoute("/_auth/app/games")({
 });
 
 function MatchesPage() {
-  const { data: matches } = useQuery(convexQuery(api.scoring.listAllMatches, {}));
-  const createMatch = useMutation(api.scoring.createMatch);
-  const deleteMatch = useMutation(api.scoring.deleteMatch);
+  const { data: matches } = useQuery(convexQuery(api.app.scoring.listAllMatches, {}));
+  const createMatch = useMutation(api.app.scoring.createMatch);
+  const deleteMatch = useMutation(api.app.scoring.deleteMatch);
   const navigate = useNavigate();
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);

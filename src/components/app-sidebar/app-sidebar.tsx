@@ -35,7 +35,7 @@ function useTournamentSlug(): string | null {
 
   const { data: bracketData } = useQuery(
     convexQuery(
-      api.brackets.getWithParticipants,
+      api.app.brackets.getWithParticipants,
       tournamentMatch || !bracketMatch?.params.bracketId
         ? "skip"
         : { bracketId: bracketMatch.params.bracketId as Id<"brackets"> },
@@ -43,7 +43,7 @@ function useTournamentSlug(): string | null {
   );
   const { data: matchData } = useQuery(
     convexQuery(
-      api.matches.getWithDetails,
+      api.app.matches.getWithDetails,
       tournamentMatch || !matchMatch?.params.matchId
         ? "skip"
         : { matchId: matchMatch.params.matchId as Id<"matches"> },

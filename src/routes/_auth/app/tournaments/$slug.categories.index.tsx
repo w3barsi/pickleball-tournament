@@ -16,11 +16,11 @@ export const Route = createFileRoute("/_auth/app/tournaments/$slug/categories/")
   component: CategoriesPage,
   loader: async ({ params, context }) => {
     const tournament = await context.queryClient.ensureQueryData(
-      convexQuery(api.tournaments.getBySlug, { slug: params.slug }),
+      convexQuery(api.app.tournaments.getBySlug, { slug: params.slug }),
     );
     if (tournament) {
       await context.queryClient.ensureQueryData(
-        convexQuery(api.categories.listByTournament, { tournamentId: tournament._id }),
+        convexQuery(api.app.categories.listByTournament, { tournamentId: tournament._id }),
       );
     }
   },
@@ -28,14 +28,14 @@ export const Route = createFileRoute("/_auth/app/tournaments/$slug/categories/")
 
 function CategoriesPage() {
   const { slug } = Route.useParams();
-  const { data: tournament } = useQuery(convexQuery(api.tournaments.getBySlug, { slug }));
+  const { data: tournament } = useQuery(convexQuery(api.app.tournaments.getBySlug, { slug }));
   const { data: categories } = useQuery(
     convexQuery(
-      api.categories.listByTournament,
+      api.app.categories.listByTournament,
       tournament ? { tournamentId: tournament._id } : "skip",
     ),
   );
-  const createCategory = useMutation(api.categories.create);
+  const createCategory = useMutation(api.app.categories.create);
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 

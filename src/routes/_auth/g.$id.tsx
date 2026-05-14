@@ -26,7 +26,7 @@ export const Route = createFileRoute("/_auth/g/$id")({
   loader: async (ctx) => {
     const matchId = ctx.params.id as Id<"matches">;
     await ctx.context.queryClient.ensureQueryData(
-      convexQuery(api.scoring.getMatchForScorer, { matchId }),
+      convexQuery(api.app.scoring.getMatchForScorer, { matchId }),
     );
   },
 });
@@ -136,20 +136,20 @@ function ScorerPage() {
 
   const { data: matchData, isLoading } = useQuery(
     convexQuery(
-      api.scoring.getMatchForScorer,
+      api.app.scoring.getMatchForScorer,
       queryArgs as { matchId: Id<"matches">; viewSetNumber?: number },
     ),
   );
 
-  const startMatchMutation = useMutation(api.scoring.startMatch);
-  const setMatchLiveMutation = useMutation(api.scoring.setMatchLive);
-  const forfeitMatchMutation = useMutation(api.scoring.forfeitMatch);
-  const confirmSetCompleteMutation = useMutation(api.scoring.confirmSetComplete);
+  const startMatchMutation = useMutation(api.app.scoring.startMatch);
+  const setMatchLiveMutation = useMutation(api.app.scoring.setMatchLive);
+  const forfeitMatchMutation = useMutation(api.app.scoring.forfeitMatch);
+  const confirmSetCompleteMutation = useMutation(api.app.scoring.confirmSetComplete);
 
-  const recordPoint = useMutation(api.scoring.recordPoint).withOptimisticUpdate(
+  const recordPoint = useMutation(api.app.scoring.recordPoint).withOptimisticUpdate(
     (localStore, args) => {
       const queryKey = viewSetNumber !== null ? { matchId, viewSetNumber } : { matchId };
-      const current = localStore.getQuery(api.scoring.getMatchForScorer, queryKey);
+      const current = localStore.getQuery(api.app.scoring.getMatchForScorer, queryKey);
       if (!current?.match || !current.currentSet || !current.computedState) return;
 
       const pointWinner = args.pointWinner as 1 | 2;
@@ -177,7 +177,7 @@ function ScorerPage() {
         current.match.winByTwo,
       );
 
-      localStore.setQuery(api.scoring.getMatchForScorer, queryKey, {
+      localStore.setQuery(api.app.scoring.getMatchForScorer, queryKey, {
         ...current,
         currentSetPoints: newPoints,
         computedState: newState,
@@ -185,24 +185,26 @@ function ScorerPage() {
     },
   );
 
-  const undoPoint = useMutation(api.scoring.undoLastPoint).withOptimisticUpdate((localStore) => {
-    const queryKey = viewSetNumber !== null ? { matchId, viewSetNumber } : { matchId };
-    const current = localStore.getQuery(api.scoring.getMatchForScorer, queryKey);
-    if (!current?.currentSetPoints.length || !current.currentSet) return;
+  const undoPoint = useMutation(api.app.scoring.undoLastPoint).withOptimisticUpdate(
+    (localStore) => {
+      const queryKey = viewSetNumber !== null ? { matchId, viewSetNumber } : { matchId };
+      const current = localStore.getQuery(api.app.scoring.getMatchForScorer, queryKey);
+      if (!current?.currentSetPoints.length || !current.currentSet) return;
 
-    const newPoints = current.currentSetPoints.slice(0, -1);
-    const newState = computeSetState(
-      newPoints.map((p) => ({ pointWinner: p.pointWinner })),
-      current.currentSet.targetScore,
-      current.match.winByTwo,
-    );
+      const newPoints = current.currentSetPoints.slice(0, -1);
+      const newState = computeSetState(
+        newPoints.map((p) => ({ pointWinner: p.pointWinner })),
+        current.currentSet.targetScore,
+        current.match.winByTwo,
+      );
 
-    localStore.setQuery(api.scoring.getMatchForScorer, queryKey, {
-      ...current,
-      currentSetPoints: newPoints,
-      computedState: newState,
-    });
-  });
+      localStore.setQuery(api.app.scoring.getMatchForScorer, queryKey, {
+        ...current,
+        currentSetPoints: newPoints,
+        computedState: newState,
+      });
+    },
+  );
 
   const [showHistory, setShowHistory] = useState(false);
   const [showForfeitChoice, setShowForfeitChoice] = useState(false);

@@ -28,7 +28,7 @@ export function LiveMatchesSection({ tournamentId }: { tournamentId: Id<"tournam
 
 export function LiveMatchesSectionInner({ tournamentId }: { tournamentId: Id<"tournaments"> }) {
   const { data: liveMatchIds } = useSuspenseQuery(
-    convexQuery(api.matches.listLiveMatchIdsByTournament, { tournamentId }),
+    convexQuery(api.app.matches.listLiveMatchIdsByTournament, { tournamentId }),
   );
 
   return (
@@ -55,7 +55,7 @@ export function LiveMatchesSectionLayout({ children }: { children: React.ReactNo
 function LiveMatchCard({ matchId }: { matchId: Id<"matches"> }) {
   const navigate = useNavigate();
   const { data: match } = useSuspenseQuery(
-    convexQuery(api.matches.getLiveMatchDetails, { matchId }),
+    convexQuery(api.app.matches.getLiveMatchDetails, { matchId }),
   );
 
   if (!match) return null;

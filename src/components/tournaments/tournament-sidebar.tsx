@@ -45,10 +45,10 @@ function statusDot(status: "upcoming" | "inProgress" | "completed") {
 }
 
 export function TournamentSidebar({ slug }: TournamentSidebarProps) {
-  const { data: tournament } = useQuery(convexQuery(api.tournaments.getBySlug, { slug }));
+  const { data: tournament } = useQuery(convexQuery(api.app.tournaments.getBySlug, { slug }));
   const { data: categories } = useQuery(
     convexQuery(
-      api.categories.listByTournament,
+      api.app.categories.listByTournament,
       tournament ? { tournamentId: tournament._id } : "skip",
     ),
   );

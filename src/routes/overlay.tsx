@@ -13,7 +13,7 @@ const convexClient = new ConvexReactClient(convexUrl);
 export const Route = createFileRoute("/overlay")({
   component: OverlayPage,
   loader: async (ctx) => {
-    await ctx.context.queryClient.ensureQueryData(convexQuery(api.scoring.getLiveMatch));
+    await ctx.context.queryClient.ensureQueryData(convexQuery(api.app.scoring.getLiveMatch));
   },
 });
 
@@ -27,7 +27,7 @@ function OverlayPage() {
 
 // The actual scoreboard component
 function Scoreboard() {
-  const { data: match } = useQuery(convexQuery(api.scoring.getLiveMatch));
+  const { data: match } = useQuery(convexQuery(api.app.scoring.getLiveMatch));
 
   if (!match) {
     return (

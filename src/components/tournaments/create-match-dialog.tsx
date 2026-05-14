@@ -72,7 +72,7 @@ export function CreateMatchDialog({
 }: CreateMatchDialogProps) {
   const [open, setOpen] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
-  const createMatch = useMutation(api.matches.create);
+  const createMatch = useMutation(api.app.matches.create);
 
   const form = useForm({
     defaultValues: {

@@ -56,10 +56,10 @@ export function CategoriesSectionInner({
   tournamentId: Id<"tournaments">;
 }) {
   const { data: categories } = useSuspenseQuery(
-    convexQuery(api.categories.listByTournament, { tournamentId }),
+    convexQuery(api.app.categories.listByTournament, { tournamentId }),
   );
   const { data: brackets } = useSuspenseQuery(
-    convexQuery(api.brackets.listByTournament, { tournamentId }),
+    convexQuery(api.app.brackets.listByTournament, { tournamentId }),
   );
 
   return (

@@ -72,7 +72,7 @@ interface PendingPlayers {
 }
 
 export function CreatePlayerPairDialog() {
-  const createPair = useMutation(api.playerPairs.create);
+  const createPair = useMutation(api.app.playerPairs.create);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const [p1Query, setP1Query] = useState("");
@@ -84,11 +84,11 @@ export function CreatePlayerPairDialog() {
   const debouncedP2 = useDebouncedValue(p2Query);
 
   const { data: p1Results = [] } = useQuery({
-    ...convexQuery(api.players.search, { query: debouncedP1 }),
+    ...convexQuery(api.app.players.search, { query: debouncedP1 }),
     placeholderData: keepPreviousData,
   });
   const { data: p2Results = [] } = useQuery({
-    ...convexQuery(api.players.search, { query: debouncedP2 }),
+    ...convexQuery(api.app.players.search, { query: debouncedP2 }),
     placeholderData: keepPreviousData,
   });
 

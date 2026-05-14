@@ -8,20 +8,18 @@
  * @module
  */
 
+import type * as admin_users from "../admin/users.js";
+import type * as app_brackets from "../app/brackets.js";
+import type * as app_categories from "../app/categories.js";
+import type * as app_categoryParticipants from "../app/categoryParticipants.js";
+import type * as app_deletionRequests from "../app/deletionRequests.js";
+import type * as app_matches from "../app/matches.js";
+import type * as app_playerPairs from "../app/playerPairs.js";
+import type * as app_players from "../app/players.js";
+import type * as app_scoring from "../app/scoring.js";
+import type * as app_tournaments from "../app/tournaments.js";
 import type * as auth from "../auth.js";
-import type * as brackets from "../brackets.js";
-import type * as categories from "../categories.js";
-import type * as categoryParticipants from "../categoryParticipants.js";
-import type * as deletionRequests from "../deletionRequests.js";
 import type * as http from "../http.js";
-import type * as matches from "../matches.js";
-import type * as migrations from "../migrations.js";
-import type * as playerPairs from "../playerPairs.js";
-import type * as players from "../players.js";
-import type * as scoring from "../scoring.js";
-import type * as session from "../session.js";
-import type * as tournaments from "../tournaments.js";
-import type * as users from "../users.js";
 
 import type {
   ApiFromModules,
@@ -30,20 +28,18 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "admin/users": typeof admin_users;
+  "app/brackets": typeof app_brackets;
+  "app/categories": typeof app_categories;
+  "app/categoryParticipants": typeof app_categoryParticipants;
+  "app/deletionRequests": typeof app_deletionRequests;
+  "app/matches": typeof app_matches;
+  "app/playerPairs": typeof app_playerPairs;
+  "app/players": typeof app_players;
+  "app/scoring": typeof app_scoring;
+  "app/tournaments": typeof app_tournaments;
   auth: typeof auth;
-  brackets: typeof brackets;
-  categories: typeof categories;
-  categoryParticipants: typeof categoryParticipants;
-  deletionRequests: typeof deletionRequests;
   http: typeof http;
-  matches: typeof matches;
-  migrations: typeof migrations;
-  playerPairs: typeof playerPairs;
-  players: typeof players;
-  scoring: typeof scoring;
-  session: typeof session;
-  tournaments: typeof tournaments;
-  users: typeof users;
 }>;
 
 /**
@@ -74,5 +70,4 @@ export declare const internal: FilterApi<
 
 export declare const components: {
   betterAuth: import("../betterAuth/_generated/component.js").ComponentApi<"betterAuth">;
-  migrations: import("@convex-dev/migrations/_generated/component.js").ComponentApi<"migrations">;
 };

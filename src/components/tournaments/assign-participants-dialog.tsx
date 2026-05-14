@@ -29,13 +29,13 @@ interface AssignParticipantsDialogProps {
 
 export function AssignParticipantsDialog({ bracketId, categoryId }: AssignParticipantsDialogProps) {
   const { data: unassigned, isLoading } = useQuery(
-    convexQuery(api.brackets.getUnassignedParticipants, { categoryId }),
+    convexQuery(api.app.brackets.getUnassignedParticipants, { categoryId }),
   );
   const { data: bracketData } = useQuery(
-    convexQuery(api.brackets.getWithParticipants, { bracketId }),
+    convexQuery(api.app.brackets.getWithParticipants, { bracketId }),
   );
 
-  const addParticipants = useMutation(api.brackets.addParticipants);
+  const addParticipants = useMutation(api.app.brackets.addParticipants);
 
   const [isAssignOpen, setIsAssignOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());

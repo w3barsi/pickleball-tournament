@@ -131,9 +131,9 @@ function getMatchScore(match: MatchItem) {
 }
 
 export function MatchList({ bracketId, categoryType }: MatchListProps) {
-  const { data: matches } = useQuery(convexQuery(api.matches.listByBracket, { bracketId }));
+  const { data: matches } = useQuery(convexQuery(api.app.matches.listByBracket, { bracketId }));
 
-  const updateResult = useMutation(api.matches.updateResult);
+  const updateResult = useMutation(api.app.matches.updateResult);
   const navigate = useNavigate();
 
   const handleSetWinner = async (matchId: Id<"matches">, winnerId: Id<"categoryParticipants">) => {

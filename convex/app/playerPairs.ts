@@ -1,8 +1,8 @@
 import { v } from "convex/values";
 
-import { Doc, Id } from "./_generated/dataModel";
-import { query, mutation } from "./_generated/server";
-import { authComponent } from "./auth";
+import { Doc, Id } from "../_generated/dataModel";
+import { query, mutation } from "../_generated/server";
+import { authComponent } from "../auth";
 
 // List all player pairs with player names populated
 export const listAll = query({

@@ -16,7 +16,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 export const Route = createFileRoute("/_auth/app/tournaments/")({
   component: TournamentsPage,
   loader: async (ctx) => {
-    await ctx.context.queryClient.ensureQueryData(convexQuery(api.tournaments.listAll, {}));
+    await ctx.context.queryClient.ensureQueryData(convexQuery(api.app.tournaments.listAll, {}));
   },
 });
 
@@ -40,8 +40,8 @@ function getStatusBadge(status: string) {
 }
 
 function TournamentsPage() {
-  const { data: tournaments } = useQuery(convexQuery(api.tournaments.listAll, {}));
-  const createTournament = useMutation(api.tournaments.create);
+  const { data: tournaments } = useQuery(convexQuery(api.app.tournaments.listAll, {}));
+  const createTournament = useMutation(api.app.tournaments.create);
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 

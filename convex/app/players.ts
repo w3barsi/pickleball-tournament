@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 
-import { query, mutation } from "./_generated/server";
-import { authComponent } from "./auth";
+import { query, mutation } from "../_generated/server";
+import { authComponent } from "../auth";
 
 // List all players
 export const listAll = query({

@@ -38,7 +38,7 @@ export function TournamentSettingsDialog({
 }: TournamentSettingsDialogProps) {
   const navigate = useNavigate();
 
-  const deleteTournament = useMutation(api.tournaments.remove);
+  const deleteTournament = useMutation(api.app.tournaments.remove);
 
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);

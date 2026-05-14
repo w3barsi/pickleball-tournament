@@ -40,7 +40,7 @@ export function ParticipantsSection({ tournamentId }: { tournamentId: Id<"tourna
 
 export function ParticipantsSectionInner({ tournamentId }: { tournamentId: Id<"tournaments"> }) {
   const { data: categoryParticipants } = useSuspenseQuery(
-    convexQuery(api.categoryParticipants.listByTournament, { tournamentId }),
+    convexQuery(api.app.categoryParticipants.listByTournament, { tournamentId }),
   );
 
   const totalParticipants = categoryParticipants.reduce(
