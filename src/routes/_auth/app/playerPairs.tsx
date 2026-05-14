@@ -2,7 +2,7 @@ import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@convex/_generated/api.js";
 import { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, useRouteContext } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import { UserPlusIcon, Trash2Icon, UsersIcon, FlagIcon } from "lucide-react";
 import { useState } from "react";
@@ -41,7 +41,7 @@ export const Route = createFileRoute("/_auth/app/playerPairs")({
 
 function PlayerPairsPage() {
   const { data: pairs } = useQuery(convexQuery(api.app.playerPairs.listAll, {}));
-  const deletePair = useMutation(api.app.playerPairs.remove);
+  const deletePair = useMutation(api.admin.players.removePair);
   const [pairToDelete, setPairToDelete] = useState<Id<"playerPair"> | null>(null);
   const [pairToRequestDelete, setPairToRequestDelete] = useState<{
     id: string;

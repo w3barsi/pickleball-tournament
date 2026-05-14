@@ -1,13 +1,11 @@
 import { v } from "convex/values";
 
 import { Doc, Id } from "../_generated/dataModel";
-import { query, mutation, QueryCtx, MutationCtx } from "../_generated/server";
-
-// ─── Types ─────────────────────────────────────────────────────────────────
+import { QueryCtx, MutationCtx } from "../_generated/server";
+import { authedQuery, authedMutation, requireManageTournament } from "./lib";
 
 type ServingTeam = 1 | 2;
 type ServerNumber = 1 | 2;
-type MatchStatus = "scheduled" | "inProgress" | "completed" | "abandoned";
 
 interface SetState {
   team1Score: number;
@@ -18,8 +16,6 @@ interface SetState {
   isGameOver: boolean;
   winner: 1 | 2 | null;
 }
-
-// ─── Helpers ───────────────────────────────────────────────────────────────
 
 function computeSetState(
   points: Array<{ pointWinner: 1 | 2 }>,
@@ -46,7 +42,6 @@ function computeSetState(
         state.team2Score += 1;
       }
 
-      // Check win condition
       const t1Wins =
         state.team1Score >= targetScore && (!winByTwo || state.team1Score >= state.team2Score + 2);
       const t2Wins =
@@ -135,46 +130,26 @@ async function updateParticipantRecords(
   }
 }
 
-// ─── Queries ───────────────────────────────────────────────────────────────
+function getParticipantDisplayName(
+  participant: {
+    player?: { fullName: string } | null;
+    pair?: { teamName?: string } | null;
+    playerOne?: { fullName: string } | null;
+    playerTwo?: { fullName: string } | null;
+  } | null,
+  categoryType: "singles" | "doubles",
+) {
+  if (!participant) return "TBD";
+  if (categoryType === "singles") {
+    return participant.player?.fullName ?? "Unknown";
+  }
+  if (participant.pair?.teamName) {
+    return `${participant.pair.teamName} (${participant.playerOne?.fullName ?? "Unknown"} / ${participant.playerTwo?.fullName ?? "Unknown"})`;
+  }
+  return `${participant.playerOne?.fullName ?? "Unknown"} / ${participant.playerTwo?.fullName ?? "Unknown"}`;
+}
 
-export const listAllMatches = query({
-  args: {},
-  handler: async (ctx) => {
-    const matches = await ctx.db.query("matches").order("desc").take(100);
-    const results = [];
-
-    for (const match of matches) {
-      const sets = await ctx.db
-        .query("matchSets")
-        .withIndex("by_match", (q) => q.eq("matchId", match._id))
-        .order("desc")
-        .collect();
-
-      const currentSet = sets.find((s) => s.status === "inProgress") ?? sets[0];
-      let currentScores = { team1Score: 0, team2Score: 0 };
-
-      if (currentSet) {
-        const points = await ctx.db
-          .query("pickleballPoints")
-          .withIndex("by_match_set", (q) => q.eq("matchSetId", currentSet._id))
-          .collect();
-        const state = computeSetState(points, currentSet.targetScore, match.winByTwo);
-        currentScores = { team1Score: state.team1Score, team2Score: state.team2Score };
-      }
-
-      results.push({
-        ...match,
-        currentSetNumber: currentSet?.setNumber ?? 0,
-        team1Score: currentScores.team1Score,
-        team2Score: currentScores.team2Score,
-      });
-    }
-
-    return results;
-  },
-});
-
-export const getMatchForScorer = query({
+export const getMatchForScorer = authedQuery({
   args: {
     matchId: v.id("matches"),
     viewSetNumber: v.optional(v.number()),
@@ -231,54 +206,7 @@ export const getMatchForScorer = query({
   },
 });
 
-export const getLiveMatch = query({
-  args: {},
-  handler: async (ctx) => {
-    const match = await ctx.db
-      .query("matches")
-      .withIndex("by_is_live", (q) => q.eq("isLive", true))
-      .first();
-
-    if (!match) return null;
-
-    const categoryType = await getCategoryType(ctx, match.bracketId);
-    const participant1 = await resolveParticipant(ctx, match.participant1Id, categoryType);
-    const participant2 = await resolveParticipant(ctx, match.participant2Id, categoryType);
-
-    const sets = await ctx.db
-      .query("matchSets")
-      .withIndex("by_match", (q) => q.eq("matchId", match._id))
-      .order("desc")
-      .collect();
-
-    const currentSet = sets.find((s) => s.status === "inProgress") ?? sets[0];
-    let computedState: SetState | null = null;
-
-    if (currentSet) {
-      const points = await ctx.db
-        .query("pickleballPoints")
-        .withIndex("by_match_set", (q) => q.eq("matchSetId", currentSet._id))
-        .collect();
-      computedState = computeSetState(points, currentSet.targetScore, match.winByTwo);
-    }
-
-    return {
-      ...match,
-      currentSetNumber: currentSet?.setNumber ?? 0,
-      team1Score: computedState?.team1Score ?? 0,
-      team2Score: computedState?.team2Score ?? 0,
-      servingTeam: computedState?.servingTeam ?? 1,
-      serverNumber: computedState?.serverNumber ?? 2,
-      isFirstServe: computedState?.isFirstServe ?? true,
-      participant1Name: getParticipantDisplayName(participant1, categoryType),
-      participant2Name: getParticipantDisplayName(participant2, categoryType),
-    };
-  },
-});
-
-// ─── Mutations ─────────────────────────────────────────────────────────────
-
-export const startMatch = mutation({
+export const startMatch = authedMutation({
   args: {
     matchId: v.id("matches"),
   },
@@ -287,6 +215,8 @@ export const startMatch = mutation({
     if (!match) {
       throw new Error("Match not found");
     }
+
+    await requireManageTournament(ctx, match.tournamentId);
 
     if (match.status !== "scheduled") {
       throw new Error("Match has already started");
@@ -300,7 +230,6 @@ export const startMatch = mutation({
       lastUpdatedAt: now,
     });
 
-    // Create the first set
     await ctx.db.insert("matchSets", {
       matchId: args.matchId,
       setNumber: 1,
@@ -314,7 +243,7 @@ export const startMatch = mutation({
   },
 });
 
-export const recordPoint = mutation({
+export const recordPoint = authedMutation({
   args: {
     matchId: v.id("matches"),
     pointWinner: v.union(v.literal(1), v.literal(2)),
@@ -325,11 +254,12 @@ export const recordPoint = mutation({
       throw new Error("Match not found");
     }
 
+    await requireManageTournament(ctx, match.tournamentId);
+
     if (match.status !== "inProgress") {
       throw new Error("Match is not in progress");
     }
 
-    // Find the current in-progress set
     const sets = await ctx.db
       .query("matchSets")
       .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
@@ -340,7 +270,6 @@ export const recordPoint = mutation({
       (s) => s.status === "inProgress",
     );
     if (!currentSet) {
-      // If no in-progress set but match is in progress, create next set
       const completedSets = sets.filter((s) => s.status === "completed");
       const nextSetNumber = completedSets.length + 1;
       if (nextSetNumber > match.numberOfSets) {
@@ -362,7 +291,6 @@ export const recordPoint = mutation({
 
     const now = Date.now();
 
-    // Get existing points for this set
     const existingPoints = await ctx.db
       .query("pickleballPoints")
       .withIndex("by_match_set", (q) => q.eq("matchSetId", currentSet._id))
@@ -370,10 +298,8 @@ export const recordPoint = mutation({
 
     const sequenceNumber = existingPoints.length;
 
-    // Compute current state before recording the point
     const beforeState = computeSetState(existingPoints, currentSet.targetScore, match.winByTwo);
 
-    // Record the point (stores state BEFORE the point was scored)
     await ctx.db.insert("pickleballPoints", {
       matchSetId: currentSet._id,
       team1Score: beforeState.team1Score,
@@ -386,14 +312,12 @@ export const recordPoint = mutation({
       timestamp: now,
     });
 
-    // Compute next state
     const afterState = computeSetState(
       [...existingPoints, { pointWinner: args.pointWinner }],
       currentSet.targetScore,
       match.winByTwo,
     );
 
-    // Update set scores
     await ctx.db.patch(currentSet._id, {
       team1Score: afterState.team1Score,
       team2Score: afterState.team2Score,
@@ -407,7 +331,7 @@ export const recordPoint = mutation({
   },
 });
 
-export const confirmSetComplete = mutation({
+export const confirmSetComplete = authedMutation({
   args: {
     matchId: v.id("matches"),
   },
@@ -416,6 +340,8 @@ export const confirmSetComplete = mutation({
     if (!match) {
       throw new Error("Match not found");
     }
+
+    await requireManageTournament(ctx, match.tournamentId);
 
     if (match.status !== "inProgress") {
       throw new Error("Match is not in progress");
@@ -491,7 +417,7 @@ export const confirmSetComplete = mutation({
   },
 });
 
-export const undoLastPoint = mutation({
+export const undoLastPoint = authedMutation({
   args: {
     matchId: v.id("matches"),
     setId: v.optional(v.id("matchSets")),
@@ -501,6 +427,8 @@ export const undoLastPoint = mutation({
     if (!match) {
       throw new Error("Match not found");
     }
+
+    await requireManageTournament(ctx, match.tournamentId);
 
     let targetSet: Doc<"matchSets"> | null = null;
     let lastPoint: Doc<"pickleballPoints"> | null = null;
@@ -516,7 +444,6 @@ export const undoLastPoint = mutation({
         .order("desc")
         .first();
     } else {
-      // Get all sets ordered by setNumber desc
       const sets = await ctx.db
         .query("matchSets")
         .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
@@ -527,7 +454,6 @@ export const undoLastPoint = mutation({
         throw new Error("No sets to undo");
       }
 
-      // Find the set with the most recent point
       for (const set of sets) {
         const point = await ctx.db
           .query("pickleballPoints")
@@ -548,7 +474,6 @@ export const undoLastPoint = mutation({
 
     const now = Date.now();
 
-    // If match was completed, revert winner/loser records
     if (match.status === "completed" && match.winnerParticipantId) {
       const loserId =
         match.winnerParticipantId === match.participant1Id
@@ -557,8 +482,6 @@ export const undoLastPoint = mutation({
       await updateParticipantRecords(ctx, match.winnerParticipantId, loserId, -1);
     }
 
-    // If the set was completed, delete any sets created after it and revert this set.
-    // Then keep deleting points until the set is no longer game over so it can be re-scored.
     if (targetSet.status === "completed") {
       const allSets = await ctx.db
         .query("matchSets")
@@ -568,7 +491,6 @@ export const undoLastPoint = mutation({
 
       for (const set of allSets) {
         if (set.setNumber > targetSet.setNumber) {
-          // Delete points in that set first
           const points = await ctx.db
             .query("pickleballPoints")
             .withIndex("by_match_set", (q) => q.eq("matchSetId", set._id))
@@ -586,7 +508,6 @@ export const undoLastPoint = mutation({
         completedAt: undefined,
       });
 
-      // Delete points until the set is no longer game over
       let remainingPoints = await ctx.db
         .query("pickleballPoints")
         .withIndex("by_match_set", (q) => q.eq("matchSetId", targetSet._id))
@@ -606,10 +527,8 @@ export const undoLastPoint = mutation({
         team2Score: state.team2Score,
       });
     } else {
-      // Just delete the single point for in-progress sets
       await ctx.db.delete(lastPoint._id);
 
-      // Recompute state for targetSet
       const remainingPoints = await ctx.db
         .query("pickleballPoints")
         .withIndex("by_match_set", (q) => q.eq("matchSetId", targetSet._id))
@@ -624,7 +543,6 @@ export const undoLastPoint = mutation({
       });
     }
 
-    // Revert match status if it was completed
     if (match.status === "completed") {
       await ctx.db.patch(args.matchId, {
         status: "inProgress",
@@ -642,7 +560,7 @@ export const undoLastPoint = mutation({
   },
 });
 
-export const forfeitMatch = mutation({
+export const forfeitMatch = authedMutation({
   args: {
     matchId: v.id("matches"),
     forfeitedBy: v.union(v.literal(1), v.literal(2)),
@@ -652,6 +570,8 @@ export const forfeitMatch = mutation({
     if (!match) {
       throw new Error("Match not found");
     }
+
+    await requireManageTournament(ctx, match.tournamentId);
 
     const winnerTeam = args.forfeitedBy === 1 ? 2 : 1;
     const winnerParticipantId = winnerTeam === 1 ? match.participant1Id : match.participant2Id;
@@ -672,7 +592,7 @@ export const forfeitMatch = mutation({
   },
 });
 
-export const setMatchLive = mutation({
+export const setMatchLive = authedMutation({
   args: {
     matchId: v.id("matches"),
   },
@@ -682,7 +602,8 @@ export const setMatchLive = mutation({
       throw new Error("Match not found");
     }
 
-    // Unset all other live matches
+    await requireManageTournament(ctx, match.tournamentId);
+
     const liveMatches = await ctx.db
       .query("matches")
       .withIndex("by_is_live", (q) => q.eq("isLive", true))
@@ -704,24 +625,3 @@ export const setMatchLive = mutation({
     return { success: true };
   },
 });
-
-// ─── Display Helpers ───────────────────────────────────────────────────────
-
-function getParticipantDisplayName(
-  participant: {
-    player?: { fullName: string } | null;
-    pair?: { teamName?: string } | null;
-    playerOne?: { fullName: string } | null;
-    playerTwo?: { fullName: string } | null;
-  } | null,
-  categoryType: "singles" | "doubles",
-) {
-  if (!participant) return "TBD";
-  if (categoryType === "singles") {
-    return participant.player?.fullName ?? "Unknown";
-  }
-  if (participant.pair?.teamName) {
-    return `${participant.pair.teamName} (${participant.playerOne?.fullName ?? "Unknown"} / ${participant.playerTwo?.fullName ?? "Unknown"})`;
-  }
-  return `${participant.playerOne?.fullName ?? "Unknown"} / ${participant.playerTwo?.fullName ?? "Unknown"}`;
-}

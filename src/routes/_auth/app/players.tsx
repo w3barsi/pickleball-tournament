@@ -2,7 +2,7 @@ import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@convex/_generated/api.js";
 import { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, useRouteContext } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import { UserIcon, Trash2Icon, UsersIcon, FlagIcon } from "lucide-react";
 import { useState } from "react";
@@ -42,7 +42,7 @@ export const Route = createFileRoute("/_auth/app/players")({
 function PlayersPage() {
   const { isAdmin } = useAuthSuspense();
   const { data: players } = useQuery(convexQuery(api.app.players.listAll, {}));
-  const deletePlayer = useMutation(api.app.players.remove);
+  const deletePlayer = useMutation(api.admin.players.remove);
   const [playerToDelete, setPlayerToDelete] = useState<Id<"player"> | null>(null);
   const [playerToRequestDelete, setPlayerToRequestDelete] = useState<{
     id: string;

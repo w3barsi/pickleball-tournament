@@ -1,10 +1,8 @@
 import { v } from "convex/values";
 
-import { query, mutation } from "../_generated/server";
-import { authComponent } from "../auth";
+import { authedQuery, authedMutation } from "./lib";
 
-// List all players
-export const listAll = query({
+export const listAll = authedQuery({
   args: {},
   handler: async (ctx) => {
     const players = await ctx.db.query("player").order("desc").take(100);
@@ -12,8 +10,7 @@ export const listAll = query({
   },
 });
 
-// Get a single player by ID
-export const get = query({
+export const get = authedQuery({
   args: {
     playerId: v.id("player"),
   },
@@ -22,8 +19,7 @@ export const get = query({
   },
 });
 
-// Create a new player
-export const create = mutation({
+export const create = authedMutation({
   args: {
     fullName: v.string(),
     nickname: v.string(),
@@ -37,8 +33,7 @@ export const create = mutation({
   },
 });
 
-// Update a player
-export const update = mutation({
+export const update = authedMutation({
   args: {
     playerId: v.id("player"),
     fullName: v.optional(v.string()),
@@ -51,39 +46,7 @@ export const update = mutation({
   },
 });
 
-// Delete a player (admin only)
-export const remove = mutation({
-  args: {
-    playerId: v.id("player"),
-  },
-  handler: async (ctx, args) => {
-    const user = await authComponent.safeGetAuthUser(ctx);
-    if (!user || user.role !== "admin") {
-      throw new Error("Unauthorized");
-    }
-
-    await ctx.db.delete(args.playerId);
-
-    // Approve any pending deletion requests for this player
-    const pendingRequests = await ctx.db
-      .query("deletionRequest")
-      .withIndex("by_target", (q) => q.eq("targetType", "player").eq("targetId", args.playerId))
-      .filter((q) => q.eq(q.field("status"), "pending"))
-      .collect();
-
-    for (const request of pendingRequests) {
-      await ctx.db.patch(request._id, {
-        status: "approved",
-        updatedAt: Date.now(),
-      });
-    }
-
-    return { success: true };
-  },
-});
-
-// Search players by full name
-export const search = query({
+export const search = authedQuery({
   args: {
     query: v.string(),
   },

@@ -1,35 +1,9 @@
 import { v } from "convex/values";
 
 import { Id } from "../_generated/dataModel";
-import { query, mutation, QueryCtx } from "../_generated/server";
-import { authComponent } from "../auth";
+import { authedQuery, authedMutation, requireManageTournament } from "./lib";
 
-// ─── Helpers ───────────────────────────────────────────────────────────────
-
-async function getAuthUser(ctx: QueryCtx) {
-  return await authComponent.safeGetAuthUser(ctx);
-}
-
-async function canManageTournament(ctx: QueryCtx, tournamentId: Id<"tournaments">) {
-  const user = await getAuthUser(ctx);
-  if (!user) return false;
-
-  const tournament = await ctx.db.get(tournamentId);
-  if (!tournament) return false;
-
-  return tournament.createdBy === user._id;
-}
-
-async function requireManageTournament(ctx: QueryCtx, tournamentId: Id<"tournaments">) {
-  const canManage = await canManageTournament(ctx, tournamentId);
-  if (!canManage) {
-    throw new Error("You do not have permission to manage this tournament");
-  }
-}
-
-// ─── Queries ───────────────────────────────────────────────────────────────
-
-export const listByCategory = query({
+export const listByCategory = authedQuery({
   args: {
     categoryId: v.id("categories"),
   },
@@ -77,7 +51,7 @@ export const listByCategory = query({
   },
 });
 
-export const listByTournament = query({
+export const listByTournament = authedQuery({
   args: {
     tournamentId: v.id("tournaments"),
   },
@@ -87,7 +61,6 @@ export const listByTournament = query({
       throw new Error("Tournament not found");
     }
 
-    // Get all categories for this tournament
     const categories = await ctx.db
       .query("categories")
       .withIndex("by_tournament", (q) => q.eq("tournamentId", args.tournamentId))
@@ -142,9 +115,7 @@ export const listByTournament = query({
   },
 });
 
-// ─── Mutations ─────────────────────────────────────────────────────────────
-
-export const register = mutation({
+export const register = authedMutation({
   args: {
     categoryId: v.id("categories"),
     playerId: v.optional(v.id("player")),
@@ -167,7 +138,6 @@ export const register = mutation({
         throw new Error("Player one and player two should not be provided for singles categories");
       }
 
-      // Check for duplicate
       const existing = await ctx.db
         .query("categoryParticipants")
         .withIndex("by_category_and_player", (q) =>
@@ -179,7 +149,6 @@ export const register = mutation({
         throw new Error("This player is already registered in this category");
       }
 
-      // Check max participants
       if (category.maxParticipants !== undefined) {
         const count = await ctx.db
           .query("categoryParticipants")
@@ -201,7 +170,6 @@ export const register = mutation({
 
       return participantId;
     } else {
-      // Doubles
       if (!args.playerOneId || !args.playerTwoId) {
         throw new Error("Both player one and player two are required for doubles categories");
       }
@@ -212,7 +180,6 @@ export const register = mutation({
         throw new Error("Player one and player two must be different people");
       }
 
-      // Find or create player pair
       const ids = [args.playerOneId, args.playerTwoId].sort();
       const pairKey = `${ids[0]}:${ids[1]}`;
 
@@ -235,7 +202,6 @@ export const register = mutation({
         }
       }
 
-      // Check for duplicate
       const existing = await ctx.db
         .query("categoryParticipants")
         .withIndex("by_category_and_pair", (q) =>
@@ -247,7 +213,6 @@ export const register = mutation({
         throw new Error("This pair is already registered in this category");
       }
 
-      // Check max participants
       if (category.maxParticipants !== undefined) {
         const count = await ctx.db
           .query("categoryParticipants")
@@ -272,7 +237,7 @@ export const register = mutation({
   },
 });
 
-export const resyncRecords = mutation({
+export const resyncRecords = authedMutation({
   args: {
     categoryId: v.id("categories"),
   },
@@ -284,14 +249,12 @@ export const resyncRecords = mutation({
 
     await requireManageTournament(ctx, category.tournamentId);
 
-    // Fetch all completed matches with a winner for this category
     const matches = await ctx.db
       .query("matches")
       .withIndex("by_category", (q) => q.eq("categoryId", args.categoryId))
       .filter((q) => q.eq(q.field("status"), "completed"))
       .collect();
 
-    // Count wins and losses per participant
     const winCounts: Record<string, number> = {};
     const lossCounts: Record<string, number> = {};
 
@@ -307,13 +270,11 @@ export const resyncRecords = mutation({
       lossCounts[loserId] = (lossCounts[loserId] ?? 0) + 1;
     }
 
-    // Fetch all participants in this category
     const participants = await ctx.db
       .query("categoryParticipants")
       .withIndex("by_category", (q) => q.eq("categoryId", args.categoryId))
       .collect();
 
-    // Update each participant's wins and losses
     for (const participant of participants) {
       const wins = winCounts[participant._id] ?? 0;
       const losses = lossCounts[participant._id] ?? 0;
@@ -327,7 +288,7 @@ export const resyncRecords = mutation({
   },
 });
 
-export const unregister = mutation({
+export const unregister = authedMutation({
   args: {
     categoryParticipantId: v.id("categoryParticipants"),
   },
@@ -344,7 +305,6 @@ export const unregister = mutation({
 
     await requireManageTournament(ctx, category.tournamentId);
 
-    // Cascade delete: remove from all brackets
     const bracketParticipants = await ctx.db
       .query("bracketParticipants")
       .withIndex("by_category_participant", (q) =>

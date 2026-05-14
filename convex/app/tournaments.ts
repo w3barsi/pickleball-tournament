@@ -1,52 +1,15 @@
 import { v } from "convex/values";
 
 import { Id } from "../_generated/dataModel";
-import { query, mutation, QueryCtx } from "../_generated/server";
-import { authComponent } from "../auth";
+import { query } from "../_generated/server";
+import { authedQuery, authedMutation, requireManageTournament } from "./lib";
 
-// ─── Helpers ───────────────────────────────────────────────────────────────
-
-async function getAuthUser(ctx: QueryCtx) {
-  return await authComponent.safeGetAuthUser(ctx);
-}
-
-async function requireAuthUser(ctx: QueryCtx) {
-  const user = await getAuthUser(ctx);
-  if (!user) {
-    throw new Error("Authentication required");
-  }
-  return user;
-}
-
-async function canManageTournament(ctx: QueryCtx, tournamentId: Id<"tournaments">) {
-  const user = await getAuthUser(ctx);
-  if (!user) return false;
-
-  const tournament = await ctx.db.get(tournamentId);
-  if (!tournament) return false;
-
-  return tournament.createdBy === user._id;
-}
-
-async function requireManageTournament(ctx: QueryCtx, tournamentId: Id<"tournaments">) {
-  const canManage = await canManageTournament(ctx, tournamentId);
-  if (!canManage) {
-    throw new Error("You do not have permission to manage this tournament");
-  }
-}
-
-// ─── Queries ───────────────────────────────────────────────────────────────
-
-// List tournaments created by the current user
-export const listAll = query({
+export const listAll = authedQuery({
   args: {},
   handler: async (ctx) => {
-    const user = await getAuthUser(ctx);
-    if (!user) return [];
-
     const tournaments = await ctx.db
       .query("tournaments")
-      .withIndex("by_createdBy", (q) => q.eq("createdBy", user._id))
+      .withIndex("by_createdBy", (q) => q.eq("createdBy", ctx.user._id))
       .order("desc")
       .collect();
 
@@ -54,7 +17,6 @@ export const listAll = query({
   },
 });
 
-// Get a single tournament by ID
 export const get = query({
   args: {
     tournamentId: v.id("tournaments"),
@@ -64,15 +26,11 @@ export const get = query({
   },
 });
 
-// Get a single tournament by slug (only if user has access)
-export const getBySlug = query({
+export const getBySlug = authedQuery({
   args: {
     slug: v.string(),
   },
   handler: async (ctx, args) => {
-    const user = await getAuthUser(ctx);
-    if (!user) return null;
-
     const tournament = await ctx.db
       .query("tournaments")
       .withIndex("by_slug", (q) => q.eq("slug", args.slug))
@@ -80,18 +38,14 @@ export const getBySlug = query({
 
     if (!tournament) return null;
 
-    // Check if user has access (created by or is a manager)
-    const hasAccess = await canManageTournament(ctx, tournament._id);
+    const hasAccess = tournament.createdBy === ctx.user._id;
     if (!hasAccess) return null;
 
     return tournament;
   },
 });
 
-// ─── Mutations ─────────────────────────────────────────────────────────────
-
-// Create a new tournament
-export const create = mutation({
+export const create = authedMutation({
   args: {
     name: v.string(),
     slug: v.string(),
@@ -105,9 +59,6 @@ export const create = mutation({
     isPublic: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const user = await requireAuthUser(ctx);
-
-    // Check if a tournament with this slug already exists
     const existing = await ctx.db
       .query("tournaments")
       .withIndex("by_slug", (q) => q.eq("slug", args.slug))
@@ -129,15 +80,14 @@ export const create = mutation({
       registrationDeadline: args.registrationDeadline,
       isPublic: args.isPublic,
       status: "upcoming",
-      createdBy: user._id,
+      createdBy: ctx.user._id,
     });
 
     return tournamentId;
   },
 });
 
-// Update a tournament
-export const update = mutation({
+export const update = authedMutation({
   args: {
     tournamentId: v.id("tournaments"),
     name: v.optional(v.string()),
@@ -157,37 +107,31 @@ export const update = mutation({
   },
 });
 
-// Delete a tournament (and all related data)
-export const remove = mutation({
+export const remove = authedMutation({
   args: {
     tournamentId: v.id("tournaments"),
   },
   handler: async (ctx, args) => {
     await requireManageTournament(ctx, args.tournamentId);
 
-    // Get all categories for this tournament
     const categories = await ctx.db
       .query("categories")
       .withIndex("by_tournament", (q) => q.eq("tournamentId", args.tournamentId))
       .collect();
 
-    // Delete all related data (cascading delete)
     for (const category of categories) {
-      // Get all brackets for this category
       const brackets = await ctx.db
         .query("brackets")
         .withIndex("by_category", (q) => q.eq("categoryId", category._id))
         .collect();
 
       for (const bracket of brackets) {
-        // Get all matches for this bracket
         const matches = await ctx.db
           .query("matches")
           .withIndex("by_bracket", (q) => q.eq("bracketId", bracket._id))
           .collect();
 
         for (const match of matches) {
-          // Delete all match sets (and their points) for this match
           const matchSets = await ctx.db
             .query("matchSets")
             .withIndex("by_match", (q) => q.eq("matchId", match._id))
@@ -209,7 +153,6 @@ export const remove = mutation({
           await ctx.db.delete(match._id);
         }
 
-        // Delete bracket participants
         const bracketParticipants = await ctx.db
           .query("bracketParticipants")
           .withIndex("by_bracket", (q) => q.eq("bracketId", bracket._id))
@@ -222,7 +165,6 @@ export const remove = mutation({
         await ctx.db.delete(bracket._id);
       }
 
-      // Delete category participants
       const categoryParticipants = await ctx.db
         .query("categoryParticipants")
         .withIndex("by_category", (q) => q.eq("categoryId", category._id))
@@ -235,7 +177,6 @@ export const remove = mutation({
       await ctx.db.delete(category._id);
     }
 
-    // Finally delete the tournament
     await ctx.db.delete(args.tournamentId);
     return { success: true };
   },

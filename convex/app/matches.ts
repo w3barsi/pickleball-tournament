@@ -1,36 +1,13 @@
 import { v } from "convex/values";
 
 import { Doc, Id } from "../_generated/dataModel";
-import { query, mutation, QueryCtx } from "../_generated/server";
-import { authComponent } from "../auth";
-
-// ─── Helpers ───────────────────────────────────────────────────────────────
-
-async function getAuthUser(ctx: QueryCtx) {
-  return await authComponent.safeGetAuthUser(ctx);
-}
-
-async function canManageTournament(ctx: QueryCtx, tournamentId: Id<"tournaments">) {
-  const user = await getAuthUser(ctx);
-  if (!user) return false;
-
-  const tournament = await ctx.db.get(tournamentId);
-  if (!tournament) return false;
-
-  return tournament.createdBy === user._id;
-}
-
-async function requireManageTournament(ctx: QueryCtx, tournamentId: Id<"tournaments">) {
-  const canManage = await canManageTournament(ctx, tournamentId);
-  if (!canManage) {
-    throw new Error("You do not have permission to manage this tournament");
-  }
-}
-
-async function getCategoryTournamentId(ctx: QueryCtx, categoryId: Id<"categories">) {
-  const category = await ctx.db.get(categoryId);
-  return category?.tournamentId ?? null;
-}
+import { query, QueryCtx } from "../_generated/server";
+import {
+  authedQuery,
+  authedMutation,
+  requireManageTournament,
+  getCategoryTournamentId,
+} from "./lib";
 
 async function hydrateMatch(ctx: QueryCtx, match: Doc<"matches">) {
   const bracket = await ctx.db.get(match.bracketId);
@@ -90,9 +67,7 @@ async function hydrateMatch(ctx: QueryCtx, match: Doc<"matches">) {
   };
 }
 
-// ─── Queries ───────────────────────────────────────────────────────────────
-
-export const listByBracket = query({
+export const listByBracket = authedQuery({
   args: {
     bracketId: v.id("brackets"),
   },
@@ -153,7 +128,6 @@ export const listByBracket = query({
         }
       }
 
-      // Get match sets for score display
       const matchSets = await ctx.db
         .query("matchSets")
         .withIndex("by_match", (q) => q.eq("matchId", match._id))
@@ -181,7 +155,7 @@ export const get = query({
   },
 });
 
-export const listByTournament = query({
+export const listByTournament = authedQuery({
   args: {
     tournamentId: v.id("tournaments"),
   },
@@ -206,7 +180,7 @@ export const listByTournament = query({
   },
 });
 
-export const listLiveMatchIdsByTournament = query({
+export const listLiveMatchIdsByTournament = authedQuery({
   args: {
     tournamentId: v.id("tournaments"),
   },
@@ -227,7 +201,7 @@ export const listLiveMatchIdsByTournament = query({
   },
 });
 
-export const getLiveMatchDetails = query({
+export const getLiveMatchDetails = authedQuery({
   args: {
     matchId: v.id("matches"),
   },
@@ -239,7 +213,7 @@ export const getLiveMatchDetails = query({
   },
 });
 
-export const getWithDetails = query({
+export const getWithDetails = authedQuery({
   args: {
     matchId: v.id("matches"),
   },
@@ -307,9 +281,7 @@ export const getWithDetails = query({
   },
 });
 
-// ─── Mutations ─────────────────────────────────────────────────────────────
-
-export const create = mutation({
+export const create = authedMutation({
   args: {
     bracketId: v.id("brackets"),
     participant1Id: v.id("categoryParticipants"),
@@ -336,7 +308,6 @@ export const create = mutation({
 
     await requireManageTournament(ctx, tournamentId);
 
-    // Verify both participants are in the bracket
     const bp1 = await ctx.db
       .query("bracketParticipants")
       .withIndex("by_category_participant", (q) =>
@@ -380,7 +351,7 @@ export const create = mutation({
   },
 });
 
-export const update = mutation({
+export const update = authedMutation({
   args: {
     matchId: v.id("matches"),
     status: v.optional(
@@ -418,7 +389,7 @@ export const update = mutation({
   },
 });
 
-export const updateResult = mutation({
+export const updateResult = authedMutation({
   args: {
     matchId: v.id("matches"),
     winnerParticipantId: v.id("categoryParticipants"),
@@ -447,7 +418,6 @@ export const updateResult = mutation({
       forfeitedBy: args.forfeitedBy,
     });
 
-    // Update participant win/loss records
     const loserId =
       args.winnerParticipantId === match.participant1Id
         ? match.participant2Id
@@ -471,7 +441,7 @@ export const updateResult = mutation({
   },
 });
 
-export const reset = mutation({
+export const reset = authedMutation({
   args: {
     matchId: v.id("matches"),
   },
@@ -483,7 +453,6 @@ export const reset = mutation({
 
     await requireManageTournament(ctx, match.tournamentId);
 
-    // If match was completed, revert win/loss records
     if (match.status === "completed" && match.winnerParticipantId) {
       const loserId =
         match.winnerParticipantId === match.participant1Id
@@ -505,7 +474,6 @@ export const reset = mutation({
       }
     }
 
-    // Delete match sets and points
     const matchSets = await ctx.db
       .query("matchSets")
       .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
@@ -538,7 +506,7 @@ export const reset = mutation({
   },
 });
 
-export const remove = mutation({
+export const remove = authedMutation({
   args: {
     matchId: v.id("matches"),
   },
@@ -550,7 +518,6 @@ export const remove = mutation({
 
     await requireManageTournament(ctx, match.tournamentId);
 
-    // If match was completed, revert win/loss records
     if (match.status === "completed" && match.winnerParticipantId) {
       const loserId =
         match.winnerParticipantId === match.participant1Id
@@ -572,7 +539,6 @@ export const remove = mutation({
       }
     }
 
-    // Delete match sets and points
     const matchSets = await ctx.db
       .query("matchSets")
       .withIndex("by_match", (q) => q.eq("matchId", args.matchId))

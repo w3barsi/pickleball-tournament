@@ -10,7 +10,6 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ShowcaseRouteImport } from './routes/showcase'
-import { Route as OverlayRouteImport } from './routes/overlay'
 import { Route as GuestRouteRouteImport } from './routes/_guest/route'
 import { Route as AuthRouteRouteImport } from './routes/_auth/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -35,11 +34,6 @@ import { Route as AuthAppTournamentsSlugCategoriesCategoryIdIndexRouteImport } f
 const ShowcaseRoute = ShowcaseRouteImport.update({
   id: '/showcase',
   path: '/showcase',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OverlayRoute = OverlayRouteImport.update({
-  id: '/overlay',
-  path: '/overlay',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GuestRouteRoute = GuestRouteRouteImport.update({
@@ -147,7 +141,6 @@ const AuthAppTournamentsSlugCategoriesCategoryIdIndexRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/overlay': typeof OverlayRoute
   '/showcase': typeof ShowcaseRoute
   '/admin': typeof AuthAdminRouteRouteWithChildren
   '/app': typeof AuthAppRouteRouteWithChildren
@@ -169,7 +162,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/overlay': typeof OverlayRoute
   '/showcase': typeof ShowcaseRoute
   '/login': typeof GuestLoginRoute
   '/signup': typeof GuestSignupRoute
@@ -192,7 +184,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_auth': typeof AuthRouteRouteWithChildren
   '/_guest': typeof GuestRouteRouteWithChildren
-  '/overlay': typeof OverlayRoute
   '/showcase': typeof ShowcaseRoute
   '/_auth/admin': typeof AuthAdminRouteRouteWithChildren
   '/_auth/app': typeof AuthAppRouteRouteWithChildren
@@ -216,7 +207,6 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/overlay'
     | '/showcase'
     | '/admin'
     | '/app'
@@ -238,7 +228,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/overlay'
     | '/showcase'
     | '/login'
     | '/signup'
@@ -260,7 +249,6 @@ export interface FileRouteTypes {
     | '/'
     | '/_auth'
     | '/_guest'
-    | '/overlay'
     | '/showcase'
     | '/_auth/admin'
     | '/_auth/app'
@@ -285,7 +273,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRouteRoute: typeof AuthRouteRouteWithChildren
   GuestRouteRoute: typeof GuestRouteRouteWithChildren
-  OverlayRoute: typeof OverlayRoute
   ShowcaseRoute: typeof ShowcaseRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
@@ -297,13 +284,6 @@ declare module '@tanstack/react-router' {
       path: '/showcase'
       fullPath: '/showcase'
       preLoaderRoute: typeof ShowcaseRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/overlay': {
-      id: '/overlay'
-      path: '/overlay'
-      fullPath: '/overlay'
-      preLoaderRoute: typeof OverlayRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_guest': {
@@ -527,7 +507,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRouteRoute: AuthRouteRouteWithChildren,
   GuestRouteRoute: GuestRouteRouteWithChildren,
-  OverlayRoute: OverlayRoute,
   ShowcaseRoute: ShowcaseRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }

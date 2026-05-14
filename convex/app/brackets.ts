@@ -1,40 +1,15 @@
 import { v } from "convex/values";
 
 import { Id } from "../_generated/dataModel";
-import { query, mutation, QueryCtx } from "../_generated/server";
-import { authComponent } from "../auth";
+import { query } from "../_generated/server";
+import {
+  authedQuery,
+  authedMutation,
+  requireManageTournament,
+  getCategoryTournamentId,
+} from "./lib";
 
-// ─── Helpers ───────────────────────────────────────────────────────────────
-
-async function getAuthUser(ctx: QueryCtx) {
-  return await authComponent.safeGetAuthUser(ctx);
-}
-
-async function canManageTournament(ctx: QueryCtx, tournamentId: Id<"tournaments">) {
-  const user = await getAuthUser(ctx);
-  if (!user) return false;
-
-  const tournament = await ctx.db.get(tournamentId);
-  if (!tournament) return false;
-
-  return tournament.createdBy === user._id;
-}
-
-async function requireManageTournament(ctx: QueryCtx, tournamentId: Id<"tournaments">) {
-  const canManage = await canManageTournament(ctx, tournamentId);
-  if (!canManage) {
-    throw new Error("You do not have permission to manage this tournament");
-  }
-}
-
-async function getCategoryTournamentId(ctx: QueryCtx, categoryId: Id<"categories">) {
-  const category = await ctx.db.get(categoryId);
-  return category?.tournamentId ?? null;
-}
-
-// ─── Queries ───────────────────────────────────────────────────────────────
-
-export const listByCategory = query({
+export const listByCategory = authedQuery({
   args: {
     categoryId: v.id("categories"),
   },
@@ -45,7 +20,6 @@ export const listByCategory = query({
       .order("asc")
       .collect();
 
-    // Get participant counts for each bracket
     const results = [];
     for (const bracket of brackets) {
       const participantCount = await ctx.db
@@ -80,7 +54,7 @@ export const get = query({
   },
 });
 
-export const getWithParticipants = query({
+export const getWithParticipants = authedQuery({
   args: {
     bracketId: v.id("brackets"),
   },
@@ -150,7 +124,7 @@ export const getWithParticipants = query({
   },
 });
 
-export const listByTournament = query({
+export const listByTournament = authedQuery({
   args: {
     tournamentId: v.id("tournaments"),
   },
@@ -160,7 +134,6 @@ export const listByTournament = query({
       throw new Error("Tournament not found");
     }
 
-    // Get all categories for this tournament
     const categories = await ctx.db
       .query("categories")
       .withIndex("by_tournament", (q) => q.eq("tournamentId", args.tournamentId))
@@ -200,7 +173,7 @@ export const listByTournament = query({
   },
 });
 
-export const getUnassignedParticipants = query({
+export const getUnassignedParticipants = authedQuery({
   args: {
     categoryId: v.id("categories"),
   },
@@ -252,9 +225,7 @@ export const getUnassignedParticipants = query({
   },
 });
 
-// ─── Mutations ─────────────────────────────────────────────────────────────
-
-export const create = mutation({
+export const create = authedMutation({
   args: {
     categoryId: v.id("categories"),
     name: v.string(),
@@ -283,7 +254,7 @@ export const create = mutation({
   },
 });
 
-export const update = mutation({
+export const update = authedMutation({
   args: {
     bracketId: v.id("brackets"),
     name: v.optional(v.string()),
@@ -313,7 +284,7 @@ export const update = mutation({
   },
 });
 
-export const remove = mutation({
+export const remove = authedMutation({
   args: {
     bracketId: v.id("brackets"),
   },
@@ -330,7 +301,6 @@ export const remove = mutation({
 
     await requireManageTournament(ctx, tournamentId);
 
-    // Cascade delete: matches, matchSets, points, bracketParticipants
     const matches = await ctx.db
       .query("matches")
       .withIndex("by_bracket", (q) => q.eq("bracketId", args.bracketId))
@@ -372,7 +342,7 @@ export const remove = mutation({
   },
 });
 
-export const addParticipants = mutation({
+export const addParticipants = authedMutation({
   args: {
     bracketId: v.id("brackets"),
     categoryParticipantIds: v.array(v.id("categoryParticipants")),
@@ -390,7 +360,6 @@ export const addParticipants = mutation({
 
     await requireManageTournament(ctx, tournamentId);
 
-    // Check max participants
     if (bracket.maxParticipants !== undefined) {
       const currentCount = await ctx.db
         .query("bracketParticipants")
@@ -405,14 +374,12 @@ export const addParticipants = mutation({
 
     const inserted = [];
     for (const cpId of args.categoryParticipantIds) {
-      // Check if already in this bracket
       const existing = await ctx.db
         .query("bracketParticipants")
         .withIndex("by_category_participant", (q) => q.eq("categoryParticipantId", cpId))
         .unique();
 
       if (existing) {
-        // Skip if already in any bracket
         continue;
       }
 
@@ -428,7 +395,7 @@ export const addParticipants = mutation({
   },
 });
 
-export const removeParticipant = mutation({
+export const removeParticipant = authedMutation({
   args: {
     bracketParticipantId: v.id("bracketParticipants"),
   },
@@ -455,7 +422,7 @@ export const removeParticipant = mutation({
   },
 });
 
-export const autoAssignRemaining = mutation({
+export const autoAssignRemaining = authedMutation({
   args: {
     bracketId: v.id("brackets"),
   },
@@ -494,7 +461,6 @@ export const autoAssignRemaining = mutation({
       return { inserted: 0 };
     }
 
-    // Check max participants
     if (bracket.maxParticipants !== undefined) {
       const currentCount = await ctx.db
         .query("bracketParticipants")

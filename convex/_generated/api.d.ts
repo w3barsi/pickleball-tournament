@@ -8,11 +8,14 @@
  * @module
  */
 
+import type * as admin_lib from "../admin/lib.js";
+import type * as admin_players from "../admin/players.js";
 import type * as admin_users from "../admin/users.js";
 import type * as app_brackets from "../app/brackets.js";
 import type * as app_categories from "../app/categories.js";
 import type * as app_categoryParticipants from "../app/categoryParticipants.js";
 import type * as app_deletionRequests from "../app/deletionRequests.js";
+import type * as app_lib from "../app/lib.js";
 import type * as app_matches from "../app/matches.js";
 import type * as app_playerPairs from "../app/playerPairs.js";
 import type * as app_players from "../app/players.js";
@@ -28,11 +31,14 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "admin/lib": typeof admin_lib;
+  "admin/players": typeof admin_players;
   "admin/users": typeof admin_users;
   "app/brackets": typeof app_brackets;
   "app/categories": typeof app_categories;
   "app/categoryParticipants": typeof app_categoryParticipants;
   "app/deletionRequests": typeof app_deletionRequests;
+  "app/lib": typeof app_lib;
   "app/matches": typeof app_matches;
   "app/playerPairs": typeof app_playerPairs;
   "app/players": typeof app_players;

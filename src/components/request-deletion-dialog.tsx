@@ -32,7 +32,7 @@ export function RequestDeletionDialog({
   open,
   onOpenChange,
 }: RequestDeletionDialogProps) {
-  const createRequest = useMutation(api.app.deletionRequests.create);
+  const createRequest = useMutation(api.app.deletionRequests.playerDeletionRequestCreate);
 
   const form = useForm({
     defaultValues: {

@@ -1,11 +1,9 @@
 import { v } from "convex/values";
 
 import { Doc, Id } from "../_generated/dataModel";
-import { query, mutation } from "../_generated/server";
-import { authComponent } from "../auth";
+import { authedQuery, authedMutation } from "./lib";
 
-// List all player pairs with player names populated
-export const listAll = query({
+export const listAll = authedQuery({
   args: {},
   handler: async (ctx) => {
     const pairs = await ctx.db.query("playerPair").order("desc").take(100);
@@ -30,8 +28,7 @@ export const listAll = query({
   },
 });
 
-// Create a new player pair
-export const create = mutation({
+export const create = authedMutation({
   args: {
     teamName: v.optional(v.string()),
     playerOne: v.id("player"),
@@ -64,36 +61,5 @@ export const create = mutation({
     });
 
     return pairId;
-  },
-});
-
-// Delete a player pair (admin only)
-export const remove = mutation({
-  args: {
-    pairId: v.id("playerPair"),
-  },
-  handler: async (ctx, args) => {
-    const user = await authComponent.safeGetAuthUser(ctx);
-    if (!user || user.role !== "admin") {
-      throw new Error("Unauthorized");
-    }
-
-    await ctx.db.delete(args.pairId);
-
-    // Approve any pending deletion requests for this pair
-    const pendingRequests = await ctx.db
-      .query("deletionRequest")
-      .withIndex("by_target", (q) => q.eq("targetType", "playerPair").eq("targetId", args.pairId))
-      .filter((q) => q.eq(q.field("status"), "pending"))
-      .collect();
-
-    for (const request of pendingRequests) {
-      await ctx.db.patch(request._id, {
-        status: "approved",
-        updatedAt: Date.now(),
-      });
-    }
-
-    return { success: true };
   },
 });

@@ -1,43 +1,10 @@
 import { v } from "convex/values";
 
 import { Id } from "../_generated/dataModel";
-import { query, mutation, QueryCtx } from "../_generated/server";
-import { authComponent } from "../auth";
+import { query } from "../_generated/server";
+import { authedQuery, authedMutation, requireManageTournament } from "./lib";
 
-// ─── Helpers ───────────────────────────────────────────────────────────────
-
-async function getAuthUser(ctx: QueryCtx) {
-  return await authComponent.safeGetAuthUser(ctx);
-}
-
-async function requireAuthUser(ctx: QueryCtx) {
-  const user = await getAuthUser(ctx);
-  if (!user) {
-    throw new Error("Authentication required");
-  }
-  return user;
-}
-
-async function canManageTournament(ctx: QueryCtx, tournamentId: Id<"tournaments">) {
-  const user = await getAuthUser(ctx);
-  if (!user) return false;
-
-  const tournament = await ctx.db.get(tournamentId);
-  if (!tournament) return false;
-
-  return tournament.createdBy === user._id;
-}
-
-async function requireManageTournament(ctx: QueryCtx, tournamentId: Id<"tournaments">) {
-  const canManage = await canManageTournament(ctx, tournamentId);
-  if (!canManage) {
-    throw new Error("You do not have permission to manage this tournament");
-  }
-}
-
-// ─── Queries ───────────────────────────────────────────────────────────────
-
-export const listByTournament = query({
+export const listByTournament = authedQuery({
   args: {
     tournamentId: v.id("tournaments"),
   },
@@ -61,9 +28,7 @@ export const get = query({
   },
 });
 
-// ─── Mutations ─────────────────────────────────────────────────────────────
-
-export const create = mutation({
+export const create = authedMutation({
   args: {
     tournamentId: v.id("tournaments"),
     name: v.string(),
@@ -93,7 +58,7 @@ export const create = mutation({
   },
 });
 
-export const update = mutation({
+export const update = authedMutation({
   args: {
     categoryId: v.id("categories"),
     name: v.optional(v.string()),
@@ -120,7 +85,7 @@ export const update = mutation({
   },
 });
 
-export const remove = mutation({
+export const remove = authedMutation({
   args: {
     categoryId: v.id("categories"),
   },
@@ -132,7 +97,6 @@ export const remove = mutation({
 
     await requireManageTournament(ctx, category.tournamentId);
 
-    // Cascade delete: brackets, bracketParticipants, matches, matchSets, points, categoryParticipants
     const brackets = await ctx.db
       .query("brackets")
       .withIndex("by_category", (q) => q.eq("categoryId", args.categoryId))
