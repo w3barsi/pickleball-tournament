@@ -1,10 +1,12 @@
 import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@convex/_generated/api.js";
 import { Id } from "@convex/_generated/dataModel.js";
-import { useQuery } from "@tanstack/react-query";
-import { UsersIcon, Loader2Icon } from "lucide-react";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { UsersIcon } from "lucide-react";
+import { Suspense } from "react";
 
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -26,23 +28,29 @@ function getPairName(participant: {
 }
 
 export function ParticipantsSection({ tournamentId }: { tournamentId: Id<"tournaments"> }) {
-  const { data: categoryParticipants } = useQuery(
-    convexQuery(api.categoryParticipants.listByTournament, { tournamentId }),
-  );
-
-  const totalParticipants =
-    categoryParticipants?.reduce((sum, cp) => sum + cp.participants.length, 0) ?? 0;
-
   return (
     <section className="space-y-3">
       <h2 className="text-lg font-bold">Participants</h2>
+      <Suspense fallback={<ParticipantsFallback />}>
+        <ParticipantsSectionInner tournamentId={tournamentId} />
+      </Suspense>
+    </section>
+  );
+}
 
-      {categoryParticipants === undefined ? (
-        <div className="py-12 text-center">
-          <Loader2Icon className="mx-auto size-8 animate-spin text-slate-400" />
-          <p className="mt-2 text-muted-foreground">Loading participants...</p>
-        </div>
-      ) : totalParticipants === 0 ? (
+export function ParticipantsSectionInner({ tournamentId }: { tournamentId: Id<"tournaments"> }) {
+  const { data: categoryParticipants } = useSuspenseQuery(
+    convexQuery(api.categoryParticipants.listByTournament, { tournamentId }),
+  );
+
+  const totalParticipants = categoryParticipants.reduce(
+    (sum, cp) => sum + cp.participants.length,
+    0,
+  );
+
+  return (
+    <>
+      {totalParticipants === 0 ? (
         <div className="rounded-xl border border-dashed py-12 text-center">
           <UsersIcon className="mx-auto size-8 text-muted-foreground" />
           <p className="mt-4 text-lg font-bold">No participants yet</p>
@@ -95,6 +103,41 @@ export function ParticipantsSection({ tournamentId }: { tournamentId: Id<"tourna
           </Table>
         </div>
       )}
-    </section>
+    </>
+  );
+}
+
+export function ParticipantsFallback() {
+  return (
+    <div className="overflow-hidden rounded-xl border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Category</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="text-right">Record</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {Array.from({ length: 3 }).map((_, i) => (
+            <TableRow key={i}>
+              <TableCell>
+                <Skeleton className="h-5 w-28" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-5 w-20" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-5 w-16" />
+              </TableCell>
+              <TableCell className="text-right">
+                <Skeleton className="ml-auto h-5 w-12" />
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 }
