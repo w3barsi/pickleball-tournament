@@ -10,8 +10,6 @@ import {
   TrophyIcon,
   UsersIcon,
   SwordsIcon,
-  PlusIcon,
-  UserPlusIcon,
   Trash2Icon,
 } from "lucide-react";
 import { useState } from "react";
@@ -71,8 +69,8 @@ function BracketDetailPage() {
   if (!bracketData || !bracketData.tournament) {
     return (
       <div className="py-20 text-center">
-        <Loader2Icon className="mx-auto size-10 animate-spin text-slate-400" />
-        <p className="mt-4 text-lg font-bold text-slate-500">Loading bracket...</p>
+        <Loader2Icon className="mx-auto size-10 animate-spin text-muted-foreground" />
+        <p className="mt-4 text-lg font-bold text-muted-foreground">Loading bracket...</p>
       </div>
     );
   }
@@ -160,9 +158,7 @@ function BracketDetailPage() {
           </HeaderCardDescription>
         </div>
         <AlertDialog>
-          <AlertDialogTrigger
-            render={<Button variant="destructive" className="bg-red-100" size="icon" />}
-          >
+          <AlertDialogTrigger render={<Button variant="destructive" size="icon" />}>
             <Trash2Icon className="size-4" />
           </AlertDialogTrigger>
           <AlertDialogContent>
@@ -192,7 +188,7 @@ function BracketDetailPage() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center gap-2 pb-2">
-            <UsersIcon className="text-tournament-lime size-5" />
+            <UsersIcon className="size-5 text-tournament-lime" />
             <CardTitle className="text-sm font-medium">Participants</CardTitle>
           </CardHeader>
           <CardContent>
@@ -214,7 +210,7 @@ function BracketDetailPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center gap-2 pb-2">
-            <SwordsIcon className="text-tournament-lime size-5" />
+            <SwordsIcon className="size-5 text-tournament-lime" />
             <CardTitle className="text-sm font-medium">Matches</CardTitle>
           </CardHeader>
           <CardContent>
@@ -225,7 +221,7 @@ function BracketDetailPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center gap-2 pb-2">
-            <TrophyIcon className="text-tournament-lime size-5" />
+            <TrophyIcon className="size-5 text-tournament-lime" />
             <CardTitle className="text-sm font-medium">Format</CardTitle>
           </CardHeader>
           <CardContent>

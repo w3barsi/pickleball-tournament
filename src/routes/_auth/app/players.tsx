@@ -68,7 +68,7 @@ function PlayersPage() {
         <div>
           <HeaderCardHeading>Players</HeaderCardHeading>
           <HeaderCardDescription>
-            Manage tournaments, track matches, and score games in real-time
+            Manage player profiles, nicknames, and track individual statistics
           </HeaderCardDescription>
         </div>
 
@@ -76,7 +76,7 @@ function PlayersPage() {
       </HeaderCard>
       {/* Players Grid */}
       <Card className="overflow-hidden">
-        <CardHeader className="">
+        <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <UsersIcon className="size-5" />
@@ -87,7 +87,7 @@ function PlayersPage() {
             </span>
           </div>
         </CardHeader>
-        <CardContent className="">
+        <CardContent>
           {!players || players.length === 0 ? (
             <div className="py-12 text-center">
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
@@ -103,11 +103,11 @@ function PlayersPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-15"></TableHead>
+                  <TableHead className="w-16"></TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Nickname</TableHead>
                   <TableHead>Created</TableHead>
-                  <TableHead className="w-15"></TableHead>
+                  <TableHead className="w-16"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

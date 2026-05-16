@@ -102,8 +102,8 @@ function MatchDetailPage() {
   if (!matchData) {
     return (
       <div className="py-20 text-center">
-        <Loader2Icon className="mx-auto size-10 animate-spin text-slate-400" />
-        <p className="mt-4 text-lg font-bold text-slate-500">Loading match...</p>
+        <Loader2Icon className="mx-auto size-10 animate-spin text-muted-foreground" />
+        <p className="mt-4 text-lg font-bold text-muted-foreground">Loading match...</p>
       </div>
     );
   }
@@ -129,6 +129,7 @@ function MatchDetailPage() {
       <div>
         <Button
           variant="ghost"
+          nativeButton={false}
           render={
             <Link
               to="/app/brackets/$bracketId"
@@ -160,6 +161,7 @@ function MatchDetailPage() {
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
+            nativeButton={false}
             render={
               <Link to="/g/$id" params={{ id: matchId }}>
                 <RadioIcon className="mr-1 size-4" />
@@ -215,7 +217,7 @@ function MatchDetailPage() {
       {/* Score / Sets */}
       <Card>
         <CardHeader className="flex flex-row items-center gap-2 pb-2">
-          <SwordsIcon className="text-tournament-lime size-5" />
+          <SwordsIcon className="size-5 text-tournament-lime" />
           <CardTitle className="text-base font-medium">Score</CardTitle>
         </CardHeader>
         <CardContent>
@@ -256,7 +258,7 @@ function MatchDetailPage() {
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader className="flex flex-row items-center gap-2 pb-2">
-            <MapPinIcon className="text-tournament-lime size-5" />
+            <MapPinIcon className="size-5 text-tournament-lime" />
             <CardTitle className="text-base font-medium">Scheduling</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
@@ -283,7 +285,7 @@ function MatchDetailPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center gap-2 pb-2">
-            <UserCheckIcon className="text-tournament-lime size-5" />
+            <UserCheckIcon className="size-5 text-tournament-lime" />
             <CardTitle className="text-base font-medium">Officiating</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
@@ -311,7 +313,7 @@ function MatchDetailPage() {
       {match.matchNotes && (
         <Card>
           <CardHeader className="flex flex-row items-center gap-2 pb-2">
-            <StickyNoteIcon className="text-tournament-lime size-5" />
+            <StickyNoteIcon className="size-5 text-tournament-lime" />
             <CardTitle className="text-base font-medium">Notes</CardTitle>
           </CardHeader>
           <CardContent>

@@ -72,7 +72,7 @@ function PlayerPairsPage() {
 
       {/* Pairs Grid */}
       <Card className="overflow-hidden">
-        <CardHeader className="">
+        <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <UsersIcon className="size-5" />
@@ -83,7 +83,7 @@ function PlayerPairsPage() {
             </span>
           </div>
         </CardHeader>
-        <CardContent className="">
+        <CardContent>
           {!pairs || pairs.length === 0 ? (
             <div className="py-12 text-center">
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
@@ -106,7 +106,7 @@ function PlayerPairsPage() {
                   <TableHead>Player 2</TableHead>
                   <TableHead className="text-right">Wins</TableHead>
                   <TableHead className="text-right">Losses</TableHead>
-                  <TableHead className="w-15"></TableHead>
+                  <TableHead className="w-16"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

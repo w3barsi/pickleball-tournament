@@ -119,8 +119,8 @@ function CategoryDetailPage() {
   if (!category || !tournament) {
     return (
       <div className="py-20 text-center">
-        <Loader2Icon className="mx-auto size-10 animate-spin text-slate-400" />
-        <p className="mt-4 text-lg font-bold text-slate-500">Loading category...</p>
+        <Loader2Icon className="mx-auto size-10 animate-spin text-muted-foreground" />
+        <p className="mt-4 text-lg font-bold text-muted-foreground">Loading category...</p>
       </div>
     );
   }
@@ -205,7 +205,7 @@ function CategoryDetailPage() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center gap-2 pb-2">
-            <UsersIcon className="text-tournament-lime size-5" />
+            <UsersIcon className="size-5 text-tournament-lime" />
             <CardTitle className="text-sm font-medium">Participants</CardTitle>
           </CardHeader>
           <CardContent>
@@ -222,7 +222,7 @@ function CategoryDetailPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center gap-2 pb-2">
-            <TrophyIcon className="text-tournament-lime size-5" />
+            <TrophyIcon className="size-5 text-tournament-lime" />
             <CardTitle className="text-sm font-medium">Brackets</CardTitle>
           </CardHeader>
           <CardContent>
@@ -239,7 +239,7 @@ function CategoryDetailPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center gap-2 pb-2">
-            <SwordsIcon className="text-tournament-lime size-5" />
+            <SwordsIcon className="size-5 text-tournament-lime" />
             <CardTitle className="text-sm font-medium">Matches</CardTitle>
           </CardHeader>
           <CardContent>

@@ -89,8 +89,8 @@ function AppIndex() {
                     className="group flex items-center justify-between rounded-xl border bg-muted/50 p-3 transition-colors hover:bg-muted"
                   >
                     <div>
-                      <p className="">{tournament.name}</p>
-                      <div className="items-center gap-3 text-muted-foreground">
+                      <p>{tournament.name}</p>
+                      <div className="flex flex-col gap-1 text-muted-foreground">
                         <span className="flex items-center gap-2">
                           <CalendarIcon className="size-3" />
                           {formatDate(tournament.date)}

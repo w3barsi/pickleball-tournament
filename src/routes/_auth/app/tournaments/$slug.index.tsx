@@ -33,8 +33,8 @@ function TournamentDetailPage() {
   if (isLoading || !tournament) {
     return (
       <div className="py-20 text-center">
-        <Loader2Icon className="mx-auto size-10 animate-spin text-slate-400" />
-        <p className="mt-4 text-lg font-bold text-slate-500">Loading tournament...</p>
+        <Loader2Icon className="mx-auto size-10 animate-spin text-muted-foreground" />
+        <p className="mt-4 text-lg font-bold text-muted-foreground">Loading tournament...</p>
       </div>
     );
   }

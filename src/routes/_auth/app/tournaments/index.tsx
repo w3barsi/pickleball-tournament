@@ -100,10 +100,10 @@ function TournamentsPage() {
       {/* Tournaments List */}
       {tournaments === undefined ? (
         <div className="py-16 text-center">
-          <div className="bg-tournament-blue/20 mx-auto flex h-20 w-20 animate-pulse items-center justify-center rounded-full">
-            <TrophyIcon className="text-tournament-blue size-10" />
+          <div className="mx-auto flex h-20 w-20 animate-pulse items-center justify-center rounded-full bg-tournament-blue/20">
+            <TrophyIcon className="size-10 text-tournament-blue" />
           </div>
-          <p className="text-tournament-blue mt-6 text-xl font-black tracking-wide uppercase">
+          <p className="mt-6 text-xl font-black tracking-wide text-tournament-blue uppercase">
             Loading Tournaments...
           </p>
         </div>
@@ -151,13 +151,13 @@ function TournamentCard({
 }) {
   return (
     <Link to="/app/tournaments/$slug" params={{ slug: tournament.slug }}>
-      <Card className="group hover:-translate-y-0.2 overflow-hidden transition-all duration-300 hover:shadow-sm">
-        <CardContent className="">
+      <Card className="group overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-sm">
+        <CardContent>
           <div className="flex items-center justify-between pb-2">
             {getStatusBadge(tournament.status)}
           </div>
 
-          <h3 className="group-hover:text-tournament-blue mb-4 text-lg font-medium tracking-tight text-foreground transition-colors">
+          <h3 className="mb-4 text-lg font-medium tracking-tight text-foreground transition-colors group-hover:text-tournament-blue">
             {tournament.name}
           </h3>
           <div className="space-y-2.5 text-sm text-muted-foreground">
