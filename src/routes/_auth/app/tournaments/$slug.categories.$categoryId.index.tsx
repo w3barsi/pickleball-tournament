@@ -172,6 +172,7 @@ function CategoryDetailPage() {
       <div>
         <Button
           variant="ghost"
+          nativeButton={false}
           render={
             <Link
               to="/app/tournaments/$slug/categories"

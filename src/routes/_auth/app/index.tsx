@@ -38,6 +38,7 @@ function AppIndex() {
 
         <div className="flex flex-col gap-3 px-4">
           <Button
+            nativeButton={false}
             render={
               <Link to="/app/tournaments">
                 <TrophyIcon />
@@ -69,6 +70,7 @@ function AppIndex() {
                 <Button
                   variant="outline"
                   className="mt-3"
+                  nativeButton={false}
                   render={
                     <Link to="/app/tournaments">
                       <PlusIcon className="size-4" />
@@ -106,6 +108,7 @@ function AppIndex() {
                   <Button
                     variant="ghost"
                     className="w-full"
+                    nativeButton={false}
                     render={
                       <Link to="/app/tournaments">
                         View All {upcomingTournaments.length} Upcoming
