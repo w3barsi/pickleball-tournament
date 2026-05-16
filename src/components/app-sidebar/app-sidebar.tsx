@@ -24,6 +24,14 @@ function useTournamentSlug(): string | null {
     from: "/_auth/app/tournaments/$slug/",
     shouldThrow: false,
   });
+  const categoriesMatch = useMatch({
+    from: "/_auth/app/tournaments/$slug/categories/",
+    shouldThrow: false,
+  });
+  const categoryMatch = useMatch({
+    from: "/_auth/app/tournaments/$slug/categories/$categoryId/",
+    shouldThrow: false,
+  });
   const bracketMatch = useMatch({
     from: "/_auth/app/brackets/$bracketId/",
     shouldThrow: false,
@@ -33,10 +41,12 @@ function useTournamentSlug(): string | null {
     shouldThrow: false,
   });
 
+  const isOnTournamentRoute = tournamentMatch || categoriesMatch || categoryMatch;
+
   const { data: bracketData } = useQuery(
     convexQuery(
       api.app.brackets.getWithParticipants,
-      tournamentMatch || !bracketMatch?.params.bracketId
+      isOnTournamentRoute || !bracketMatch?.params.bracketId
         ? "skip"
         : { bracketId: bracketMatch.params.bracketId as Id<"brackets"> },
     ),
@@ -44,13 +54,15 @@ function useTournamentSlug(): string | null {
   const { data: matchData } = useQuery(
     convexQuery(
       api.app.matches.getWithDetails,
-      tournamentMatch || !matchMatch?.params.matchId
+      isOnTournamentRoute || !matchMatch?.params.matchId
         ? "skip"
         : { matchId: matchMatch.params.matchId as Id<"matches"> },
     ),
   );
 
   if (tournamentMatch) return tournamentMatch.params.slug;
+  if (categoriesMatch) return categoriesMatch.params.slug;
+  if (categoryMatch) return categoryMatch.params.slug;
   if (bracketData?.tournament?.slug) return bracketData.tournament.slug;
   if (matchData?.tournament?.slug) return matchData.tournament.slug;
   return null;
