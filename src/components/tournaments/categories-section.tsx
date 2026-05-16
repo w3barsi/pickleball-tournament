@@ -3,19 +3,19 @@ import { api } from "@convex/_generated/api.js";
 import { Id } from "@convex/_generated/dataModel.js";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { TrophyIcon, ChevronRightIcon, EyeIcon } from "lucide-react";
+import { TrophyIcon, ChevronRightIcon } from "lucide-react";
 import { Suspense } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+  ItemTitle,
+} from "@/components/ui/item";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function CategoriesSection({
   slug,
@@ -32,13 +32,9 @@ export function CategoriesSection({
           variant="ghost"
           size="sm"
           nativeButton={false}
-          render={
-            <Link to="/app/tournaments/$slug/categories" params={{ slug }}>
-              View all <ChevronRightIcon className="size-4" />
-            </Link>
-          }
+          render={<Link to="/app/tournaments/$slug/categories" params={{ slug }} />}
         >
-          <ChevronRightIcon className="size-4" />
+          View all <ChevronRightIcon className="size-4" />
         </Button>
       </div>
       <Suspense fallback={<CategoriesFallback />}>
@@ -71,54 +67,45 @@ export function CategoriesSectionInner({
           <p className="text-sm text-muted-foreground">Create a category to get started</p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Rating</TableHead>
-                <TableHead>Brackets</TableHead>
-                <TableHead>Participants</TableHead>
-                <TableHead className="text-right">Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {categories.map((category) => {
-                const categoryBrackets = brackets.filter((b) => b.category._id === category._id);
-                const categoryParticipantCount = categoryBrackets.reduce(
-                  (sum, b) => sum + b.participantCount,
-                  0,
-                );
-                return (
-                  <TableRow key={category._id}>
-                    <TableCell className="font-medium">{category.name}</TableCell>
-                    <TableCell className="capitalize">{category.type}</TableCell>
-                    <TableCell className="capitalize">{category.rating}</TableCell>
-                    <TableCell>{categoryBrackets.length}</TableCell>
-                    <TableCell>{categoryParticipantCount}</TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        nativeButton={false}
-                        render={
-                          <Link
-                            to="/app/tournaments/$slug/categories/$categoryId"
-                            params={{ slug, categoryId: category._id }}
-                          >
-                            <EyeIcon className="mr-1 size-4" />
-                            View
-                          </Link>
-                        }
-                      />
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
+        <ItemGroup className="gap-2">
+          {categories.map((category) => {
+            const categoryBrackets = brackets.filter((b) => b.category._id === category._id);
+            const categoryParticipantCount = categoryBrackets.reduce(
+              (sum, b) => sum + b.participantCount,
+              0,
+            );
+            return (
+              <Item
+                key={category._id}
+                variant="outline"
+                render={
+                  <Link
+                    to="/app/tournaments/$slug/categories/$categoryId"
+                    params={{ slug, categoryId: category._id }}
+                  />
+                }
+              >
+                <ItemContent>
+                  <ItemTitle>{category.name}</ItemTitle>
+                  <ItemDescription>
+                    <span className="capitalize">{category.type}</span>
+                    {" \u00b7 "}
+                    <span className="capitalize">{category.rating}</span>
+                    {" \u00b7 "}
+                    {categoryBrackets.length}{" "}
+                    {categoryBrackets.length === 1 ? "bracket" : "brackets"}
+                    {" \u00b7 "}
+                    {categoryParticipantCount}{" "}
+                    {categoryParticipantCount === 1 ? "participant" : "participants"}
+                  </ItemDescription>
+                </ItemContent>
+                <ItemActions>
+                  <ChevronRightIcon className="size-4 text-muted-foreground transition-transform group-hover/item:translate-x-1" />
+                </ItemActions>
+              </Item>
+            );
+          })}
+        </ItemGroup>
       )}
     </>
   );
@@ -126,43 +113,24 @@ export function CategoriesSectionInner({
 
 export function CategoriesFallback() {
   return (
-    <div className="overflow-hidden rounded-xl border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Rating</TableHead>
-            <TableHead>Brackets</TableHead>
-            <TableHead>Participants</TableHead>
-            <TableHead className="text-right">Action</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {Array.from({ length: 3 }).map((_, i) => (
-            <TableRow key={i}>
-              <TableCell>
-                <Skeleton className="h-5 w-28" />
-              </TableCell>
-              <TableCell>
-                <Skeleton className="h-5 w-16" />
-              </TableCell>
-              <TableCell>
-                <Skeleton className="h-5 w-16" />
-              </TableCell>
-              <TableCell>
-                <Skeleton className="h-5 w-8" />
-              </TableCell>
-              <TableCell>
-                <Skeleton className="h-5 w-8" />
-              </TableCell>
-              <TableCell className="text-right">
-                <Skeleton className="ml-auto h-7 w-14" />
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+    <ItemGroup>
+      {Array.from({ length: 3 }).map((_, i) => (
+        <Item key={i} variant="outline">
+          <ItemContent>
+            <ItemTitle>
+              <Skeleton className="h-5 w-32" />
+            </ItemTitle>
+            <div className="flex items-center gap-1">
+              <Skeleton className="h-4 w-16" />
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 w-20" />
+            </div>
+          </ItemContent>
+          <ItemActions>
+            <Skeleton className="size-4" />
+          </ItemActions>
+        </Item>
+      ))}
+    </ItemGroup>
   );
 }
