@@ -215,7 +215,7 @@ export function CreateTournamentDialog({
                 value={organizerName}
                 onChange={(e) => setOrganizerName(e.target.value)}
                 placeholder="e.g., John Smith"
-                className="focus:border-tournament-lime border-2 border-slate-200"
+                className="border-2 border-slate-200 focus:border-tournament-lime"
                 required
               />
             </div>

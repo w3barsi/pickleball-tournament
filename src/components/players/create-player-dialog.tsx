@@ -118,7 +118,7 @@ export function CreatePlayerDialog() {
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
                   placeholder="Enter nickname (optional)"
-                  className="focus-visible:ring-tournament-blue border-2"
+                  className="border-2 focus-visible:ring-tournament-blue"
                 />
               </div>
             )}

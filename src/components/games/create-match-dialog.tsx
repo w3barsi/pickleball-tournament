@@ -73,7 +73,7 @@ export function CreateMatchDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger
         render={
-          <Button className="group bg-tournament-lime text-tournament-blue gap-2 rounded-full border-4 border-white px-8 py-6 text-lg font-black tracking-wide uppercase shadow-xl transition-all hover:scale-105 hover:shadow-2xl">
+          <Button className="group gap-2 rounded-full border-4 border-white bg-tournament-lime px-8 py-6 text-lg font-black tracking-wide text-tournament-blue uppercase shadow-xl transition-all hover:scale-105 hover:shadow-2xl">
             <PlusIcon className="size-6 transition-transform group-hover:rotate-90" />
             NEW MATCH
           </Button>
@@ -88,7 +88,7 @@ export function CreateMatchDialog({
           <div className="space-y-2">
             <Label
               htmlFor="bracketId"
-              className="text-tournament-blue text-sm font-bold tracking-wider uppercase"
+              className="text-sm font-bold tracking-wider text-tournament-blue uppercase"
             >
               Bracket ID
             </Label>
@@ -97,14 +97,14 @@ export function CreateMatchDialog({
               value={bracketId}
               onChange={(e) => setBracketId(e.target.value)}
               placeholder="Enter bracket ID"
-              className="border-tournament-blue border-2 font-semibold"
+              className="border-2 border-tournament-blue font-semibold"
             />
             <p className="text-xs text-muted-foreground">The bracket this match belongs to</p>
           </div>
           <div className="space-y-2">
             <Label
               htmlFor="participant1"
-              className="text-tournament-blue text-sm font-bold tracking-wider uppercase"
+              className="text-sm font-bold tracking-wider text-tournament-blue uppercase"
             >
               Participant 1 ID
             </Label>
@@ -113,13 +113,13 @@ export function CreateMatchDialog({
               value={participant1Id}
               onChange={(e) => setParticipant1Id(e.target.value)}
               placeholder="Enter participant 1 ID"
-              className="border-tournament-blue border-2 font-semibold"
+              className="border-2 border-tournament-blue font-semibold"
             />
           </div>
           <div className="space-y-2">
             <Label
               htmlFor="participant2"
-              className="text-tournament-blue text-sm font-bold tracking-wider uppercase"
+              className="text-sm font-bold tracking-wider text-tournament-blue uppercase"
             >
               Participant 2 ID
             </Label>
@@ -128,13 +128,13 @@ export function CreateMatchDialog({
               value={participant2Id}
               onChange={(e) => setParticipant2Id(e.target.value)}
               placeholder="Enter participant 2 ID"
-              className="border-tournament-blue border-2 font-semibold"
+              className="border-2 border-tournament-blue font-semibold"
             />
           </div>
           <div className="space-y-2">
             <Label
               htmlFor="targetScore"
-              className="text-tournament-blue text-sm font-bold tracking-wider uppercase"
+              className="text-sm font-bold tracking-wider text-tournament-blue uppercase"
             >
               Winning Score
             </Label>
@@ -144,7 +144,7 @@ export function CreateMatchDialog({
               value={targetScore}
               onChange={(e) => setTargetScore(parseInt(e.target.value) || 11)}
               min={1}
-              className="border-tournament-blue border-2 text-xl font-black"
+              className="border-2 border-tournament-blue text-xl font-black"
             />
             <p className="text-xs font-bold tracking-wide text-muted-foreground uppercase">
               Win by 2 points
@@ -162,7 +162,7 @@ export function CreateMatchDialog({
           <Button
             onClick={handleSubmit}
             disabled={!isValid}
-            className="bg-tournament-lime text-tournament-blue gap-2 font-black tracking-wide uppercase disabled:opacity-50"
+            className="gap-2 bg-tournament-lime font-black tracking-wide text-tournament-blue uppercase disabled:opacity-50"
           >
             <TrophyIcon className="size-4" />
             Create Match

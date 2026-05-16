@@ -76,10 +76,10 @@ function CategoriesPage() {
       {/* Categories List */}
       {categories === undefined ? (
         <div className="py-16 text-center">
-          <div className="bg-tournament-blue/20 mx-auto flex h-20 w-20 animate-pulse items-center justify-center rounded-full">
-            <LayoutGridIcon className="text-tournament-blue size-10" />
+          <div className="mx-auto flex h-20 w-20 animate-pulse items-center justify-center rounded-full bg-tournament-blue/20">
+            <LayoutGridIcon className="size-10 text-tournament-blue" />
           </div>
-          <p className="text-tournament-blue mt-6 text-xl font-black tracking-wide uppercase">
+          <p className="mt-6 text-xl font-black tracking-wide text-tournament-blue uppercase">
             Loading Categories...
           </p>
         </div>

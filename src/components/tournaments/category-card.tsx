@@ -100,7 +100,7 @@ export function CategoryCard({ category, slug }: CategoryCardProps) {
             {getRatingBadge(category.rating)}
           </div>
 
-          <h3 className="group-hover:text-tournament-blue mb-4 text-lg font-medium tracking-tight text-foreground transition-colors">
+          <h3 className="mb-4 text-lg font-medium tracking-tight text-foreground transition-colors group-hover:text-tournament-blue">
             {category.name}
           </h3>
           <div className="space-y-2.5 text-sm text-muted-foreground">
