@@ -85,7 +85,7 @@ export function BracketList({ brackets, unassignedCount, onAutoAssign }: Bracket
         <div key={stage} className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             {stageBrackets.map((bracket) => (
-              <Card key={bracket._id} className="overflow-hidden transition-shadow hover:shadow-md">
+              <Card key={bracket._id} className="overflow-hidden transition-shadow">
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">
@@ -116,7 +116,7 @@ export function BracketList({ brackets, unassignedCount, onAutoAssign }: Bracket
                     </div>
                   </div>
                 </CardContent>
-                <CardFooter>
+                <CardFooter className="gap-2">
                   <Button
                     variant="outline"
                     className="flex-1"
