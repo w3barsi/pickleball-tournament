@@ -229,7 +229,9 @@ function CategoryDetailPage() {
             <p className="text-2xl font-black">{brackets !== undefined ? brackets.length : "—"}</p>
             <p className="text-sm text-muted-foreground">
               {unassignedCount > 0 ? (
-                <span className="font-medium text-amber-600">{unassignedCount} unassigned</span>
+                <span className="font-medium text-amber-600">
+                  {unassignedCount} players unassigned
+                </span>
               ) : (
                 "All participants assigned"
               )}

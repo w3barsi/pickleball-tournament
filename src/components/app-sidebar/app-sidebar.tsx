@@ -111,7 +111,7 @@ export function AppSidebar() {
           <SidebarMenuLinkItem
             to="/app/tournaments"
             icon={TrophyIcon}
-            label="Tournaments"
+            label="All Tournaments"
             matchFrom="/_auth/app/tournaments/"
           />
         </SidebarMenu>
