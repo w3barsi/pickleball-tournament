@@ -24,7 +24,7 @@ import { ParticipantList } from "@/components/tournaments/participant-list";
 import { RegisterParticipantDialog } from "@/components/tournaments/register-participant-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 export const Route = createFileRoute("/_auth/app/tournaments/$slug/categories/$categoryId/")({
   component: CategoryDetailPage,
@@ -165,9 +165,10 @@ function CategoryDetailPage() {
   };
 
   const unassignedCount = unassignedParticipants?.length ?? 0;
+  const totalMatches = brackets?.reduce((sum, b) => sum + (b.matchCount ?? 0), 0) ?? 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Back Link */}
       <div>
         <Button
@@ -201,62 +202,50 @@ function CategoryDetailPage() {
         <EditCategoryDialog category={category} tournamentSlug={slug} />
       </HeaderCard>
 
-      {/* Category Info Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center gap-2 pb-2">
-            <UsersIcon className="size-5 text-tournament-lime" />
-            <CardTitle className="text-sm font-medium">Participants</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-black">
+      {/* Stats Bar */}
+      <div className="flex items-center justify-around rounded-2xl border bg-muted/20 px-4 py-5">
+        <div className="flex items-center gap-3">
+          <UsersIcon className="size-5 text-tournament-lime" />
+          <div>
+            <p className="text-2xl leading-none font-black">
               {participants !== undefined
                 ? `${participants.length}${category.maxParticipants ? ` / ${category.maxParticipants}` : ""}`
                 : "—"}
             </p>
-            <p className="text-sm text-muted-foreground">
-              {participants !== undefined ? `${participants.length} registered` : "Loading..."}
+            <p className="mt-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              Participants
             </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center gap-2 pb-2">
-            <TrophyIcon className="size-5 text-tournament-lime" />
-            <CardTitle className="text-sm font-medium">Brackets</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-black">{brackets !== undefined ? brackets.length : "—"}</p>
-            <p className="text-sm text-muted-foreground">
-              {unassignedCount > 0 ? (
-                <span className="font-medium text-amber-600">
-                  {unassignedCount} players unassigned
-                </span>
-              ) : (
-                "All participants assigned"
-              )}
+          </div>
+        </div>
+        <Separator orientation="vertical" className="h-10" />
+        <div className="flex items-center gap-3">
+          <TrophyIcon className="size-5 text-tournament-lime" />
+          <div>
+            <p className="text-2xl leading-none font-black">
+              {brackets !== undefined ? brackets.length : "—"}
             </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center gap-2 pb-2">
-            <SwordsIcon className="size-5 text-tournament-lime" />
-            <CardTitle className="text-sm font-medium">Matches</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-black">
-              {brackets !== undefined
-                ? brackets.reduce((sum, b) => sum + (b.matchCount ?? 0), 0)
-                : "—"}
+            <p className="mt-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              Brackets
             </p>
-            <p className="text-sm text-muted-foreground">
-              {brackets !== undefined
-                ? `${brackets.reduce((sum, b) => sum + (b.matchCount ?? 0), 0)} scheduled`
-                : "Loading..."}
+            {unassignedCount > 0 && (
+              <p className="mt-0.5 text-xs font-medium text-amber-600">
+                {unassignedCount} unassigned
+              </p>
+            )}
+          </div>
+        </div>
+        <Separator orientation="vertical" className="h-10" />
+        <div className="flex items-center gap-3">
+          <SwordsIcon className="size-5 text-tournament-lime" />
+          <div>
+            <p className="text-2xl leading-none font-black">
+              {brackets !== undefined ? totalMatches : "—"}
             </p>
-          </CardContent>
-        </Card>
+            <p className="mt-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              Matches
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Brackets */}

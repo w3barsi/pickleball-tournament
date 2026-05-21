@@ -2,18 +2,19 @@
 
 import { Id } from "@convex/_generated/dataModel";
 import { Link } from "@tanstack/react-router";
-import {
-  TrophyIcon,
-  UsersIcon,
-  SwordsIcon,
-  ArrowRightIcon,
-  ShuffleIcon,
-  UserPlusIcon,
-} from "lucide-react";
+import { TrophyIcon, UsersIcon, SwordsIcon, ArrowRightIcon, ShuffleIcon } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+  ItemMedia,
+  ItemTitle,
+} from "@/components/ui/item";
 import { Separator } from "@/components/ui/separator";
 
 interface BracketItem {
@@ -58,15 +59,13 @@ function getStatusBadge(status: string) {
 export function BracketList({ brackets, unassignedCount, onAutoAssign }: BracketListProps) {
   if (brackets.length === 0) {
     return (
-      <Card className="overflow-hidden">
-        <CardContent className="py-12 text-center">
-          <TrophyIcon className="mx-auto size-8 text-muted-foreground" />
-          <p className="mt-4 text-lg font-bold">No brackets yet</p>
-          <p className="text-sm text-muted-foreground">
-            Create a bracket to start organizing matches
-          </p>
-        </CardContent>
-      </Card>
+      <div className="rounded-xl border border-dashed py-12 text-center">
+        <TrophyIcon className="mx-auto size-8 text-muted-foreground" />
+        <p className="mt-4 text-lg font-bold">No brackets yet</p>
+        <p className="text-sm text-muted-foreground">
+          Create a bracket to start organizing matches
+        </p>
+      </div>
     );
   }
 
@@ -82,48 +81,46 @@ export function BracketList({ brackets, unassignedCount, onAutoAssign }: Bracket
   return (
     <div className="space-y-8">
       {sortedStages.map(([stage, stageBrackets], index) => (
-        <div key={stage} className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
+        <div key={stage} className="space-y-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+              Stage {stage}
+            </span>
+            <Separator className="flex-1" />
+          </div>
+          <ItemGroup className="gap-2">
             {stageBrackets.map((bracket) => (
-              <Card key={bracket._id} className="overflow-hidden transition-shadow">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                      <CardTitle className="text-base">{bracket.name}</CardTitle>
-                      <div className="flex items-center gap-2">
-                        {getStatusBadge(bracket.status)}
-                        <Badge variant="outline">{getFormatLabel(bracket.format)}</Badge>
-                      </div>
-                    </div>
-                    <span className="text-xs font-medium text-muted-foreground">
-                      Stage {bracket.stage}
+              <Item key={bracket._id} variant="outline">
+                <ItemMedia variant="icon">
+                  <TrophyIcon className="size-5 text-tournament-lime" />
+                </ItemMedia>
+                <ItemContent>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <ItemTitle>{bracket.name}</ItemTitle>
+                    {getStatusBadge(bracket.status)}
+                    <Badge variant="outline">{getFormatLabel(bracket.format)}</Badge>
+                  </div>
+                  <ItemDescription>
+                    <span className="inline-flex items-center gap-1">
+                      <UsersIcon className="size-3.5" />
+                      {bracket.participantCount ?? 0}
+                      {bracket.maxParticipants ? ` / ${bracket.maxParticipants}` : ""} participants
                     </span>
-                  </div>
-                </CardHeader>
-                <CardContent className="pb-4">
-                  <div className="mb-4 flex items-center gap-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <UsersIcon className="size-4" />
-                      <span>
-                        {bracket.participantCount ?? 0}
-                        {bracket.maxParticipants ? ` / ${bracket.maxParticipants}` : ""}{" "}
-                        participants
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <SwordsIcon className="size-4" />
-                      <span>{bracket.matchCount ?? 0} matches</span>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="gap-2">
+                    {" · "}
+                    <span className="inline-flex items-center gap-1">
+                      <SwordsIcon className="size-3.5" />
+                      {bracket.matchCount ?? 0} matches
+                    </span>
+                  </ItemDescription>
+                </ItemContent>
+                <ItemActions>
                   <Button
                     variant="outline"
-                    className="flex-1"
+                    size="sm"
                     nativeButton={false}
                     render={
                       <Link to="/app/brackets/$bracketId" params={{ bracketId: bracket._id }}>
-                        View Bracket
+                        View
                         <ArrowRightIcon className="ml-1 size-3" />
                       </Link>
                     }
@@ -131,18 +128,19 @@ export function BracketList({ brackets, unassignedCount, onAutoAssign }: Bracket
                   {unassignedCount > 0 && (
                     <Button
                       variant="ghost"
-                      nativeButton={false}
+                      size="icon"
+                      className="size-8"
                       onClick={() => onAutoAssign(bracket._id)}
                       title="Auto-assign remaining participants"
                     >
                       <ShuffleIcon className="size-4" />
                     </Button>
                   )}
-                </CardFooter>
-              </Card>
+                </ItemActions>
+              </Item>
             ))}
-          </div>
-          {index < sortedStages.length - 1 && <Separator />}
+          </ItemGroup>
+          {index < sortedStages.length - 1 && <Separator className="my-6" />}
         </div>
       ))}
     </div>
