@@ -92,8 +92,13 @@ export const update = authedMutation({
     tournamentId: v.id("tournaments"),
     name: v.optional(v.string()),
     date: v.optional(v.number()),
+    endDate: v.optional(v.number()),
     description: v.optional(v.string()),
     organizerName: v.optional(v.string()),
+    venueName: v.optional(v.string()),
+    venueAddress: v.optional(v.string()),
+    registrationDeadline: v.optional(v.number()),
+    isPublic: v.optional(v.boolean()),
     status: v.optional(
       v.union(v.literal("upcoming"), v.literal("inProgress"), v.literal("completed")),
     ),

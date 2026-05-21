@@ -81,7 +81,7 @@ export function TournamentHeader({ tournament }: { tournament: Doc<"tournaments"
         </div>
       </div>
 
-      <TournamentSettingsDialog tournamentId={tournament._id} tournamentName={tournament.name} />
+      <TournamentSettingsDialog tournament={tournament} />
     </HeaderCard>
   );
 }
