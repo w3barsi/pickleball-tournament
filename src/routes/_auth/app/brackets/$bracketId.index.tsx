@@ -149,7 +149,15 @@ function BracketDetailPage() {
           </HeaderCardDescription>
         </div>
         <AlertDialog>
-          <AlertDialogTrigger render={<Button variant="destructive" size="icon" />}>
+          <AlertDialogTrigger
+            render={
+              <Button
+                variant="destructive"
+                size="icon"
+                className="bg-destructive text-primary-foreground"
+              />
+            }
+          >
             <Trash2Icon className="size-4" />
           </AlertDialogTrigger>
           <AlertDialogContent>

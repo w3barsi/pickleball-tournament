@@ -3,17 +3,7 @@ import { api } from "@convex/_generated/api.js";
 import { Id } from "@convex/_generated/dataModel.js";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMutation } from "convex/react";
-import {
-  Loader2Icon,
-  ChevronLeftIcon,
-  SwordsIcon,
-  UsersIcon,
-  TrophyIcon,
-  RefreshCwIcon,
-} from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
+import { Loader2Icon, ChevronLeftIcon, SwordsIcon, UsersIcon, TrophyIcon } from "lucide-react";
 
 import { HeaderCard, HeaderCardDescription, HeaderCardHeading } from "@/components/header-card";
 import { BracketList } from "@/components/tournaments/bracket-list";
@@ -65,30 +55,6 @@ function CategoryDetailPage() {
       categoryId: categoryId as Id<"categories">,
     }),
   );
-  const resyncRecords = useMutation(api.app.categoryParticipants.resyncRecords);
-  const createBracket = useMutation(api.app.brackets.create);
-
-  const [isCreateBracketOpen, setIsCreateBracketOpen] = useState(false);
-
-  const handleCreateBracket = async (data: {
-    name: string;
-    stage: number;
-    format: "roundRobin" | "singleElimination";
-    maxParticipants?: number;
-  }) => {
-    try {
-      await createBracket({
-        categoryId: categoryId as Id<"categories">,
-        ...data,
-      });
-      toast.success("Bracket created");
-      return {};
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      return { error: `Failed to create bracket: ${message}` };
-    }
-  };
-
   if (!category || !tournament) {
     return (
       <div className="py-20 text-center">
@@ -220,11 +186,7 @@ function CategoryDetailPage() {
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold">Brackets</h2>
           <div className="flex items-center gap-2">
-            <CreateBracketDialog
-              open={isCreateBracketOpen}
-              onOpenChange={setIsCreateBracketOpen}
-              onCreate={handleCreateBracket}
-            />
+            <CreateBracketDialog categoryId={categoryId as Id<"categories">} />
           </div>
         </div>
         {brackets === undefined ? (
@@ -242,19 +204,6 @@ function CategoryDetailPage() {
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold">Participants</h2>
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                toast.promise(resyncRecords({ categoryId: categoryId as Id<"categories"> }), {
-                  loading: "Resyncing records...",
-                  success: "Records resynced",
-                  error: (err) => (err instanceof Error ? err.message : "Failed to resync records"),
-                });
-              }}
-            >
-              <RefreshCwIcon className="size-4" />
-              Resync Records
-            </Button>
             <RegisterParticipantDialog
               categoryId={categoryId as Id<"categories">}
               categoryType={category.type}

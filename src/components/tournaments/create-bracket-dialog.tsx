@@ -1,8 +1,12 @@
 "use client";
 
+import { api } from "@convex/_generated/api.js";
+import { Id } from "@convex/_generated/dataModel.js";
 import { useForm } from "@tanstack/react-form";
+import { useMutation } from "convex/react";
 import { Loader2Icon, PlusIcon } from "lucide-react";
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -26,14 +30,7 @@ import {
 } from "@/components/ui/select";
 
 interface CreateBracketDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onCreate: (data: {
-    name: string;
-    stage: number;
-    format: "roundRobin" | "singleElimination";
-    maxParticipants?: number;
-  }) => Promise<{ error?: string } | void>;
+  categoryId: Id<"categories">;
 }
 
 const FORMAT_OPTIONS = [
@@ -41,8 +38,10 @@ const FORMAT_OPTIONS = [
   { value: "singleElimination", label: "Single Elimination" },
 ] as const;
 
-export function CreateBracketDialog({ open, onOpenChange, onCreate }: CreateBracketDialogProps) {
+export function CreateBracketDialog({ categoryId }: CreateBracketDialogProps) {
+  const [open, setOpen] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const createBracket = useMutation(api.app.brackets.create);
 
   const form = useForm({
     defaultValues: {
@@ -53,17 +52,20 @@ export function CreateBracketDialog({ open, onOpenChange, onCreate }: CreateBrac
     },
     onSubmit: async ({ value }) => {
       setServerError(null);
-      const result = await onCreate({
-        name: value.name.trim(),
-        stage: Number(value.stage),
-        format: value.format,
-        maxParticipants: value.maxParticipants ? Number(value.maxParticipants) : undefined,
-      });
-      if (result?.error) {
-        setServerError(result.error);
-        return;
+      try {
+        await createBracket({
+          categoryId,
+          name: value.name.trim(),
+          stage: Number(value.stage),
+          format: value.format,
+          maxParticipants: value.maxParticipants ? Number(value.maxParticipants) : undefined,
+        });
+        toast.success("Bracket created");
+        setOpen(false);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown error";
+        setServerError(`Failed to create bracket: ${message}`);
       }
-      onOpenChange(false);
     },
   });
 
@@ -79,7 +81,7 @@ export function CreateBracketDialog({ open, onOpenChange, onCreate }: CreateBrac
       form.reset();
       setServerError(null);
     }
-    onOpenChange(newOpen);
+    setOpen(newOpen);
   };
 
   return (
