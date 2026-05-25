@@ -6,18 +6,16 @@ import { UserPlusIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogMedia,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface PendingPlayers {
   teamName?: string;
@@ -73,18 +71,18 @@ export function ConfirmCreatePlayersDialog({
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogMedia>
-            <UserPlusIcon className="size-6" />
-          </AlertDialogMedia>
-          <AlertDialogTitle>Create Missing Players</AlertDialogTitle>
-          <AlertDialogDescription>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <div className="flex items-center gap-2">
+            <UserPlusIcon className="size-5 text-muted-foreground" />
+            <DialogTitle>Create Missing Players</DialogTitle>
+          </div>
+          <DialogDescription>
             The following {missingNames.length === 1 ? "player doesn't" : "players don't"} exist yet
             and will be created before forming the pair.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
+          </DialogDescription>
+        </DialogHeader>
 
         <ul className="list-disc space-y-1 rounded-lg bg-muted/50 px-6 py-3 text-sm">
           {missingNames.map((name) => (
@@ -92,17 +90,20 @@ export function ConfirmCreatePlayersDialog({
           ))}
         </ul>
 
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
-          <AlertDialogAction
+        <DialogFooter>
+          <DialogClose
+            disabled={isSubmitting}
             render={
-              <Button disabled={isSubmitting} onClick={handleConfirm}>
-                {isSubmitting ? "Creating..." : "Create Players & Pair"}
+              <Button variant="outline" disabled={isSubmitting}>
+                Cancel
               </Button>
             }
           />
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+          <Button disabled={isSubmitting} onClick={handleConfirm}>
+            {isSubmitting ? "Creating..." : "Create Players & Pair"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

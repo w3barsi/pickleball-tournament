@@ -1,8 +1,11 @@
 "use client";
 
+import { api } from "@convex/_generated/api.js";
 import { Id } from "@convex/_generated/dataModel";
+import { useMutation } from "convex/react";
 import { Trash2Icon } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 import {
   AlertDialog,
@@ -48,7 +51,7 @@ interface DoublesParticipant {
 interface ParticipantListProps {
   participants: SinglesParticipant[] | DoublesParticipant[];
   categoryType: "singles" | "doubles";
-  onRemove: (participantId: Id<"categoryParticipants">) => void;
+  categoryId: Id<"categories">;
 }
 
 function getStatusBadge(status: string) {
@@ -64,12 +67,28 @@ function getStatusBadge(status: string) {
   }
 }
 
-export function ParticipantList({ participants, categoryType, onRemove }: ParticipantListProps) {
+export function ParticipantList({ participants, categoryType, categoryId }: ParticipantListProps) {
   const [removeTarget, setRemoveTarget] = useState<Id<"categoryParticipants"> | null>(null);
+
+  const unregister = useMutation(api.app.categoryParticipants.unregister).withOptimisticUpdate(
+    (localStore, args) => {
+      const current = localStore.getQuery(api.app.categoryParticipants.listByCategory, {
+        categoryId,
+      });
+      if (!current) return;
+
+      const updated = current.filter((p) => p._id !== args.categoryParticipantId) as typeof current;
+      localStore.setQuery(api.app.categoryParticipants.listByCategory, { categoryId }, updated);
+    },
+  );
 
   const handleConfirmRemove = () => {
     if (removeTarget) {
-      onRemove(removeTarget);
+      unregister({ categoryParticipantId: removeTarget })
+        .then(() => toast.success("Participant removed"))
+        .catch((err) =>
+          toast.error(err instanceof Error ? err.message : "Failed to remove participant"),
+        );
       setRemoveTarget(null);
     }
   };
@@ -145,13 +164,9 @@ export function ParticipantList({ participants, categoryType, onRemove }: Partic
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              render={
-                <Button variant="destructive" onClick={handleConfirmRemove}>
-                  Remove
-                </Button>
-              }
-            />
+            <AlertDialogAction onClick={handleConfirmRemove} variant="destructive">
+              Remove
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

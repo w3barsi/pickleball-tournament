@@ -65,20 +65,10 @@ function CategoryDetailPage() {
       categoryId: categoryId as Id<"categories">,
     }),
   );
-  const unregister = useMutation(api.app.categoryParticipants.unregister);
   const resyncRecords = useMutation(api.app.categoryParticipants.resyncRecords);
   const createBracket = useMutation(api.app.brackets.create);
 
   const [isCreateBracketOpen, setIsCreateBracketOpen] = useState(false);
-
-  const handleRemove = async (participantId: Id<"categoryParticipants">) => {
-    try {
-      await unregister({ categoryParticipantId: participantId });
-      toast.success("Participant removed");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to remove participant");
-    }
-  };
 
   const handleCreateBracket = async (data: {
     name: string;
@@ -280,7 +270,7 @@ function CategoryDetailPage() {
           <ParticipantList
             participants={participants}
             categoryType={category.type}
-            onRemove={handleRemove}
+            categoryId={category._id}
           />
         )}
       </div>
