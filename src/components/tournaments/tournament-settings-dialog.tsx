@@ -122,8 +122,8 @@ export function TournamentSettingsDialog({ tournament }: TournamentSettingsDialo
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={
-          <Button variant="secondary" size="icon" className="rounded-full">
-            <SettingsIcon className="size-5" />
+          <Button variant="secondary" size="icon">
+            <SettingsIcon />
           </Button>
         }
       />

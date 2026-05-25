@@ -5,7 +5,7 @@ import { Doc } from "@convex/_generated/dataModel";
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
-import { Loader2Icon, PencilIcon, Trash2Icon } from "lucide-react";
+import { Loader2Icon, PencilIcon, SettingsIcon, Trash2Icon } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -134,9 +134,8 @@ export function EditCategoryDialog({ category, tournamentSlug }: EditCategoryDia
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogTrigger
           render={
-            <Button variant="outline">
-              <PencilIcon className="size-4" />
-              Edit
+            <Button variant="secondary" size="icon">
+              <SettingsIcon />
             </Button>
           }
         />

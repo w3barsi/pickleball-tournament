@@ -10,7 +10,6 @@ import {
   SwordsIcon,
   UsersIcon,
   TrophyIcon,
-  ShuffleIcon,
   RefreshCwIcon,
 } from "lucide-react";
 import { useState } from "react";
@@ -66,16 +65,9 @@ function CategoryDetailPage() {
       categoryId: categoryId as Id<"categories">,
     }),
   );
-  const { data: unassignedParticipants } = useQuery(
-    convexQuery(api.app.brackets.getUnassignedParticipants, {
-      categoryId: categoryId as Id<"categories">,
-    }),
-  );
-
   const unregister = useMutation(api.app.categoryParticipants.unregister);
   const resyncRecords = useMutation(api.app.categoryParticipants.resyncRecords);
   const createBracket = useMutation(api.app.brackets.create);
-  const autoAssign = useMutation(api.app.brackets.autoAssignRemaining);
 
   const [isCreateBracketOpen, setIsCreateBracketOpen] = useState(false);
 
@@ -104,15 +96,6 @@ function CategoryDetailPage() {
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown error";
       return { error: `Failed to create bracket: ${message}` };
-    }
-  };
-
-  const handleAutoAssign = async (bracketId: Id<"brackets">) => {
-    try {
-      const result = await autoAssign({ bracketId });
-      toast.success(`${result.inserted} participants assigned`);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to auto-assign participants");
     }
   };
 
@@ -164,11 +147,10 @@ function CategoryDetailPage() {
     }
   };
 
-  const unassignedCount = unassignedParticipants?.length ?? 0;
   const totalMatches = brackets?.reduce((sum, b) => sum + (b.matchCount ?? 0), 0) ?? 0;
 
   return (
-    <div className="space-y-8">
+    <div className="flex flex-col gap-8">
       {/* Back Link */}
       <div>
         <Button
@@ -204,7 +186,7 @@ function CategoryDetailPage() {
 
       {/* Stats Bar */}
       <div className="flex items-center justify-around rounded-2xl border bg-muted/20 px-4 py-5">
-        <div className="flex items-center gap-3">
+        <div className="flex w-full items-center justify-center gap-3">
           <UsersIcon className="size-5 text-tournament-lime" />
           <div>
             <p className="text-2xl leading-none font-black">
@@ -217,28 +199,23 @@ function CategoryDetailPage() {
             </p>
           </div>
         </div>
-        <Separator orientation="vertical" className="h-10" />
-        <div className="flex items-center gap-3">
+        <Separator orientation="vertical" className="" />
+        <div className="flex w-full items-center justify-center gap-3">
           <TrophyIcon className="size-5 text-tournament-lime" />
           <div>
-            <p className="text-2xl leading-none font-black">
+            <p className="text-center text-2xl leading-none font-black">
               {brackets !== undefined ? brackets.length : "—"}
             </p>
             <p className="mt-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
               Brackets
             </p>
-            {unassignedCount > 0 && (
-              <p className="mt-0.5 text-xs font-medium text-amber-600">
-                {unassignedCount} unassigned
-              </p>
-            )}
           </div>
         </div>
-        <Separator orientation="vertical" className="h-10" />
-        <div className="flex items-center gap-3">
+        <Separator orientation="vertical" />
+        <div className="flex w-full items-center justify-center gap-3">
           <SwordsIcon className="size-5 text-tournament-lime" />
           <div>
-            <p className="text-2xl leading-none font-black">
+            <p className="text-center text-2xl leading-none font-black">
               {brackets !== undefined ? totalMatches : "—"}
             </p>
             <p className="mt-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
@@ -253,20 +230,6 @@ function CategoryDetailPage() {
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold">Brackets</h2>
           <div className="flex items-center gap-2">
-            {unassignedCount > 0 && brackets && brackets.length > 0 && (
-              <Button
-                variant="outline"
-                onClick={() => {
-                  const lastBracket = brackets[brackets.length - 1];
-                  if (lastBracket) {
-                    handleAutoAssign(lastBracket._id);
-                  }
-                }}
-              >
-                <ShuffleIcon className="size-4" />
-                Auto Assign Remaining
-              </Button>
-            )}
             <CreateBracketDialog
               open={isCreateBracketOpen}
               onOpenChange={setIsCreateBracketOpen}
@@ -280,11 +243,7 @@ function CategoryDetailPage() {
             <p className="mt-2 text-muted-foreground">Loading brackets...</p>
           </div>
         ) : (
-          <BracketList
-            brackets={brackets}
-            unassignedCount={unassignedCount}
-            onAutoAssign={handleAutoAssign}
-          />
+          <BracketList brackets={brackets} />
         )}
       </div>
 

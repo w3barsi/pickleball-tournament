@@ -2,7 +2,7 @@
 
 import { Id } from "@convex/_generated/dataModel";
 import { Link } from "@tanstack/react-router";
-import { TrophyIcon, UsersIcon, SwordsIcon, ArrowRightIcon, ShuffleIcon } from "lucide-react";
+import { TrophyIcon, UsersIcon, SwordsIcon, ArrowRightIcon } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,6 @@ import {
   ItemMedia,
   ItemTitle,
 } from "@/components/ui/item";
-import { Separator } from "@/components/ui/separator";
 
 interface BracketItem {
   _id: Id<"brackets">;
@@ -30,8 +29,6 @@ interface BracketItem {
 
 interface BracketListProps {
   brackets: BracketItem[];
-  unassignedCount: number;
-  onAutoAssign: (bracketId: Id<"brackets">) => void;
 }
 
 function getFormatLabel(format: string) {
@@ -56,7 +53,7 @@ function getStatusBadge(status: string) {
   }
 }
 
-export function BracketList({ brackets, unassignedCount, onAutoAssign }: BracketListProps) {
+export function BracketList({ brackets }: BracketListProps) {
   if (brackets.length === 0) {
     return (
       <div className="rounded-xl border border-dashed py-12 text-center">
@@ -79,24 +76,34 @@ export function BracketList({ brackets, unassignedCount, onAutoAssign }: Bracket
   const sortedStages = Array.from(grouped.entries()).sort((a, b) => b[0] - a[0]);
 
   return (
-    <div className="space-y-8">
-      {sortedStages.map(([stage, stageBrackets], index) => (
+    <div className="space-y-10">
+      {sortedStages.map(([stage, stageBrackets]) => (
         <div key={stage} className="space-y-3">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-              Stage {stage}
-            </span>
-            <Separator className="flex-1" />
-          </div>
+          <span className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+            Stage {stage}
+          </span>
           <ItemGroup className="gap-2">
             {stageBrackets.map((bracket) => (
               <Item key={bracket._id} variant="outline">
-                <ItemMedia variant="icon">
-                  <TrophyIcon className="size-5 text-tournament-lime" />
-                </ItemMedia>
+                <div>
+                  <ItemMedia variant="icon">
+                    <TrophyIcon className="size-5 text-tournament-lime" />
+                  </ItemMedia>
+                </div>
                 <ItemContent>
                   <div className="flex flex-wrap items-center gap-2">
-                    <ItemTitle>{bracket.name}</ItemTitle>
+                    <ItemTitle>
+                      <Button
+                        className="h-auto w-auto px-0"
+                        variant="link"
+                        render={
+                          <Link to="/app/brackets/$bracketId" params={{ bracketId: bracket._id }} />
+                        }
+                        nativeButton={false}
+                      >
+                        {bracket.name}
+                      </Button>
+                    </ItemTitle>
                     {getStatusBadge(bracket.status)}
                     <Badge variant="outline">{getFormatLabel(bracket.format)}</Badge>
                   </div>
@@ -125,22 +132,10 @@ export function BracketList({ brackets, unassignedCount, onAutoAssign }: Bracket
                       </Link>
                     }
                   />
-                  {unassignedCount > 0 && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="size-8"
-                      onClick={() => onAutoAssign(bracket._id)}
-                      title="Auto-assign remaining participants"
-                    >
-                      <ShuffleIcon className="size-4" />
-                    </Button>
-                  )}
                 </ItemActions>
               </Item>
             ))}
           </ItemGroup>
-          {index < sortedStages.length - 1 && <Separator className="my-6" />}
         </div>
       ))}
     </div>

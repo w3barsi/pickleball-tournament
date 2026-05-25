@@ -16,7 +16,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { HeaderCard, HeaderCardDescription, HeaderCardHeading } from "@/components/header-card";
-import { AssignParticipantsDialog } from "@/components/tournaments/assign-participants-dialog";
 import { BracketParticipantList } from "@/components/tournaments/bracket-participant-list";
 import { CreateMatchDialog } from "@/components/tournaments/create-match-dialog";
 import { MatchList } from "@/components/tournaments/match-list";
@@ -53,12 +52,6 @@ function BracketDetailPage() {
     convexQuery(api.app.brackets.getWithParticipants, {
       bracketId: bracketId as Id<"brackets">,
     }),
-  );
-  const { data: unassignedParticipants } = useQuery(
-    convexQuery(
-      api.app.brackets.getUnassignedParticipants,
-      bracketData?.category ? { categoryId: bracketData.category._id as Id<"categories"> } : "skip",
-    ),
   );
 
   const removeParticipant = useMutation(api.app.brackets.removeParticipant);
@@ -122,8 +115,6 @@ function BracketDetailPage() {
       setIsDeleting(false);
     }
   };
-
-  const unassignedCount = unassignedParticipants?.length ?? 0;
 
   return (
     <div className="space-y-6">
@@ -196,15 +187,6 @@ function BracketDetailPage() {
               {participants.length}
               {bracket.maxParticipants ? ` / ${bracket.maxParticipants}` : ""}
             </p>
-            <p className="text-sm text-muted-foreground">
-              {unassignedCount > 0 ? (
-                <span className="font-medium text-amber-600">
-                  {unassignedCount} unassigned in category
-                </span>
-              ) : (
-                "All assigned"
-              )}
-            </p>
           </CardContent>
         </Card>
 
@@ -252,12 +234,6 @@ function BracketDetailPage() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold">Participants</h2>
-          {unassignedCount > 0 && (
-            <AssignParticipantsDialog
-              bracketId={bracketId as Id<"brackets">}
-              categoryId={category._id as Id<"categories">}
-            />
-          )}
         </div>
         <BracketParticipantList
           participants={participants}
