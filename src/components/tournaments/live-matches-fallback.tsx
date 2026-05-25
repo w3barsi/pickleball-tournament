@@ -25,10 +25,10 @@ export function LiveMatchesFallback() {
 
 export function LiveMatchesEmpty() {
   return (
-    <div className="col-span-full flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-white p-8 text-center">
-      <RadioIcon className="size-8 text-slate-300" />
-      <p className="mt-2 text-sm font-medium text-slate-500">No live matches</p>
-      <p className="text-xs text-slate-400">Live matches will appear here as they start.</p>
+    <div className="col-span-full rounded-xl border border-dashed py-12 text-center">
+      <RadioIcon className="mx-auto size-8 text-muted-foreground" />
+      <p className="mt-4 text-lg font-bold">No live matches</p>
+      <p className="text-sm text-muted-foreground">Matches will appear here once they start</p>
     </div>
   );
 }

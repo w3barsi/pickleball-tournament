@@ -8,7 +8,7 @@ import { Suspense } from "react";
 
 import { Badge } from "@/components/ui/badge";
 
-import { LiveMatchesFallback } from "./live-matches-fallback";
+import { LiveMatchesEmpty, LiveMatchesFallback } from "./live-matches-fallback";
 
 export function LiveMatchesSection({ tournamentId }: { tournamentId: Id<"tournaments"> }) {
   return (
@@ -30,6 +30,14 @@ export function LiveMatchesSectionInner({ tournamentId }: { tournamentId: Id<"to
   const { data: liveMatchIds } = useSuspenseQuery(
     convexQuery(api.app.matches.listLiveMatchIdsByTournament, { tournamentId }),
   );
+
+  if (liveMatchIds.length === 0) {
+    return (
+      <>
+        <LiveMatchesEmpty />
+      </>
+    );
+  }
 
   return (
     <>
