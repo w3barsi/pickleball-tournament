@@ -65,14 +65,16 @@ function getOptions(results: PlayerResult[], query: string): Option[] {
   return [...results, { _id: "__create__", fullName: query.trim(), nickname: "" }];
 }
 
-interface PendingPlayers {
+interface CreatePairPayload {
   teamName?: string;
-  player1: { name: string; id: string | null };
-  player2: { name: string; id: string | null };
+  playerOneId?: Id<"player">;
+  playerOneName: string;
+  playerTwoId?: Id<"player">;
+  playerTwoName: string;
 }
 
 export function CreatePlayerPairDialog() {
-  const createPair = useMutation(api.app.playerPairs.create);
+  const createPairWithPlayers = useMutation(api.app.playerPairs.createWithPlayers);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const [p1Query, setP1Query] = useState("");
@@ -96,7 +98,8 @@ export function CreatePlayerPairDialog() {
   const p2Options = getOptions(p2Results, p2Query);
 
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [pending, setPending] = useState<PendingPlayers | null>(null);
+  const [missingNames, setMissingNames] = useState<string[]>([]);
+  const [pendingPayload, setPendingPayload] = useState<CreatePairPayload | null>(null);
 
   const form = useForm({
     defaultValues: {
@@ -105,17 +108,16 @@ export function CreatePlayerPairDialog() {
       player2: "",
     },
     onSubmit: async ({ value }) => {
-      const p1Name = value.player1;
-      const p2Name = value.player2;
+      const p1Name = value.player1.trim();
+      const p2Name = value.player2.trim();
 
       let finalP1Id = p1Id;
-      let finalP2Id = p2Id;
-
       if (!finalP1Id) {
         const match = p1Results.find((r) => r.fullName.toLowerCase() === p1Name.toLowerCase());
         if (match) finalP1Id = match._id;
       }
 
+      let finalP2Id = p2Id;
       if (!finalP2Id) {
         const match = p2Results.find((r) => r.fullName.toLowerCase() === p2Name.toLowerCase());
         if (match) finalP2Id = match._id;
@@ -126,31 +128,32 @@ export function CreatePlayerPairDialog() {
         return;
       }
 
-      const missing = [];
+      const payload: CreatePairPayload = {
+        teamName: value.teamName.trim() || undefined,
+        playerOneId: finalP1Id ? (finalP1Id as Id<"player">) : undefined,
+        playerOneName: p1Name,
+        playerTwoId: finalP2Id ? (finalP2Id as Id<"player">) : undefined,
+        playerTwoName: p2Name,
+      };
+
+      const missing: string[] = [];
       if (!finalP1Id) missing.push(p1Name);
       if (!finalP2Id) missing.push(p2Name);
 
       if (missing.length > 0) {
-        setPending({
-          teamName: value.teamName.trim() || undefined,
-          player1: { name: p1Name, id: finalP1Id },
-          player2: { name: p2Name, id: finalP2Id },
-        });
+        setMissingNames(missing);
+        setPendingPayload(payload);
         setConfirmOpen(true);
         return;
       }
 
-      try {
-        await createPair({
-          teamName: value.teamName.trim() || undefined,
-          playerOne: finalP1Id as Id<"player">,
-          playerTwo: finalP2Id as Id<"player">,
-        });
-        resetAndClose();
-        toast.success("Player pair created");
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Failed to create pair");
-      }
+      // Optimistic: close dialog immediately, fire mutation in background
+      resetAndClose();
+      toast.promise(createPairWithPlayers(payload), {
+        loading: "Creating player pair...",
+        success: "Player pair created",
+        error: (err) => (err instanceof Error ? err.message : "Failed to create pair"),
+      });
     },
   });
 
@@ -160,7 +163,8 @@ export function CreatePlayerPairDialog() {
     setP2Query("");
     setP1Id(null);
     setP2Id(null);
-    setPending(null);
+    setMissingNames([]);
+    setPendingPayload(null);
     setIsDialogOpen(false);
   }, [form]);
 
@@ -169,19 +173,19 @@ export function CreatePlayerPairDialog() {
     if (!open) resetAndClose();
   };
 
-  const handleConfirm = async (playerOneId: string, playerTwoId: string) => {
-    try {
-      await createPair({
-        teamName: pending!.teamName || undefined,
-        playerOne: playerOneId as Id<"player">,
-        playerTwo: playerTwoId as Id<"player">,
-      });
-      setConfirmOpen(false);
-      resetAndClose();
-      toast.success("Player pair created");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to create pair");
-    }
+  const handleConfirm = () => {
+    if (!pendingPayload) return;
+    const payload = pendingPayload;
+
+    // Optimistic: close dialogs immediately, fire mutation in background
+    setConfirmOpen(false);
+    resetAndClose();
+
+    toast.promise(createPairWithPlayers(payload), {
+      loading: "Creating players and pair...",
+      success: "Player pair created",
+      error: (err) => (err instanceof Error ? err.message : "Failed to create pair"),
+    });
   };
 
   const handleP1ValueChange = (val: string, details: { reason: string }) => {
@@ -397,13 +401,13 @@ export function CreatePlayerPairDialog() {
                 Cancel
               </Button>
               <form.Subscribe selector={(state) => [state.isSubmitting, state.canSubmit]}>
-                {([isSubmitting, canSubmit]) => (
+                {([formIsSubmitting, canSubmit]) => (
                   <Button
                     type="submit"
                     className="flex-1 font-bold"
-                    disabled={isSubmitting || !canSubmit}
+                    disabled={formIsSubmitting || !canSubmit}
                   >
-                    {isSubmitting ? "Creating..." : "Create Pair"}
+                    {formIsSubmitting ? "Creating..." : "Create Pair"}
                   </Button>
                 )}
               </form.Subscribe>
@@ -412,14 +416,12 @@ export function CreatePlayerPairDialog() {
         </DialogContent>
       </Dialog>
 
-      {pending && (
-        <ConfirmCreatePlayersDialog
-          open={confirmOpen}
-          onOpenChange={setConfirmOpen}
-          pending={pending}
-          onConfirm={handleConfirm}
-        />
-      )}
+      <ConfirmCreatePlayersDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        missingNames={missingNames}
+        onConfirm={handleConfirm}
+      />
     </>
   );
 }

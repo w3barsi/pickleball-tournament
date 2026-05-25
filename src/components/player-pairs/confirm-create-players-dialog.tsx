@@ -1,10 +1,6 @@
 "use client";
 
-import { api } from "@convex/_generated/api.js";
-import { useMutation } from "convex/react";
 import { UserPlusIcon } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -17,59 +13,21 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-interface PendingPlayers {
-  teamName?: string;
-  player1: { name: string; id: string | null };
-  player2: { name: string; id: string | null };
-}
-
 interface ConfirmCreatePlayersDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  pending: PendingPlayers;
-  onConfirm: (playerOneId: string, playerTwoId: string) => Promise<void>;
+  missingNames: string[];
+  confirmLabel?: string;
+  onConfirm: () => void;
 }
 
 export function ConfirmCreatePlayersDialog({
   open,
   onOpenChange,
-  pending,
+  missingNames,
+  confirmLabel,
   onConfirm,
 }: ConfirmCreatePlayersDialogProps) {
-  const createPlayer = useMutation(api.app.players.create);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const missingNames: string[] = [];
-  if (!pending.player1.id) missingNames.push(pending.player1.name);
-  if (!pending.player2.id) missingNames.push(pending.player2.name);
-
-  const handleConfirm = async () => {
-    setIsSubmitting(true);
-    try {
-      const createdIds: Record<string, string> = {};
-
-      await Promise.all(
-        missingNames.map(async (name) => {
-          const id = await createPlayer({ fullName: name, nickname: "" });
-          createdIds[name] = id;
-        }),
-      );
-
-      const playerOneId = pending.player1.id ?? createdIds[pending.player1.name];
-      const playerTwoId = pending.player2.id ?? createdIds[pending.player2.name];
-
-      if (!playerOneId || !playerTwoId) {
-        throw new Error("Failed to resolve player IDs");
-      }
-
-      await onConfirm(playerOneId, playerTwoId);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to create players");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -91,17 +49,8 @@ export function ConfirmCreatePlayersDialog({
         </ul>
 
         <DialogFooter>
-          <DialogClose
-            disabled={isSubmitting}
-            render={
-              <Button variant="outline" disabled={isSubmitting}>
-                Cancel
-              </Button>
-            }
-          />
-          <Button disabled={isSubmitting} onClick={handleConfirm}>
-            {isSubmitting ? "Creating..." : "Create Players & Pair"}
-          </Button>
+          <DialogClose render={<Button variant="outline">Cancel</Button>} />
+          <Button onClick={onConfirm}>{confirmLabel ?? "Create Players & Pair"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

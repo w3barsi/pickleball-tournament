@@ -62,6 +62,20 @@ function getOptions(results: PlayerResult[], query: string): Option[] {
   return [...results, { _id: "__create__", fullName: query.trim(), nickname: "" }];
 }
 
+interface RegisterPayloadSingles {
+  categoryId: Id<"categories">;
+  playerId?: Id<"player">;
+  playerName: string;
+}
+
+interface RegisterPayloadDoubles {
+  categoryId: Id<"categories">;
+  playerOneId?: Id<"player">;
+  playerOneName: string;
+  playerTwoId?: Id<"player">;
+  playerTwoName: string;
+}
+
 interface RegisterParticipantDialogProps {
   categoryId: Id<"categories">;
   categoryType: "singles" | "doubles";
@@ -73,8 +87,7 @@ export function RegisterParticipantDialog({
   categoryType,
   onSuccess,
 }: RegisterParticipantDialogProps) {
-  const register = useMutation(api.app.categoryParticipants.register);
-  const createPlayer = useMutation(api.app.players.create);
+  const registerWithPlayers = useMutation(api.app.categoryParticipants.registerWithPlayers);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   // Singles state
@@ -109,12 +122,10 @@ export function RegisterParticipantDialog({
   const p2Options = getOptions(p2Results, p2Query);
 
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [pending, setPending] = useState<{
-    player1: { name: string; id: string | null };
-    player2: { name: string; id: string | null };
-  } | null>(null);
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [missingNames, setMissingNames] = useState<string[]>([]);
+  const [pendingPayload, setPendingPayload] = useState<
+    RegisterPayloadSingles | RegisterPayloadDoubles | null
+  >(null);
 
   const resetAndClose = useCallback(() => {
     setPlayerQuery("");
@@ -123,8 +134,8 @@ export function RegisterParticipantDialog({
     setP2Query("");
     setP1Id(null);
     setP2Id(null);
-    setPending(null);
-    setIsSubmitting(false);
+    setMissingNames([]);
+    setPendingPayload(null);
     setIsDialogOpen(false);
   }, []);
 
@@ -140,31 +151,35 @@ export function RegisterParticipantDialog({
       return;
     }
 
-    setIsSubmitting(true);
-    try {
-      let finalPlayerId = playerId;
-      if (!finalPlayerId) {
-        const match = playerResults.find((r) => r.fullName.toLowerCase() === name.toLowerCase());
-        if (match) finalPlayerId = match._id;
-      }
-
-      if (!finalPlayerId) {
-        finalPlayerId = await createPlayer({ fullName: name, nickname: "" });
-      }
-
-      await register({
-        categoryId,
-        playerId: finalPlayerId as Id<"player">,
-      });
-
-      toast.success("Participant registered");
-      resetAndClose();
-      onSuccess?.();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to register participant");
-    } finally {
-      setIsSubmitting(false);
+    let finalPlayerId = playerId;
+    if (!finalPlayerId) {
+      const match = playerResults.find((r) => r.fullName.toLowerCase() === name.toLowerCase());
+      if (match) finalPlayerId = match._id;
     }
+
+    const payload: RegisterPayloadSingles = {
+      categoryId,
+      playerId: finalPlayerId ? (finalPlayerId as Id<"player">) : undefined,
+      playerName: name,
+    };
+
+    if (!finalPlayerId) {
+      setMissingNames([name]);
+      setPendingPayload(payload);
+      setConfirmOpen(true);
+      return;
+    }
+
+    // Optimistic: close dialog immediately, fire mutation in background
+    resetAndClose();
+    toast.promise(registerWithPlayers(payload), {
+      loading: "Registering participant...",
+      success: () => {
+        onSuccess?.();
+        return "Participant registered";
+      },
+      error: (err) => (err instanceof Error ? err.message : "Failed to register participant"),
+    });
   };
 
   const handleDoublesSubmit = async () => {
@@ -177,13 +192,12 @@ export function RegisterParticipantDialog({
     }
 
     let finalP1Id = p1Id;
-    let finalP2Id = p2Id;
-
     if (!finalP1Id) {
       const match = p1Results.find((r) => r.fullName.toLowerCase() === p1Name.toLowerCase());
       if (match) finalP1Id = match._id;
     }
 
+    let finalP2Id = p2Id;
     if (!finalP2Id) {
       const match = p2Results.find((r) => r.fullName.toLowerCase() === p2Name.toLowerCase());
       if (match) finalP2Id = match._id;
@@ -194,49 +208,53 @@ export function RegisterParticipantDialog({
       return;
     }
 
-    if (!finalP1Id || !finalP2Id) {
-      setPending({
-        player1: { name: p1Name, id: finalP1Id },
-        player2: { name: p2Name, id: finalP2Id },
-      });
+    const payload: RegisterPayloadDoubles = {
+      categoryId,
+      playerOneId: finalP1Id ? (finalP1Id as Id<"player">) : undefined,
+      playerOneName: p1Name,
+      playerTwoId: finalP2Id ? (finalP2Id as Id<"player">) : undefined,
+      playerTwoName: p2Name,
+    };
+
+    const missing: string[] = [];
+    if (!finalP1Id) missing.push(p1Name);
+    if (!finalP2Id) missing.push(p2Name);
+
+    if (missing.length > 0) {
+      setMissingNames(missing);
+      setPendingPayload(payload);
       setConfirmOpen(true);
       return;
     }
 
-    setIsSubmitting(true);
-    try {
-      await register({
-        categoryId,
-        playerOneId: finalP1Id as Id<"player">,
-        playerTwoId: finalP2Id as Id<"player">,
-      });
-      toast.success("Participant registered");
-      resetAndClose();
-      onSuccess?.();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to register participant");
-    } finally {
-      setIsSubmitting(false);
-    }
+    // Optimistic: close dialog immediately, fire mutation in background
+    resetAndClose();
+    toast.promise(registerWithPlayers(payload), {
+      loading: "Registering participant...",
+      success: () => {
+        onSuccess?.();
+        return "Participant registered";
+      },
+      error: (err) => (err instanceof Error ? err.message : "Failed to register participant"),
+    });
   };
 
-  const handleConfirm = async (playerOneId: string, playerTwoId: string) => {
-    setIsSubmitting(true);
-    try {
-      await register({
-        categoryId,
-        playerOneId: playerOneId as Id<"player">,
-        playerTwoId: playerTwoId as Id<"player">,
-      });
-      setConfirmOpen(false);
-      toast.success("Participant registered");
-      resetAndClose();
-      onSuccess?.();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to register participant");
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleConfirm = () => {
+    if (!pendingPayload) return;
+    const payload = pendingPayload;
+
+    // Optimistic: close dialogs immediately, fire mutation in background
+    setConfirmOpen(false);
+    resetAndClose();
+
+    toast.promise(registerWithPlayers(payload), {
+      loading: "Creating players and registering...",
+      success: () => {
+        onSuccess?.();
+        return "Participant registered";
+      },
+      error: (err) => (err instanceof Error ? err.message : "Failed to register participant"),
+    });
   };
 
   const handlePlayerValueChange = (val: string, details: { reason: string }) => {
@@ -451,31 +469,33 @@ export function RegisterParticipantDialog({
                 variant="outline"
                 className="flex-1 font-bold"
                 onClick={() => handleOpenChange(false)}
-                disabled={isSubmitting}
               >
                 Cancel
               </Button>
               <Button
                 type="button"
                 className="flex-1 font-bold"
-                disabled={isSubmitting}
+                disabled={
+                  categoryType === "singles"
+                    ? !playerQuery.trim()
+                    : !p1Query.trim() || !p2Query.trim()
+                }
                 onClick={categoryType === "singles" ? handleSinglesSubmit : handleDoublesSubmit}
               >
-                {isSubmitting ? "Registering..." : "Register"}
+                Register
               </Button>
             </DialogFooter>
           </div>
         </DialogContent>
       </Dialog>
 
-      {pending && (
-        <ConfirmCreatePlayersDialog
-          open={confirmOpen}
-          onOpenChange={setConfirmOpen}
-          pending={pending}
-          onConfirm={handleConfirm}
-        />
-      )}
+      <ConfirmCreatePlayersDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        missingNames={missingNames}
+        confirmLabel="Create Players & Register"
+        onConfirm={handleConfirm}
+      />
     </>
   );
 }

@@ -237,9 +237,15 @@ export const register = authedMutation({
   },
 });
 
-export const resyncRecords = authedMutation({
+export const registerWithPlayers = authedMutation({
   args: {
     categoryId: v.id("categories"),
+    playerId: v.optional(v.id("player")),
+    playerName: v.optional(v.string()),
+    playerOneId: v.optional(v.id("player")),
+    playerOneName: v.optional(v.string()),
+    playerTwoId: v.optional(v.id("player")),
+    playerTwoName: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const category = await ctx.db.get(args.categoryId);
@@ -249,42 +255,145 @@ export const resyncRecords = authedMutation({
 
     await requireManageTournament(ctx, category.tournamentId);
 
-    const matches = await ctx.db
-      .query("matches")
-      .withIndex("by_category", (q) => q.eq("categoryId", args.categoryId))
-      .filter((q) => q.eq(q.field("status"), "completed"))
-      .collect();
-
-    const winCounts: Record<string, number> = {};
-    const lossCounts: Record<string, number> = {};
-
-    for (const match of matches) {
-      if (!match.winnerParticipantId) continue;
-
-      const loserId =
-        match.winnerParticipantId === match.participant1Id
-          ? match.participant2Id
-          : match.participant1Id;
-
-      winCounts[match.winnerParticipantId] = (winCounts[match.winnerParticipantId] ?? 0) + 1;
-      lossCounts[loserId] = (lossCounts[loserId] ?? 0) + 1;
-    }
-
-    const participants = await ctx.db
-      .query("categoryParticipants")
-      .withIndex("by_category", (q) => q.eq("categoryId", args.categoryId))
-      .collect();
-
-    for (const participant of participants) {
-      const wins = winCounts[participant._id] ?? 0;
-      const losses = lossCounts[participant._id] ?? 0;
-
-      if (participant.wins !== wins || participant.losses !== losses) {
-        await ctx.db.patch(participant._id, { wins, losses });
+    if (category.type === "singles") {
+      let finalPlayerId = args.playerId;
+      if (!finalPlayerId && args.playerName) {
+        const existing = await ctx.db
+          .query("player")
+          .withIndex("by_fullName", (q) => q.eq("fullName", args.playerName!))
+          .take(1);
+        if (existing.length > 0) {
+          finalPlayerId = existing[0]._id;
+        } else {
+          finalPlayerId = await ctx.db.insert("player", {
+            fullName: args.playerName!,
+            nickname: "",
+          });
+        }
       }
-    }
+      if (!finalPlayerId) {
+        throw new Error("Player is required");
+      }
 
-    return { success: true };
+      const existing = await ctx.db
+        .query("categoryParticipants")
+        .withIndex("by_category_and_player", (q) =>
+          q.eq("categoryId", args.categoryId).eq("playerId", finalPlayerId),
+        )
+        .unique();
+
+      if (existing) {
+        throw new Error("This player is already registered in this category");
+      }
+
+      if (category.maxParticipants !== undefined) {
+        const count = await ctx.db
+          .query("categoryParticipants")
+          .withIndex("by_category", (q) => q.eq("categoryId", args.categoryId))
+          .take(category.maxParticipants + 1);
+        if (count.length >= category.maxParticipants) {
+          throw new Error("This category is already full");
+        }
+      }
+
+      const participantId = await ctx.db.insert("categoryParticipants", {
+        categoryId: args.categoryId,
+        playerId: finalPlayerId,
+        status: "active",
+        registrationStatus: "confirmed",
+        wins: 0,
+        losses: 0,
+      });
+
+      return participantId;
+    } else {
+      let p1Id = args.playerOneId;
+      if (!p1Id && args.playerOneName) {
+        const existing = await ctx.db
+          .query("player")
+          .withIndex("by_fullName", (q) => q.eq("fullName", args.playerOneName!))
+          .take(1);
+        if (existing.length > 0) {
+          p1Id = existing[0]._id;
+        } else {
+          p1Id = await ctx.db.insert("player", { fullName: args.playerOneName!, nickname: "" });
+        }
+      }
+
+      let p2Id = args.playerTwoId;
+      if (!p2Id && args.playerTwoName) {
+        const existing = await ctx.db
+          .query("player")
+          .withIndex("by_fullName", (q) => q.eq("fullName", args.playerTwoName!))
+          .take(1);
+        if (existing.length > 0) {
+          p2Id = existing[0]._id;
+        } else {
+          p2Id = await ctx.db.insert("player", { fullName: args.playerTwoName!, nickname: "" });
+        }
+      }
+
+      if (!p1Id || !p2Id) {
+        throw new Error("Both player one and player two are required for doubles categories");
+      }
+      if (p1Id === p2Id) {
+        throw new Error("Player one and player two must be different people");
+      }
+
+      const ids = [p1Id, p2Id].sort();
+      const pairKey = `${ids[0]}:${ids[1]}`;
+
+      let pair = await ctx.db
+        .query("playerPair")
+        .withIndex("by_pair_key", (q) => q.eq("pairKey", pairKey))
+        .unique();
+
+      if (!pair) {
+        const pairId = await ctx.db.insert("playerPair", {
+          playerOne: ids[0],
+          playerTwo: ids[1],
+          pairKey,
+          wins: 0,
+          losses: 0,
+        });
+        pair = await ctx.db.get(pairId);
+        if (!pair) {
+          throw new Error("Failed to create player pair");
+        }
+      }
+
+      const existing = await ctx.db
+        .query("categoryParticipants")
+        .withIndex("by_category_and_pair", (q) =>
+          q.eq("categoryId", args.categoryId).eq("pairId", pair._id),
+        )
+        .unique();
+
+      if (existing) {
+        throw new Error("This pair is already registered in this category");
+      }
+
+      if (category.maxParticipants !== undefined) {
+        const count = await ctx.db
+          .query("categoryParticipants")
+          .withIndex("by_category", (q) => q.eq("categoryId", args.categoryId))
+          .take(category.maxParticipants + 1);
+        if (count.length >= category.maxParticipants) {
+          throw new Error("This category is already full");
+        }
+      }
+
+      const participantId = await ctx.db.insert("categoryParticipants", {
+        categoryId: args.categoryId,
+        pairId: pair._id,
+        status: "active",
+        registrationStatus: "confirmed",
+        wins: 0,
+        losses: 0,
+      });
+
+      return participantId;
+    }
   },
 });
 

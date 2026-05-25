@@ -16,7 +16,9 @@ export default defineSchema({
     dominantHand: v.optional(v.union(v.literal("left"), v.literal("right"))),
     clubAffiliation: v.optional(v.string()),
     deletedAt: v.optional(v.number()),
-  }).index("by_deletedAt", ["deletedAt"]),
+  })
+    .index("by_fullName", ["fullName"])
+    .index("by_deletedAt", ["deletedAt"]),
 
   playerPair: defineTable({
     teamName: v.optional(v.string()),
