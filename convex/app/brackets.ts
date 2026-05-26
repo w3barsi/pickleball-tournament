@@ -343,6 +343,39 @@ export const addParticipants = authedMutation({
   },
 });
 
+export const listAssignmentsByCategory = authedQuery({
+  args: {
+    categoryId: v.id("categories"),
+  },
+  handler: async (ctx, args) => {
+    const brackets = await ctx.db
+      .query("brackets")
+      .withIndex("by_category", (q) => q.eq("categoryId", args.categoryId))
+      .order("asc")
+      .collect();
+
+    const assignments = [];
+    for (const bracket of brackets) {
+      const bracketParticipants = await ctx.db
+        .query("bracketParticipants")
+        .withIndex("by_bracket", (q) => q.eq("bracketId", bracket._id))
+        .collect();
+
+      for (const bp of bracketParticipants) {
+        assignments.push({
+          _id: bp._id,
+          bracketId: bracket._id,
+          bracketName: bracket.name,
+          categoryParticipantId: bp.categoryParticipantId,
+          status: bp.status,
+        });
+      }
+    }
+
+    return assignments;
+  },
+});
+
 export const removeParticipant = authedMutation({
   args: {
     bracketParticipantId: v.id("bracketParticipants"),

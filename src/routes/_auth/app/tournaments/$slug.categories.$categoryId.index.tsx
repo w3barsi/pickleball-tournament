@@ -6,6 +6,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Loader2Icon, ChevronLeftIcon, SwordsIcon, UsersIcon, TrophyIcon } from "lucide-react";
 
 import { HeaderCard, HeaderCardDescription, HeaderCardHeading } from "@/components/header-card";
+import { AssignPlayersDialog } from "@/components/tournaments/assign-players-dialog";
 import { BracketList } from "@/components/tournaments/bracket-list";
 import { CreateBracketDialog } from "@/components/tournaments/create-bracket-dialog";
 import { EditCategoryDialog } from "@/components/tournaments/edit-category-dialog";
@@ -187,6 +188,13 @@ function CategoryDetailPage() {
           <h2 className="text-lg font-bold">Brackets</h2>
           <div className="flex items-center gap-2">
             <CreateBracketDialog categoryId={categoryId as Id<"categories">} />
+            {brackets && brackets.length > 0 && (
+              <AssignPlayersDialog
+                categoryId={categoryId as Id<"categories">}
+                categoryType={category.type}
+                brackets={brackets}
+              />
+            )}
           </div>
         </div>
         {brackets === undefined ? (
