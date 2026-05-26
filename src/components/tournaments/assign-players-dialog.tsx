@@ -7,6 +7,7 @@ import {
   DndContext,
   DragOverlay,
   PointerSensor,
+  TouchSensor,
   pointerWithin,
   useDraggable,
   useDroppable,
@@ -104,6 +105,7 @@ function DraggableParticipant({
   const style: CSSProperties = {
     transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
     opacity: isDragging ? 0.4 : 1,
+    touchAction: "none",
   };
 
   return (
@@ -141,7 +143,7 @@ function DroppableBracketBox({
   return (
     <div
       ref={setNodeRef}
-      className={`min-h-24 rounded-xl border-2 border-dashed p-3 transition-colors ${
+      className={`min-h-24 touch-none rounded-xl border-2 border-dashed p-3 transition-colors ${
         isOver
           ? "border-tournament-lime bg-tournament-lime/10"
           : maxReached
@@ -201,7 +203,7 @@ function UnassignedPool({
   return (
     <div
       ref={setNodeRef}
-      className={`min-h-40 rounded-xl border-2 border-dashed p-3 transition-colors ${
+      className={`min-h-40 touch-none rounded-xl border-2 border-dashed p-3 transition-colors ${
         isOver ? "border-blue-400 bg-blue-50/50" : "border-muted-foreground/20 bg-muted/5"
       }`}
     >
@@ -301,7 +303,10 @@ function AssignPlayersDialogContent({
 
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }),
+  );
 
   const assignedMap = new Map<Id<"categoryParticipants">, Assignment>();
   for (const a of assignments ?? []) {
