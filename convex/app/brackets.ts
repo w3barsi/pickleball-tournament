@@ -320,12 +320,24 @@ export const addParticipants = authedMutation({
       }
     }
 
+    const stageBracketIds = new Set(
+      (
+        await ctx.db
+          .query("brackets")
+          .withIndex("by_category_stage", (q) =>
+            q.eq("categoryId", bracket.categoryId).eq("stage", bracket.stage),
+          )
+          .collect()
+      ).map((b) => b._id),
+    );
+
     const inserted = [];
     for (const cpId of args.categoryParticipantIds) {
       const existing = await ctx.db
         .query("bracketParticipants")
         .withIndex("by_category_participant", (q) => q.eq("categoryParticipantId", cpId))
-        .unique();
+        .collect()
+        .then((bps) => bps.find((bp) => stageBracketIds.has(bp.bracketId)));
 
       if (existing) {
         continue;
@@ -343,15 +355,17 @@ export const addParticipants = authedMutation({
   },
 });
 
-export const listAssignmentsByCategory = authedQuery({
+export const listAssignmentsByStage = authedQuery({
   args: {
     categoryId: v.id("categories"),
+    stage: v.number(),
   },
   handler: async (ctx, args) => {
     const brackets = await ctx.db
       .query("brackets")
-      .withIndex("by_category", (q) => q.eq("categoryId", args.categoryId))
-      .order("asc")
+      .withIndex("by_category_stage", (q) =>
+        q.eq("categoryId", args.categoryId).eq("stage", args.stage),
+      )
       .collect();
 
     const assignments = [];

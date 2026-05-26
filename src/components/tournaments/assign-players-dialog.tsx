@@ -77,6 +77,7 @@ interface Assignment {
 interface AssignPlayersDialogProps {
   categoryId: Id<"categories">;
   categoryType: "singles" | "doubles";
+  stage: number;
   brackets: BracketItem[];
 }
 
@@ -207,7 +208,7 @@ function UnassignedPool({
       <h4 className="mb-2 text-sm font-bold text-muted-foreground">Unassigned Participants</h4>
       {participants.length === 0 ? (
         <p className="py-4 text-center text-xs text-muted-foreground">
-          All participants are assigned to brackets
+          All participants are assigned to brackets in this stage
         </p>
       ) : (
         <div className="flex flex-col gap-1.5">
@@ -246,19 +247,21 @@ type UniqueIdentifier = Id<"categoryParticipants">;
 function AssignPlayersDialogContent({
   categoryId,
   categoryType,
+  stage,
   brackets,
 }: AssignPlayersDialogProps) {
   const { data: participants } = useQuery(
     convexQuery(api.app.categoryParticipants.listByCategory, { categoryId }),
   );
   const { data: assignments } = useQuery(
-    convexQuery(api.app.brackets.listAssignmentsByCategory, { categoryId }),
+    convexQuery(api.app.brackets.listAssignmentsByStage, { categoryId, stage }),
   );
 
   const addParticipants = useMutation(api.app.brackets.addParticipants).withOptimisticUpdate(
     (localStore, args) => {
-      const current = localStore.getQuery(api.app.brackets.listAssignmentsByCategory, {
+      const current = localStore.getQuery(api.app.brackets.listAssignmentsByStage, {
         categoryId,
+        stage,
       });
       if (!current) return;
 
@@ -274,20 +277,25 @@ function AssignPlayersDialogContent({
           categoryParticipantId: cpId,
           status: "active",
         });
-        localStore.setQuery(api.app.brackets.listAssignmentsByCategory, { categoryId }, filtered);
+        localStore.setQuery(
+          api.app.brackets.listAssignmentsByStage,
+          { categoryId, stage },
+          filtered,
+        );
       }
     },
   );
 
   const removeParticipant = useMutation(api.app.brackets.removeParticipant).withOptimisticUpdate(
     (localStore, args) => {
-      const current = localStore.getQuery(api.app.brackets.listAssignmentsByCategory, {
+      const current = localStore.getQuery(api.app.brackets.listAssignmentsByStage, {
         categoryId,
+        stage,
       });
       if (!current) return;
 
       const updated = current.filter((a) => a._id !== args.bracketParticipantId);
-      localStore.setQuery(api.app.brackets.listAssignmentsByCategory, { categoryId }, updated);
+      localStore.setQuery(api.app.brackets.listAssignmentsByStage, { categoryId, stage }, updated);
     },
   );
 
@@ -380,43 +388,32 @@ function AssignPlayersDialogContent({
   const allParticipants = participants ?? [];
 
   return (
-    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+    <DndContext
+      sensors={sensors}
+      collisionDetection={pointerWithin}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
       <div className="grid gap-4 py-2 sm:grid-cols-[1fr_2fr]">
         <div>
           <UnassignedPool participants={unassigned} categoryType={categoryType} />
         </div>
-        <div className="space-y-4">
-          {(() => {
-            const stages = [...new Set(brackets.map((b) => b.stage))].sort((a, b) => a - b);
-            return stages.map((stage) => {
-              const stageBrackets = brackets.filter((b) => b.stage === stage);
-              return (
-                <div key={stage} className="space-y-3">
-                  <span className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-                    Stage {stage}
-                  </span>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {stageBrackets.map((bracket) => {
-                      const bps = bracketParticipantsMap.get(bracket._id) ?? [];
-                      const maxReached =
-                        bracket.maxParticipants !== undefined &&
-                        bps.length >= bracket.maxParticipants;
-                      return (
-                        <DroppableBracketBox
-                          key={bracket._id}
-                          bracket={bracket}
-                          participants={bps}
-                          categoryType={categoryType}
-                          onRemove={handleRemove}
-                          maxReached={maxReached}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            });
-          })()}
+        <div className="grid gap-3 sm:grid-cols-2">
+          {brackets.map((bracket) => {
+            const bps = bracketParticipantsMap.get(bracket._id) ?? [];
+            const maxReached =
+              bracket.maxParticipants !== undefined && bps.length >= bracket.maxParticipants;
+            return (
+              <DroppableBracketBox
+                key={bracket._id}
+                bracket={bracket}
+                participants={bps}
+                categoryType={categoryType}
+                onRemove={handleRemove}
+                maxReached={maxReached}
+              />
+            );
+          })}
         </div>
       </div>
 
@@ -439,6 +436,7 @@ function AssignPlayersDialogContent({
 export function AssignPlayersDialog({
   categoryId,
   categoryType,
+  stage,
   brackets,
 }: AssignPlayersDialogProps) {
   const [open, setOpen] = useState(false);
@@ -447,18 +445,18 @@ export function AssignPlayersDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={
-          <Button variant="secondary">
+          <Button variant="ghost" size="sm">
             <UserPlusIcon className="size-4" />
-            Assign to Brackets
+            Assign
           </Button>
         }
       />
       <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Assign Players to Brackets</DialogTitle>
+          <DialogTitle>Assign Players to Stage {stage}</DialogTitle>
           <DialogDescription>
-            Drag participants from the pool into bracket boxes to assign them. Drag them back to the
-            pool to unassign.
+            Drag participants from the pool into bracket boxes to assign them for this stage. Drag
+            them back to the pool to unassign.
           </DialogDescription>
         </DialogHeader>
 
@@ -466,6 +464,7 @@ export function AssignPlayersDialog({
           <AssignPlayersDialogContent
             categoryId={categoryId}
             categoryType={categoryType}
+            stage={stage}
             brackets={brackets}
           />
         ) : null}

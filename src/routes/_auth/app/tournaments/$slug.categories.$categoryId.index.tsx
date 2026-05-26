@@ -188,13 +188,6 @@ function CategoryDetailPage() {
           <h2 className="text-lg font-bold">Brackets</h2>
           <div className="flex items-center gap-2">
             <CreateBracketDialog categoryId={categoryId as Id<"categories">} />
-            {brackets && brackets.length > 0 && (
-              <AssignPlayersDialog
-                categoryId={categoryId as Id<"categories">}
-                categoryType={category.type}
-                brackets={brackets}
-              />
-            )}
           </div>
         </div>
         {brackets === undefined ? (
@@ -203,7 +196,17 @@ function CategoryDetailPage() {
             <p className="mt-2 text-muted-foreground">Loading brackets...</p>
           </div>
         ) : (
-          <BracketList brackets={brackets} />
+          <BracketList
+            brackets={brackets}
+            renderStageAction={(stage, stageBrackets) => (
+              <AssignPlayersDialog
+                categoryId={categoryId as Id<"categories">}
+                categoryType={category.type}
+                stage={stage}
+                brackets={stageBrackets}
+              />
+            )}
+          />
         )}
       </div>
 

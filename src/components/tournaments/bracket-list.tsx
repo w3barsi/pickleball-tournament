@@ -3,6 +3,7 @@
 import { Id } from "@convex/_generated/dataModel";
 import { Link } from "@tanstack/react-router";
 import { TrophyIcon, UsersIcon, SwordsIcon, ArrowRightIcon } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ interface BracketItem {
 
 interface BracketListProps {
   brackets: BracketItem[];
+  renderStageAction?: (stage: number, stageBrackets: BracketItem[]) => ReactNode;
 }
 
 function getFormatLabel(format: string) {
@@ -53,7 +55,7 @@ function getStatusBadge(status: string) {
   }
 }
 
-export function BracketList({ brackets }: BracketListProps) {
+export function BracketList({ brackets, renderStageAction }: BracketListProps) {
   if (brackets.length === 0) {
     return (
       <div className="rounded-xl border border-dashed py-12 text-center">
@@ -79,9 +81,12 @@ export function BracketList({ brackets }: BracketListProps) {
     <div className="space-y-10">
       {sortedStages.map(([stage, stageBrackets]) => (
         <div key={stage} className="space-y-3">
-          <span className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-            Stage {stage}
-          </span>
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+              Stage {stage}
+            </span>
+            {renderStageAction?.(stage, stageBrackets)}
+          </div>
           <ItemGroup className="gap-2">
             {stageBrackets.map((bracket) => (
               <Item key={bracket._id} variant="outline">
