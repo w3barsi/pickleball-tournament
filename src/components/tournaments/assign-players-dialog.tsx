@@ -143,7 +143,7 @@ function DroppableBracketBox({
   return (
     <div
       ref={setNodeRef}
-      className={`min-h-24 touch-none rounded-xl border-2 border-dashed p-3 transition-colors ${
+      className={`min-h-24 rounded-xl border-2 border-dashed p-3 transition-colors ${
         isOver
           ? "border-tournament-lime bg-tournament-lime/10"
           : maxReached
@@ -203,7 +203,7 @@ function UnassignedPool({
   return (
     <div
       ref={setNodeRef}
-      className={`min-h-40 touch-none rounded-xl border-2 border-dashed p-3 transition-colors ${
+      className={`min-h-40 rounded-xl border-2 border-dashed p-3 transition-colors ${
         isOver ? "border-blue-400 bg-blue-50/50" : "border-muted-foreground/20 bg-muted/5"
       }`}
     >
@@ -456,7 +456,7 @@ export function AssignPlayersDialog({
           </Button>
         }
       />
-      <DialogContent className="sm:max-w-3xl">
+      <DialogContent className="flex max-h-[90vh] flex-col sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>Assign Players to Stage {stage}</DialogTitle>
           <DialogDescription>
@@ -466,12 +466,14 @@ export function AssignPlayersDialog({
         </DialogHeader>
 
         {open ? (
-          <AssignPlayersDialogContent
-            categoryId={categoryId}
-            categoryType={categoryType}
-            stage={stage}
-            brackets={brackets}
-          />
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            <AssignPlayersDialogContent
+              categoryId={categoryId}
+              categoryType={categoryType}
+              stage={stage}
+              brackets={brackets}
+            />
+          </div>
         ) : null}
 
         <DialogFooter>
