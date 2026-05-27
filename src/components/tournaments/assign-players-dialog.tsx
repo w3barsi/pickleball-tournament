@@ -145,9 +145,11 @@ function DroppableBracketBox({
       ref={setNodeRef}
       className={`min-h-24 rounded-xl border-2 border-dashed p-3 transition-colors ${
         isOver
-          ? "border-tournament-lime bg-tournament-lime/10"
+          ? maxReached
+            ? "border-destructive bg-destructive/10"
+            : "border-tournament-lime bg-tournament-lime/10"
           : maxReached
-            ? "border-muted-foreground/20 bg-muted/30"
+            ? "border-destructive/40 bg-destructive/5"
             : "border-muted-foreground/30 bg-muted/10"
       }`}
     >
@@ -359,6 +361,12 @@ function AssignPlayersDialogContent({
 
     const targetBracketId = targetId as Id<"brackets">;
 
+    const targetBracket = brackets.find((b) => b._id === targetBracketId);
+    if (targetBracket?.maxParticipants !== undefined) {
+      const currentCount = bracketParticipantsMap.get(targetBracketId)?.length ?? 0;
+      if (currentCount >= targetBracket.maxParticipants) return;
+    }
+
     if (currentAssignment && currentAssignment.bracketId === targetBracketId) {
       return;
     }
@@ -393,12 +401,7 @@ function AssignPlayersDialogContent({
   const allParticipants = participants ?? [];
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={pointerWithin}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-    >
+    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="grid gap-4 py-2 sm:grid-cols-[1fr_2fr]">
         <div>
           <UnassignedPool participants={unassigned} categoryType={categoryType} />
