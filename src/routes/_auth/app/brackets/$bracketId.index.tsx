@@ -161,9 +161,21 @@ function BracketDetailPage() {
             {getStatusBadge(bracket.status)}
           </div>
           <HeaderCardDescription>
-            {tournament.name} · {category.name} · Stage {bracket.stage} ·{" "}
-            {getFormatLabel(bracket.format)}
+            {tournament.name} · {category.name} · Stage {bracket.stage}
           </HeaderCardDescription>
+          <p className="mt-1 flex items-center gap-2 text-xs font-semibold tracking-wide text-white/70">
+            <span>{getFormatLabel(bracket.format)}</span>
+            <span className="text-white/40">·</span>
+            <span>Best of {bracket.numberOfSets}</span>
+            <span className="text-white/40">·</span>
+            <span>First to {bracket.pointsPerGame}</span>
+            {bracket.winByTwo && (
+              <>
+                <span className="text-white/40">·</span>
+                <span>Win by 2</span>
+              </>
+            )}
+          </p>
         </div>
         <AlertDialog>
           <AlertDialogTrigger
