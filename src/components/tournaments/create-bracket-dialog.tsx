@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -49,6 +50,9 @@ export function CreateBracketDialog({ categoryId }: CreateBracketDialogProps) {
       stage: "1",
       format: "roundRobin" as "roundRobin" | "singleElimination",
       maxParticipants: "",
+      numberOfSets: "3",
+      pointsPerGame: "11",
+      winByTwo: true,
     },
     onSubmit: async ({ value }) => {
       setServerError(null);
@@ -59,6 +63,9 @@ export function CreateBracketDialog({ categoryId }: CreateBracketDialogProps) {
           stage: Number(value.stage),
           format: value.format,
           maxParticipants: value.maxParticipants ? Number(value.maxParticipants) : undefined,
+          numberOfSets: value.numberOfSets ? Number(value.numberOfSets) : undefined,
+          pointsPerGame: value.pointsPerGame ? Number(value.pointsPerGame) : undefined,
+          winByTwo: value.winByTwo,
         });
         toast.success("Bracket created");
         setOpen(false);
@@ -195,6 +202,58 @@ export function CreateBracketDialog({ categoryId }: CreateBracketDialogProps) {
                     onBlur={field.handleBlur}
                     placeholder="∞"
                   />
+                </div>
+              )}
+            </form.Field>
+
+            <div className="grid grid-cols-2 gap-4">
+              <form.Field name="numberOfSets">
+                {(field) => (
+                  <div className="space-y-2">
+                    <Label htmlFor={field.name}>Number of Sets</Label>
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      type="number"
+                      min={1}
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      onBlur={field.handleBlur}
+                    />
+                  </div>
+                )}
+              </form.Field>
+
+              <form.Field name="pointsPerGame">
+                {(field) => (
+                  <div className="space-y-2">
+                    <Label htmlFor={field.name}>Points Per Game</Label>
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      type="number"
+                      min={1}
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      onBlur={field.handleBlur}
+                    />
+                  </div>
+                )}
+              </form.Field>
+            </div>
+
+            <form.Field name="winByTwo">
+              {(field) => (
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id={field.name}
+                    name={field.name}
+                    checked={field.state.value}
+                    onCheckedChange={(checked) => field.handleChange(checked === true)}
+                  />
+                  <Label htmlFor={field.name} className="cursor-pointer">
+                    Win by two (slide-2 scoring)
+                  </Label>
                 </div>
               )}
             </form.Field>

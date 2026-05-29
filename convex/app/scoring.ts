@@ -179,6 +179,7 @@ export const getMatchForScorer = authedQuery({
       viewedSet = allSets.find((s) => s.setNumber === args.viewSetNumber) ?? currentSet;
     }
 
+    const bracket = await ctx.db.get(match.bracketId);
     let currentSetPoints: Doc<"pickleballPoints">[] = [];
     let computedState: SetState | null = null;
 
@@ -189,11 +190,14 @@ export const getMatchForScorer = authedQuery({
         .order("asc")
         .collect();
 
-      computedState = computeSetState(currentSetPoints, viewedSet.targetScore, match.winByTwo);
+      const winByTwo = bracket?.winByTwo ?? true;
+
+      computedState = computeSetState(currentSetPoints, viewedSet.targetScore, winByTwo);
     }
 
     return {
       match,
+      bracket,
       participant1,
       participant2,
       categoryType,
@@ -222,6 +226,11 @@ export const startMatch = authedMutation({
       throw new Error("Match has already started");
     }
 
+    const bracket = await ctx.db.get(match.bracketId);
+    if (!bracket) {
+      throw new Error("Bracket not found");
+    }
+
     const now = Date.now();
 
     await ctx.db.patch(args.matchId, {
@@ -235,7 +244,8 @@ export const startMatch = authedMutation({
       setNumber: 1,
       team1Score: 0,
       team2Score: 0,
-      targetScore: match.pointsPerGame,
+      targetScore: bracket.pointsPerGame ?? 11,
+
       status: "inProgress",
     });
 
@@ -260,6 +270,11 @@ export const recordPoint = authedMutation({
       throw new Error("Match is not in progress");
     }
 
+    const bracket = await ctx.db.get(match.bracketId);
+    if (!bracket) {
+      throw new Error("Bracket not found");
+    }
+
     const sets = await ctx.db
       .query("matchSets")
       .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
@@ -272,7 +287,7 @@ export const recordPoint = authedMutation({
     if (!currentSet) {
       const completedSets = sets.filter((s) => s.status === "completed");
       const nextSetNumber = completedSets.length + 1;
-      if (nextSetNumber > match.numberOfSets) {
+      if (nextSetNumber > (bracket.numberOfSets ?? 3)) {
         throw new Error("All sets have been played");
       }
       const newSetId = await ctx.db.insert("matchSets", {
@@ -280,7 +295,7 @@ export const recordPoint = authedMutation({
         setNumber: nextSetNumber,
         team1Score: 0,
         team2Score: 0,
-        targetScore: match.pointsPerGame,
+        targetScore: bracket.pointsPerGame ?? 11,
         status: "inProgress",
       });
       currentSet = await ctx.db.get(newSetId);
@@ -298,7 +313,11 @@ export const recordPoint = authedMutation({
 
     const sequenceNumber = existingPoints.length;
 
-    const beforeState = computeSetState(existingPoints, currentSet.targetScore, match.winByTwo);
+    const beforeState = computeSetState(
+      existingPoints,
+      currentSet.targetScore,
+      bracket.winByTwo ?? true,
+    );
 
     await ctx.db.insert("pickleballPoints", {
       matchSetId: currentSet._id,
@@ -315,7 +334,7 @@ export const recordPoint = authedMutation({
     const afterState = computeSetState(
       [...existingPoints, { pointWinner: args.pointWinner }],
       currentSet.targetScore,
-      match.winByTwo,
+      bracket.winByTwo ?? true,
     );
 
     await ctx.db.patch(currentSet._id, {
@@ -347,6 +366,11 @@ export const confirmSetComplete = authedMutation({
       throw new Error("Match is not in progress");
     }
 
+    const bracket = await ctx.db.get(match.bracketId);
+    if (!bracket) {
+      throw new Error("Bracket not found");
+    }
+
     const sets = await ctx.db
       .query("matchSets")
       .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
@@ -363,7 +387,7 @@ export const confirmSetComplete = authedMutation({
       .withIndex("by_match_set", (q) => q.eq("matchSetId", currentSet._id))
       .collect();
 
-    const state = computeSetState(points, currentSet.targetScore, match.winByTwo);
+    const state = computeSetState(points, currentSet.targetScore, bracket.winByTwo ?? true);
 
     if (!state.isGameOver || !state.winner) {
       throw new Error("Set is not over yet");
@@ -381,7 +405,7 @@ export const confirmSetComplete = authedMutation({
       sets.filter((s) => s.winnerTeam === 1).length + (state.winner === 1 ? 1 : 0);
     const team2SetWins =
       sets.filter((s) => s.winnerTeam === 2).length + (state.winner === 2 ? 1 : 0);
-    const needed = setsNeededToWin(match.numberOfSets);
+    const needed = setsNeededToWin(bracket.numberOfSets ?? 3);
 
     if (team1SetWins >= needed || team2SetWins >= needed) {
       const matchWinner = team1SetWins >= needed ? 1 : 2;
@@ -398,13 +422,13 @@ export const confirmSetComplete = authedMutation({
       await updateParticipantRecords(ctx, winnerParticipantId, loserParticipantId, 1);
     } else {
       const nextSetNumber = sets.length + 1;
-      if (nextSetNumber <= match.numberOfSets) {
+      if (nextSetNumber <= (bracket.numberOfSets ?? 3)) {
         await ctx.db.insert("matchSets", {
           matchId: args.matchId,
           setNumber: nextSetNumber,
           team1Score: 0,
           team2Score: 0,
-          targetScore: match.pointsPerGame,
+          targetScore: bracket.pointsPerGame ?? 11,
           status: "inProgress",
         });
       }
@@ -429,6 +453,11 @@ export const undoLastPoint = authedMutation({
     }
 
     await requireManageTournament(ctx, match.tournamentId);
+
+    const bracket = await ctx.db.get(match.bracketId);
+    if (!bracket) {
+      throw new Error("Bracket not found");
+    }
 
     let targetSet: Doc<"matchSets"> | null = null;
     let lastPoint: Doc<"pickleballPoints"> | null = null;
@@ -514,12 +543,12 @@ export const undoLastPoint = authedMutation({
         .order("asc")
         .collect();
 
-      let state = computeSetState(remainingPoints, targetSet.targetScore, match.winByTwo);
+      let state = computeSetState(remainingPoints, targetSet.targetScore, bracket.winByTwo ?? true);
       while (state.isGameOver && remainingPoints.length > 0) {
         const pointToDelete = remainingPoints[remainingPoints.length - 1];
         await ctx.db.delete(pointToDelete._id);
         remainingPoints = remainingPoints.slice(0, -1);
-        state = computeSetState(remainingPoints, targetSet.targetScore, match.winByTwo);
+        state = computeSetState(remainingPoints, targetSet.targetScore, bracket.winByTwo ?? true);
       }
 
       await ctx.db.patch(targetSet._id, {
@@ -535,7 +564,11 @@ export const undoLastPoint = authedMutation({
         .order("asc")
         .collect();
 
-      const state = computeSetState(remainingPoints, targetSet.targetScore, match.winByTwo);
+      const state = computeSetState(
+        remainingPoints,
+        targetSet.targetScore,
+        bracket.winByTwo ?? true,
+      );
 
       await ctx.db.patch(targetSet._id, {
         team1Score: state.team1Score,

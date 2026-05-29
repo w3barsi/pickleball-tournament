@@ -9,7 +9,6 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -83,9 +82,6 @@ export function CreateMatchDialog({
       scheduledAt: "",
       refereeName: "",
       matchOrder: "",
-      numberOfSets: "3",
-      pointsPerGame: "11",
-      winByTwo: true,
     },
     onSubmit: async ({ value }) => {
       setServerError(null);
@@ -109,9 +105,6 @@ export function CreateMatchDialog({
           scheduledAt: value.scheduledAt ? new Date(value.scheduledAt).getTime() : undefined,
           refereeName: value.refereeName || undefined,
           matchOrder: value.matchOrder ? Number(value.matchOrder) : undefined,
-          numberOfSets: value.numberOfSets ? Number(value.numberOfSets) : undefined,
-          pointsPerGame: value.pointsPerGame ? Number(value.pointsPerGame) : undefined,
-          winByTwo: value.winByTwo,
         });
         toast.success("Match created");
         setOpen(false);
@@ -296,74 +289,20 @@ export function CreateMatchDialog({
               </form.Field>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
-              <form.Field name="matchOrder">
-                {(field) => (
-                  <div className="space-y-2">
-                    <Label htmlFor={field.name}>Match Order</Label>
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      type="number"
-                      min={1}
-                      value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      onBlur={field.handleBlur}
-                      placeholder="Optional"
-                    />
-                  </div>
-                )}
-              </form.Field>
-
-              <form.Field name="numberOfSets">
-                {(field) => (
-                  <div className="space-y-2">
-                    <Label htmlFor={field.name}>Number of Sets</Label>
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      type="number"
-                      min={1}
-                      value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      onBlur={field.handleBlur}
-                      placeholder="Default: 3"
-                    />
-                  </div>
-                )}
-              </form.Field>
-
-              <form.Field name="pointsPerGame">
-                {(field) => (
-                  <div className="space-y-2">
-                    <Label htmlFor={field.name}>Points Per Game</Label>
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      type="number"
-                      min={1}
-                      value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      onBlur={field.handleBlur}
-                      placeholder="Default: 11"
-                    />
-                  </div>
-                )}
-              </form.Field>
-            </div>
-
-            <form.Field name="winByTwo">
+            <form.Field name="matchOrder">
               {(field) => (
-                <div className="flex items-center gap-2">
-                  <Checkbox
+                <div className="space-y-2">
+                  <Label htmlFor={field.name}>Match Order</Label>
+                  <Input
                     id={field.name}
                     name={field.name}
-                    checked={field.state.value}
-                    onCheckedChange={(checked) => field.handleChange(checked === true)}
+                    type="number"
+                    min={1}
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    onBlur={field.handleBlur}
+                    placeholder="Optional"
                   />
-                  <Label htmlFor={field.name} className="cursor-pointer">
-                    Win by two (slide-2 scoring)
-                  </Label>
                 </div>
               )}
             </form.Field>

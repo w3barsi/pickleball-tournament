@@ -180,6 +180,9 @@ export const create = authedMutation({
     stage: v.number(),
     format: v.union(v.literal("roundRobin"), v.literal("singleElimination")),
     maxParticipants: v.optional(v.number()),
+    numberOfSets: v.optional(v.number()),
+    pointsPerGame: v.optional(v.number()),
+    winByTwo: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const tournamentId = await getCategoryTournamentId(ctx, args.categoryId);
@@ -196,6 +199,9 @@ export const create = authedMutation({
       format: args.format,
       status: "upcoming",
       maxParticipants: args.maxParticipants,
+      numberOfSets: args.numberOfSets ?? 3,
+      pointsPerGame: args.pointsPerGame ?? 11,
+      winByTwo: args.winByTwo ?? true,
     });
 
     return bracketId;

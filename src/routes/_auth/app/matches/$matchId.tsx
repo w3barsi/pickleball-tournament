@@ -296,9 +296,9 @@ function MatchDetailPage() {
             <div className="flex justify-between">
               <span className="text-muted-foreground">Format</span>
               <span className="font-medium">
-                {match.numberOfSets} {match.numberOfSets === 1 ? "set" : "sets"} ·{" "}
-                {match.pointsPerGame} points
-                {match.winByTwo ? " (win by 2)" : " (win at target)"}
+                {bracket?.numberOfSets ?? 3} {bracket?.numberOfSets === 1 ? "set" : "sets"} ·{" "}
+                {bracket?.pointsPerGame ?? 11} points
+                {bracket?.winByTwo ? " (win by 2)" : " (win at target)"}
               </span>
             </div>
             <div className="flex justify-between">

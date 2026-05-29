@@ -18,7 +18,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -124,9 +123,6 @@ export function EditMatchDialog({ match }: EditMatchDialogProps) {
       matchNotes: match.matchNotes ?? "",
       roundNumber: match.roundNumber?.toString() ?? "",
       matchOrder: match.matchOrder?.toString() ?? "",
-      numberOfSets: match.numberOfSets?.toString() ?? "3",
-      pointsPerGame: match.pointsPerGame?.toString() ?? "11",
-      winByTwo: match.winByTwo ?? true,
     },
     onSubmit: async ({ value }) => {
       setServerError(null);
@@ -140,9 +136,6 @@ export function EditMatchDialog({ match }: EditMatchDialogProps) {
           matchNotes: value.matchNotes || undefined,
           roundNumber: value.roundNumber ? Number(value.roundNumber) : undefined,
           matchOrder: value.matchOrder ? Number(value.matchOrder) : undefined,
-          numberOfSets: value.numberOfSets ? Number(value.numberOfSets) : undefined,
-          pointsPerGame: value.pointsPerGame ? Number(value.pointsPerGame) : undefined,
-          winByTwo: value.winByTwo,
         });
         toast.success("Match updated");
         setOpen(false);
@@ -329,58 +322,6 @@ export function EditMatchDialog({ match }: EditMatchDialogProps) {
                     onBlur={field.handleBlur}
                     placeholder="Optional notes about this match"
                   />
-                </Field>
-              )}
-            </form.Field>
-
-            <FieldGroup className="grid grid-cols-2 gap-4">
-              <form.Field name="numberOfSets">
-                {(field) => (
-                  <Field>
-                    <FieldLabel>Number of Sets</FieldLabel>
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      type="number"
-                      min={1}
-                      value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      onBlur={field.handleBlur}
-                    />
-                  </Field>
-                )}
-              </form.Field>
-
-              <form.Field name="pointsPerGame">
-                {(field) => (
-                  <Field>
-                    <FieldLabel>Points Per Game</FieldLabel>
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      type="number"
-                      min={1}
-                      value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      onBlur={field.handleBlur}
-                    />
-                  </Field>
-                )}
-              </form.Field>
-            </FieldGroup>
-
-            <form.Field name="winByTwo">
-              {(field) => (
-                <Field orientation="horizontal">
-                  <Checkbox
-                    id={field.name}
-                    name={field.name}
-                    checked={field.state.value}
-                    onCheckedChange={(checked) => field.handleChange(checked === true)}
-                  />
-                  <FieldLabel htmlFor={field.name} className="cursor-pointer">
-                    Win by two (slide-2 scoring)
-                  </FieldLabel>
                 </Field>
               )}
             </form.Field>

@@ -96,6 +96,9 @@ export default defineSchema({
     format: v.union(v.literal("roundRobin"), v.literal("singleElimination")),
     status: v.union(v.literal("upcoming"), v.literal("inProgress"), v.literal("completed")),
     maxParticipants: v.optional(v.number()),
+    numberOfSets: v.number(),
+    pointsPerGame: v.number(),
+    winByTwo: v.boolean(),
     deletedAt: v.optional(v.number()),
   })
     .index("by_category", ["categoryId"])
@@ -143,9 +146,6 @@ export default defineSchema({
     isBye: v.optional(v.boolean()),
     roundNumber: v.optional(v.number()),
     matchOrder: v.optional(v.number()),
-    numberOfSets: v.number(),
-    pointsPerGame: v.number(),
-    winByTwo: v.boolean(),
     deletedAt: v.optional(v.number()),
   })
     .index("by_tournament", ["tournamentId"])

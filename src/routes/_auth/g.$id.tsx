@@ -174,7 +174,7 @@ function ScorerPage() {
       const newState = computeSetState(
         newPoints.map((p) => ({ pointWinner: p.pointWinner })),
         current.currentSet.targetScore,
-        current.match.winByTwo,
+        current.bracket?.winByTwo ?? true,
       );
 
       localStore.setQuery(api.app.scoring.getMatchForScorer, queryKey, {
@@ -195,7 +195,7 @@ function ScorerPage() {
       const newState = computeSetState(
         newPoints.map((p) => ({ pointWinner: p.pointWinner })),
         current.currentSet.targetScore,
-        current.match.winByTwo,
+        current.bracket?.winByTwo ?? true,
       );
 
       localStore.setQuery(api.app.scoring.getMatchForScorer, queryKey, {
@@ -211,6 +211,7 @@ function ScorerPage() {
   const [showForfeitConfirm, setShowForfeitConfirm] = useState<1 | 2 | null>(null);
 
   const match = matchData?.match;
+  const bracket = matchData?.bracket;
   const participant1 = matchData?.participant1;
   const participant2 = matchData?.participant2;
   const categoryType = matchData?.categoryType ?? "singles";
@@ -232,7 +233,7 @@ function ScorerPage() {
   const team1SetWins = allSets.filter((s) => s.winnerTeam === 1).length;
   const team2SetWins = allSets.filter((s) => s.winnerTeam === 2).length;
 
-  const totalSets = match?.numberOfSets ?? 3;
+  const totalSets = bracket?.numberOfSets ?? 3;
 
   const getScoreAnnouncement = useCallback(() => {
     if (!computedState) return "";
@@ -340,8 +341,8 @@ function ScorerPage() {
             {team1Name} <span className="text-muted-foreground">vs</span> {team2Name}
           </h1>
           <p className="text-sm text-muted-foreground">
-            Set {currentSet?.setNumber ?? 1} of {totalSets} · {match.pointsPerGame} points
-            {match.winByTwo ? " (win by 2)" : " (win at target)"}
+            Set {currentSet?.setNumber ?? 1} of {totalSets} · {bracket?.pointsPerGame ?? 11} points
+            {bracket?.winByTwo ? " (win by 2)" : " (win at target)"}
             {!isViewingActiveSet && <span className="ml-1 text-amber-600">(viewing)</span>}
           </p>
         </div>
