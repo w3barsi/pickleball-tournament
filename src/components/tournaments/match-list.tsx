@@ -5,26 +5,9 @@ import { api } from "@convex/_generated/api.js";
 import { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { useMutation } from "convex/react";
-import {
-  SwordsIcon,
-  CheckCircle2Icon,
-  ClockIcon,
-  PlayIcon,
-  Loader2Icon,
-  RadioIcon,
-  ChevronDownIcon,
-} from "lucide-react";
-import { toast } from "sonner";
+import { SwordsIcon, CheckCircle2Icon, ClockIcon, PlayIcon, Loader2Icon } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -43,14 +26,6 @@ interface MatchParticipant {
   playerTwo?: { fullName: string } | null;
 }
 
-interface MatchSet {
-  _id: Id<"matchSets">;
-  setNumber: number;
-  team1Score: number;
-  team2Score: number;
-  winnerTeam?: 1 | 2 | null;
-}
-
 interface MatchItem {
   _id: Id<"matches">;
   status: "scheduled" | "inProgress" | "completed" | "abandoned";
@@ -60,7 +35,6 @@ interface MatchItem {
   courtNumber?: number | null;
   scheduledAt?: number | null;
   matchOrder?: number | null;
-  matchSets: MatchSet[];
 }
 
 interface MatchListProps {
@@ -119,18 +93,6 @@ function getParticipantName(
   return `${participant.playerOne?.fullName ?? "Unknown"} / ${participant.playerTwo?.fullName ?? "Unknown"}`;
 }
 
-function getMatchScore(match: MatchItem) {
-  if (match.matchSets.length > 0) {
-    const p1Wins = match.matchSets.filter((s) => s.winnerTeam === 1).length;
-    const p2Wins = match.matchSets.filter((s) => s.winnerTeam === 2).length;
-    return `${p1Wins} - ${p2Wins}`;
-  }
-  if (match.status === "completed" && match.winnerParticipantId) {
-    return "W - L";
-  }
-  return "—";
-}
-
 function getSeedLabel(seed: number | null | undefined, bracketLabel?: string | null) {
   if (seed == null) return null;
   return `${bracketLabel ?? ""}${seed}`;
@@ -140,17 +102,7 @@ export function MatchList({ bracketId, bracketLabel, categoryType }: MatchListPr
   const { data: matchData } = useQuery(convexQuery(api.app.matches.listByBracket, { bracketId }));
   const matches = matchData?.matches;
 
-  const updateResult = useMutation(api.app.matches.updateResult);
   const navigate = useNavigate();
-
-  const handleSetWinner = async (matchId: Id<"matches">, winnerId: Id<"categoryParticipants">) => {
-    try {
-      await updateResult({ matchId, winnerParticipantId: winnerId });
-      toast.success("Winner recorded");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to record winner");
-    }
-  };
 
   if (matches === undefined) {
     return (
@@ -179,9 +131,7 @@ export function MatchList({ bracketId, bracketLabel, categoryType }: MatchListPr
             <TableRow>
               <TableHead className="w-24 whitespace-nowrap">Match</TableHead>
               <TableHead>Participants</TableHead>
-              <TableHead className="w-20 text-center">Score</TableHead>
               <TableHead className="w-28">Status</TableHead>
-              <TableHead className="w-32" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -235,64 +185,7 @@ export function MatchList({ bracketId, bracketLabel, categoryType }: MatchListPr
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-center font-mono text-lg font-semibold">
-                    {getMatchScore(match)}
-                  </TableCell>
                   <TableCell>{getStatusBadge(match.status)}</TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap items-center justify-end gap-1">
-                      {match.status !== "completed" && match.participant1 && match.participant2 && (
-                        <>
-                          <Button
-                            variant="ghost"
-                            className="h-7 px-2 text-xs"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate({
-                                to: "/g/$id",
-                                params: { id: match._id },
-                              });
-                            }}
-                          >
-                            <RadioIcon className="mr-1 size-3" />
-                            Scorer
-                          </Button>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger
-                              render={
-                                <Button
-                                  variant="ghost"
-                                  className="h-7 px-2 text-xs"
-                                  onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                                >
-                                  Set Winner
-                                  <ChevronDownIcon className="ml-1 size-3" />
-                                </Button>
-                              }
-                            />
-                            <DropdownMenuContent align="end" className="w-full">
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleSetWinner(match._id, match.participant1!._id);
-                                }}
-                              >
-                                {p1Name}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleSetWinner(match._id, match.participant2!._id);
-                                }}
-                              >
-                                {p2Name}
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </>
-                      )}
-                    </div>
-                  </TableCell>
                 </TableRow>
               );
             })}
