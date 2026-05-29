@@ -1,6 +1,6 @@
 export function HeaderCard({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-blue-500 px-2 py-12 lg:px-14">
+    <div className="relative overflow-hidden rounded-lg bg-blue-500 px-2 py-12 lg:px-14">
       {/* Decorative circles */}
       <div className="pointer-events-none absolute -top-10 -right-10 z-0 h-40 w-40 rounded-full bg-lime-400 opacity-50" />
       <div className="pointer-events-none absolute -bottom-8 -left-8 h-24 w-24 rounded-full bg-white opacity-15" />
