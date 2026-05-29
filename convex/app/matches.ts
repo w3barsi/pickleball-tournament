@@ -88,6 +88,15 @@ export const listByBracket = authedQuery({
       .order("asc")
       .collect();
 
+    const bracketParticipants = await ctx.db
+      .query("bracketParticipants")
+      .withIndex("by_bracket", (q) => q.eq("bracketId", args.bracketId))
+      .collect();
+
+    const seedByCategoryParticipant = new Map(
+      bracketParticipants.map((bp) => [bp.categoryParticipantId, bp.seed ?? null]),
+    );
+
     const results = [];
     for (const match of matches) {
       const p1 = await ctx.db.get(match.participant1Id);
@@ -99,7 +108,7 @@ export const listByBracket = authedQuery({
       if (p1) {
         if (category.type === "singles") {
           const player = p1.playerId ? await ctx.db.get(p1.playerId) : null;
-          participant1 = { ...p1, player };
+          participant1 = { ...p1, player, seed: seedByCategoryParticipant.get(p1._id) ?? null };
         } else {
           const pair = p1.pairId ? await ctx.db.get(p1.pairId) : null;
           let playerOne = null;
@@ -108,14 +117,20 @@ export const listByBracket = authedQuery({
             playerOne = await ctx.db.get(pair.playerOne);
             playerTwo = await ctx.db.get(pair.playerTwo);
           }
-          participant1 = { ...p1, pair, playerOne, playerTwo };
+          participant1 = {
+            ...p1,
+            pair,
+            playerOne,
+            playerTwo,
+            seed: seedByCategoryParticipant.get(p1._id) ?? null,
+          };
         }
       }
 
       if (p2) {
         if (category.type === "singles") {
           const player = p2.playerId ? await ctx.db.get(p2.playerId) : null;
-          participant2 = { ...p2, player };
+          participant2 = { ...p2, player, seed: seedByCategoryParticipant.get(p2._id) ?? null };
         } else {
           const pair = p2.pairId ? await ctx.db.get(p2.pairId) : null;
           let playerOne = null;
@@ -124,7 +139,13 @@ export const listByBracket = authedQuery({
             playerOne = await ctx.db.get(pair.playerOne);
             playerTwo = await ctx.db.get(pair.playerTwo);
           }
-          participant2 = { ...p2, pair, playerOne, playerTwo };
+          participant2 = {
+            ...p2,
+            pair,
+            playerOne,
+            playerTwo,
+            seed: seedByCategoryParticipant.get(p2._id) ?? null,
+          };
         }
       }
 
@@ -142,7 +163,7 @@ export const listByBracket = authedQuery({
       });
     }
 
-    return results;
+    return { matches: results, bracketLabel: bracket.label ?? null };
   },
 });
 
@@ -289,7 +310,6 @@ export const create = authedMutation({
     courtNumber: v.optional(v.number()),
     scheduledAt: v.optional(v.number()),
     refereeName: v.optional(v.string()),
-    roundNumber: v.optional(v.number()),
     matchOrder: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
@@ -336,7 +356,6 @@ export const create = authedMutation({
       courtNumber: args.courtNumber,
       scheduledAt: args.scheduledAt,
       refereeName: args.refereeName,
-      roundNumber: args.roundNumber,
       matchOrder: args.matchOrder,
       lastUpdatedAt: Date.now(),
     });
@@ -360,7 +379,6 @@ export const update = authedMutation({
     scheduledAt: v.optional(v.number()),
     refereeName: v.optional(v.string()),
     matchNotes: v.optional(v.string()),
-    roundNumber: v.optional(v.number()),
     matchOrder: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
@@ -562,7 +580,6 @@ export const generateRoundRobin = authedMutation({
           participant1Id: p1,
           participant2Id: p2,
           status: "scheduled",
-          roundNumber: j - i,
           matchOrder,
           lastUpdatedAt: Date.now(),
         });

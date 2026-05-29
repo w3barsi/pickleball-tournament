@@ -148,7 +148,7 @@ function MatchDetailPage() {
         <div>
           <div className="mb-2 flex items-center gap-3">
             <HeaderCardHeading>
-              Match {match.roundNumber ? `R${match.roundNumber}` : ""}
+              Match
               {match.matchOrder ? ` · M${match.matchOrder}` : ""}
             </HeaderCardHeading>
             {getStatusBadge(match.status)}

@@ -27,6 +27,7 @@ import {
 
 interface BracketParticipant {
   _id: Id<"bracketParticipants">;
+  seed?: number;
   status: "active" | "eliminated" | "withdrawn";
   categoryParticipant: {
     _id: Id<"categoryParticipants">;
@@ -42,6 +43,7 @@ interface BracketParticipant {
 
 interface BracketParticipantListProps {
   participants: BracketParticipant[];
+  bracketLabel?: string;
   categoryType: "singles" | "doubles";
   onRemove: (bracketParticipantId: Id<"bracketParticipants">) => void;
 }
@@ -61,6 +63,7 @@ function getStatusBadge(status: string) {
 
 export function BracketParticipantList({
   participants,
+  bracketLabel,
   categoryType,
   onRemove,
 }: BracketParticipantListProps) {
@@ -79,6 +82,7 @@ export function BracketParticipantList({
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>Label</TableHead>
               <TableHead>Participant</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Record</TableHead>
@@ -88,7 +92,7 @@ export function BracketParticipantList({
           <TableBody>
             {participants.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
+                <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
                   No participants in this bracket yet
                 </TableCell>
               </TableRow>
@@ -104,6 +108,9 @@ export function BracketParticipantList({
 
                 return (
                   <TableRow key={bp._id}>
+                    <TableCell className="font-mono font-semibold">
+                      {bp.seed != null ? `${bracketLabel ?? ""}${bp.seed}` : "—"}
+                    </TableCell>
                     <TableCell className="font-medium">
                       {name}
                       {categoryType === "doubles" && cp.pair?.teamName && (

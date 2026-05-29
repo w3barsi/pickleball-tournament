@@ -39,6 +39,11 @@ const FORMAT_OPTIONS = [
   { value: "singleElimination", label: "Single Elimination" },
 ] as const;
 
+const LABEL_OPTIONS = Array.from({ length: 26 }, (_, i) => {
+  const letter = String.fromCharCode(65 + i);
+  return { value: letter, label: letter };
+});
+
 export function CreateBracketDialog({ categoryId }: CreateBracketDialogProps) {
   const [open, setOpen] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -47,6 +52,7 @@ export function CreateBracketDialog({ categoryId }: CreateBracketDialogProps) {
   const form = useForm({
     defaultValues: {
       name: "",
+      label: "",
       stage: "1",
       format: "roundRobin" as "roundRobin" | "singleElimination",
       maxParticipants: "",
@@ -60,6 +66,7 @@ export function CreateBracketDialog({ categoryId }: CreateBracketDialogProps) {
         await createBracket({
           categoryId,
           name: value.name.trim(),
+          label: value.label || undefined,
           stage: Number(value.stage),
           format: value.format,
           maxParticipants: value.maxParticipants ? Number(value.maxParticipants) : undefined,
@@ -188,23 +195,50 @@ export function CreateBracketDialog({ categoryId }: CreateBracketDialogProps) {
               </form.Field>
             </div>
 
-            <form.Field name="maxParticipants">
-              {(field) => (
-                <div className="space-y-2">
-                  <Label htmlFor={field.name}>Max Participants</Label>
-                  <Input
-                    id={field.name}
-                    name={field.name}
-                    type="number"
-                    min={1}
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    onBlur={field.handleBlur}
-                    placeholder="∞"
-                  />
-                </div>
-              )}
-            </form.Field>
+            <div className="grid grid-cols-2 gap-4">
+              <form.Field name="maxParticipants">
+                {(field) => (
+                  <div className="space-y-2">
+                    <Label htmlFor={field.name}>Max Participants</Label>
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      type="number"
+                      min={1}
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      onBlur={field.handleBlur}
+                      placeholder="∞"
+                    />
+                  </div>
+                )}
+              </form.Field>
+
+              <form.Field name="label">
+                {(field) => (
+                  <div className="space-y-2">
+                    <Label>Label</Label>
+                    <Select
+                      value={field.state.value}
+                      onValueChange={(v) => field.handleChange(v ?? "")}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="None" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          {LABEL_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </form.Field>
+            </div>
 
             <div className="grid grid-cols-2 gap-4">
               <form.Field name="numberOfSets">

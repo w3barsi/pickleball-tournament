@@ -20,6 +20,7 @@ import {
 interface BracketItem {
   _id: Id<"brackets">;
   name: string;
+  label?: string;
   stage: number;
   format: "roundRobin" | "singleElimination";
   status: "upcoming" | "inProgress" | "completed";
@@ -109,6 +110,11 @@ export function BracketList({ brackets, renderStageAction }: BracketListProps) {
                         {bracket.name}
                       </Button>
                     </ItemTitle>
+                    {bracket.label && (
+                      <Badge variant="outline" className="font-mono">
+                        {bracket.label}
+                      </Badge>
+                    )}
                     {getStatusBadge(bracket.status)}
                     <Badge variant="outline">{getFormatLabel(bracket.format)}</Badge>
                   </div>

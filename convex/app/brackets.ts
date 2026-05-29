@@ -177,6 +177,7 @@ export const create = authedMutation({
   args: {
     categoryId: v.id("categories"),
     name: v.string(),
+    label: v.optional(v.string()),
     stage: v.number(),
     format: v.union(v.literal("roundRobin"), v.literal("singleElimination")),
     maxParticipants: v.optional(v.number()),
@@ -195,6 +196,7 @@ export const create = authedMutation({
     const bracketId = await ctx.db.insert("brackets", {
       categoryId: args.categoryId,
       name: args.name,
+      label: args.label,
       stage: args.stage,
       format: args.format,
       status: "upcoming",
@@ -212,12 +214,16 @@ export const update = authedMutation({
   args: {
     bracketId: v.id("brackets"),
     name: v.optional(v.string()),
+    label: v.optional(v.string()),
     stage: v.optional(v.number()),
     format: v.optional(v.union(v.literal("roundRobin"), v.literal("singleElimination"))),
     status: v.optional(
       v.union(v.literal("upcoming"), v.literal("inProgress"), v.literal("completed")),
     ),
     maxParticipants: v.optional(v.number()),
+    numberOfSets: v.optional(v.number()),
+    pointsPerGame: v.optional(v.number()),
+    winByTwo: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const bracket = await ctx.db.get(args.bracketId);
@@ -338,6 +344,13 @@ export const addParticipants = authedMutation({
     );
 
     const inserted = [];
+    let seedCounter =
+      (await ctx.db
+        .query("bracketParticipants")
+        .withIndex("by_bracket", (q) => q.eq("bracketId", args.bracketId))
+        .collect()
+        .then((bps) => bps.length)) + 1;
+
     for (const cpId of args.categoryParticipantIds) {
       const existing = await ctx.db
         .query("bracketParticipants")
@@ -352,9 +365,11 @@ export const addParticipants = authedMutation({
       const id = await ctx.db.insert("bracketParticipants", {
         bracketId: args.bracketId,
         categoryParticipantId: cpId,
+        seed: seedCounter,
         status: "active",
       });
       inserted.push(id);
+      seedCounter++;
     }
 
     return { inserted: inserted.length };

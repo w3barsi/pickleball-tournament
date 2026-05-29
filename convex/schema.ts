@@ -92,6 +92,7 @@ export default defineSchema({
   brackets: defineTable({
     categoryId: v.id("categories"),
     name: v.string(),
+    label: v.optional(v.string()),
     stage: v.number(),
     format: v.union(v.literal("roundRobin"), v.literal("singleElimination")),
     status: v.union(v.literal("upcoming"), v.literal("inProgress"), v.literal("completed")),
@@ -109,6 +110,7 @@ export default defineSchema({
   bracketParticipants: defineTable({
     bracketId: v.id("brackets"),
     categoryParticipantId: v.id("categoryParticipants"),
+    seed: v.optional(v.number()),
     status: v.union(v.literal("active"), v.literal("eliminated"), v.literal("withdrawn")),
     deletedAt: v.optional(v.number()),
   })
@@ -144,7 +146,6 @@ export default defineSchema({
     nextMatchId: v.optional(v.id("matches")),
     nextMatchPosition: v.optional(v.union(v.literal(1), v.literal(2))),
     isBye: v.optional(v.boolean()),
-    roundNumber: v.optional(v.number()),
     matchOrder: v.optional(v.number()),
     deletedAt: v.optional(v.number()),
   })

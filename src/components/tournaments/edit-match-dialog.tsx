@@ -121,7 +121,6 @@ export function EditMatchDialog({ match }: EditMatchDialogProps) {
       scheduledAt: match.scheduledAt ? new Date(match.scheduledAt).toISOString().slice(0, 16) : "",
       refereeName: match.refereeName ?? "",
       matchNotes: match.matchNotes ?? "",
-      roundNumber: match.roundNumber?.toString() ?? "",
       matchOrder: match.matchOrder?.toString() ?? "",
     },
     onSubmit: async ({ value }) => {
@@ -134,7 +133,6 @@ export function EditMatchDialog({ match }: EditMatchDialogProps) {
           scheduledAt: value.scheduledAt ? new Date(value.scheduledAt).getTime() : undefined,
           refereeName: value.refereeName || undefined,
           matchNotes: value.matchNotes || undefined,
-          roundNumber: value.roundNumber ? Number(value.roundNumber) : undefined,
           matchOrder: value.matchOrder ? Number(value.matchOrder) : undefined,
         });
         toast.success("Match updated");
@@ -224,24 +222,6 @@ export function EditMatchDialog({ match }: EditMatchDialogProps) {
                 {(field) => (
                   <Field>
                     <FieldLabel>Court Number</FieldLabel>
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      type="number"
-                      min={1}
-                      value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      onBlur={field.handleBlur}
-                      placeholder="Optional"
-                    />
-                  </Field>
-                )}
-              </form.Field>
-
-              <form.Field name="roundNumber">
-                {(field) => (
-                  <Field>
-                    <FieldLabel>Round</FieldLabel>
                     <Input
                       id={field.name}
                       name={field.name}

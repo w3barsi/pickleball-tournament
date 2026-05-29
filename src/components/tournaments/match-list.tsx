@@ -36,6 +36,7 @@ import {
 
 interface MatchParticipant {
   _id: Id<"categoryParticipants">;
+  seed?: number | null;
   player?: { fullName: string } | null;
   pair?: { teamName?: string } | null;
   playerOne?: { fullName: string } | null;
@@ -58,13 +59,13 @@ interface MatchItem {
   winnerParticipantId?: Id<"categoryParticipants"> | null;
   courtNumber?: number | null;
   scheduledAt?: number | null;
-  roundNumber?: number | null;
   matchOrder?: number | null;
   matchSets: MatchSet[];
 }
 
 interface MatchListProps {
   bracketId: Id<"brackets">;
+  bracketLabel?: string | null;
   categoryType: "singles" | "doubles";
 }
 
@@ -130,8 +131,14 @@ function getMatchScore(match: MatchItem) {
   return "—";
 }
 
-export function MatchList({ bracketId, categoryType }: MatchListProps) {
-  const { data: matches } = useQuery(convexQuery(api.app.matches.listByBracket, { bracketId }));
+function getSeedLabel(seed: number | null | undefined, bracketLabel?: string | null) {
+  if (seed == null) return null;
+  return `${bracketLabel ?? ""}${seed}`;
+}
+
+export function MatchList({ bracketId, bracketLabel, categoryType }: MatchListProps) {
+  const { data: matchData } = useQuery(convexQuery(api.app.matches.listByBracket, { bracketId }));
+  const matches = matchData?.matches;
 
   const updateResult = useMutation(api.app.matches.updateResult);
   const navigate = useNavigate();
@@ -198,14 +205,19 @@ export function MatchList({ bracketId, categoryType }: MatchListProps) {
                   <TableCell className="font-medium whitespace-nowrap">
                     <div className="flex flex-col gap-0.5">
                       <span>
-                        {match.roundNumber ? `R${match.roundNumber}` : "—"}
-                        {match.matchOrder ? ` · M${match.matchOrder}` : ""}
+                        {(() => {
+                          const s1 = getSeedLabel(match.participant1?.seed, bracketLabel);
+                          const s2 = getSeedLabel(match.participant2?.seed, bracketLabel);
+                          if (s1 && s2) return `${s1} vs ${s2}`;
+                          if (s1) return `${s1} vs TBD`;
+                          if (s2) return `TBD vs ${s2}`;
+                          return "—";
+                        })()}
                       </span>
-                      {match.courtNumber ? (
-                        <span className="text-xs text-muted-foreground">
-                          Court {match.courtNumber}
-                        </span>
-                      ) : null}
+                      <span className="text-xs text-muted-foreground">
+                        {match.matchOrder ? `M${match.matchOrder}` : ""}
+                        {match.courtNumber ? ` · Court ${match.courtNumber}` : ""}
+                      </span>
                     </div>
                   </TableCell>
                   <TableCell>

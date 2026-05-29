@@ -35,7 +35,26 @@ export const removeScoringConfigFromMatches = migrations.define({
   },
 });
 
+export const backfillBracketParticipantSeeds = migrations.define({
+  table: "bracketParticipants",
+  migrateOne: async (ctx, bp) => {
+    if (bp.seed !== undefined) return;
+
+    const existingInBracket = await ctx.db
+      .query("bracketParticipants")
+      .withIndex("by_bracket", (q) => q.eq("bracketId", bp.bracketId))
+      .order("asc")
+      .collect();
+
+    const position = existingInBracket.findIndex((p) => p._id === bp._id) + 1;
+    if (position > 0) {
+      await ctx.db.patch(bp._id, { seed: position });
+    }
+  },
+});
+
 export const run = migrations.runner([
   internal.migrations.moveScoringConfigToBrackets,
   internal.migrations.removeScoringConfigFromMatches,
+  internal.migrations.backfillBracketParticipantSeeds,
 ]);

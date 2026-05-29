@@ -10,7 +10,6 @@ import {
   TrophyIcon,
   UsersIcon,
   SwordsIcon,
-  Trash2Icon,
   RotateCcwIcon,
 } from "lucide-react";
 import { useState } from "react";
@@ -19,18 +18,8 @@ import { toast } from "sonner";
 import { HeaderCard, HeaderCardDescription, HeaderCardHeading } from "@/components/header-card";
 import { BracketParticipantList } from "@/components/tournaments/bracket-participant-list";
 import { CreateMatchDialog } from "@/components/tournaments/create-match-dialog";
+import { EditBracketDialog } from "@/components/tournaments/edit-bracket-dialog";
 import { MatchList } from "@/components/tournaments/match-list";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -56,10 +45,8 @@ function BracketDetailPage() {
   );
 
   const removeParticipant = useMutation(api.app.brackets.removeParticipant);
-  const removeBracket = useMutation(api.app.brackets.remove);
   const generateRoundRobin = useMutation(api.app.matches.generateRoundRobin);
 
-  const [isDeleting, setIsDeleting] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
 
   if (!bracketData || !bracketData.tournament) {
@@ -101,21 +88,6 @@ function BracketDetailPage() {
       toast.success("Participant removed from bracket");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to remove participant");
-    }
-  };
-
-  const handleDeleteBracket = async () => {
-    setIsDeleting(true);
-    try {
-      await removeBracket({ bracketId: bracketId as Id<"brackets"> });
-      toast.success("Bracket deleted");
-      navigate({
-        to: "/app/tournaments/$slug/categories/$categoryId",
-        params: { slug: tournament.slug, categoryId: category._id },
-      });
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to delete bracket");
-      setIsDeleting(false);
     }
   };
 
@@ -177,39 +149,11 @@ function BracketDetailPage() {
             )}
           </p>
         </div>
-        <AlertDialog>
-          <AlertDialogTrigger
-            render={
-              <Button
-                variant="destructive"
-                size="icon"
-                className="bg-destructive text-primary-foreground"
-              />
-            }
-          >
-            <Trash2Icon className="size-4" />
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete Bracket</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to delete{" "}
-                <span className="font-semibold">{bracket.name}</span>? This action cannot be undone
-                and will also remove all participants and matches.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                variant="destructive"
-                disabled={isDeleting}
-                onClick={handleDeleteBracket}
-              >
-                {isDeleting ? "Deleting..." : "Delete"}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <EditBracketDialog
+          bracket={bracket}
+          tournamentSlug={tournament.slug}
+          categoryId={category._id}
+        />
       </HeaderCard>
 
       {/* Bracket Info Cards */}
@@ -280,7 +224,11 @@ function BracketDetailPage() {
             )}
           </div>
         </div>
-        <MatchList bracketId={bracketId as Id<"brackets">} categoryType={category.type} />
+        <MatchList
+          bracketId={bracketId as Id<"brackets">}
+          bracketLabel={bracket.label}
+          categoryType={category.type}
+        />
       </div>
 
       {/* Participants */}
@@ -290,6 +238,7 @@ function BracketDetailPage() {
         </div>
         <BracketParticipantList
           participants={participants}
+          bracketLabel={bracket.label ?? undefined}
           categoryType={category.type}
           onRemove={handleRemoveParticipant}
         />

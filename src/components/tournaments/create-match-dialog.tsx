@@ -78,7 +78,6 @@ export function CreateMatchDialog({
       participant1Id: "",
       participant2Id: "",
       courtNumber: "",
-      roundNumber: "",
       scheduledAt: "",
       refereeName: "",
       matchOrder: "",
@@ -101,7 +100,6 @@ export function CreateMatchDialog({
           participant1Id: value.participant1Id as Id<"categoryParticipants">,
           participant2Id: value.participant2Id as Id<"categoryParticipants">,
           courtNumber: value.courtNumber ? Number(value.courtNumber) : undefined,
-          roundNumber: value.roundNumber ? Number(value.roundNumber) : undefined,
           scheduledAt: value.scheduledAt ? new Date(value.scheduledAt).getTime() : undefined,
           refereeName: value.refereeName || undefined,
           matchOrder: value.matchOrder ? Number(value.matchOrder) : undefined,
@@ -221,24 +219,6 @@ export function CreateMatchDialog({
                 {(field) => (
                   <div className="space-y-2">
                     <Label htmlFor={field.name}>Court Number</Label>
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      type="number"
-                      min={1}
-                      value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      onBlur={field.handleBlur}
-                      placeholder="Optional"
-                    />
-                  </div>
-                )}
-              </form.Field>
-
-              <form.Field name="roundNumber">
-                {(field) => (
-                  <div className="space-y-2">
-                    <Label htmlFor={field.name}>Round</Label>
                     <Input
                       id={field.name}
                       name={field.name}
