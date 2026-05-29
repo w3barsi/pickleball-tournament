@@ -11,6 +11,7 @@ import {
   UsersIcon,
   SwordsIcon,
   Trash2Icon,
+  RotateCcwIcon,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -56,8 +57,10 @@ function BracketDetailPage() {
 
   const removeParticipant = useMutation(api.app.brackets.removeParticipant);
   const removeBracket = useMutation(api.app.brackets.remove);
+  const generateRoundRobin = useMutation(api.app.matches.generateRoundRobin);
 
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   if (!bracketData || !bracketData.tournament) {
     return (
@@ -113,6 +116,20 @@ function BracketDetailPage() {
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to delete bracket");
       setIsDeleting(false);
+    }
+  };
+
+  const handleGenerateRoundRobin = async () => {
+    setIsGenerating(true);
+    try {
+      const result = await generateRoundRobin({ bracketId: bracketId as Id<"brackets"> });
+      toast.success(
+        `Generated ${result.created} round robin match${result.created !== 1 ? "es" : ""}`,
+      );
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to generate matches");
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -227,13 +244,29 @@ function BracketDetailPage() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold">Matches</h2>
-          {participants.length >= 2 && (
-            <CreateMatchDialog
-              bracketId={bracketId as Id<"brackets">}
-              bracketParticipants={participants}
-              categoryType={category.type}
-            />
-          )}
+          <div className="flex items-center gap-2">
+            {bracket.format === "roundRobin" && participants.length >= 2 && (
+              <Button
+                variant="secondary"
+                onClick={handleGenerateRoundRobin}
+                disabled={isGenerating}
+              >
+                {isGenerating ? (
+                  <Loader2Icon className="size-4 animate-spin" />
+                ) : (
+                  <RotateCcwIcon className="size-4" />
+                )}
+                Generate Round Robin Matches
+              </Button>
+            )}
+            {participants.length >= 2 && (
+              <CreateMatchDialog
+                bracketId={bracketId as Id<"brackets">}
+                bracketParticipants={participants}
+                categoryType={category.type}
+              />
+            )}
+          </div>
         </div>
         <MatchList bracketId={bracketId as Id<"brackets">} categoryType={category.type} />
       </div>

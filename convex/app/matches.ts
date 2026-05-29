@@ -497,6 +497,89 @@ export const reset = authedMutation({
   },
 });
 
+export const generateRoundRobin = authedMutation({
+  args: {
+    bracketId: v.id("brackets"),
+  },
+  handler: async (ctx, args) => {
+    const bracket = await ctx.db.get(args.bracketId);
+    if (!bracket) {
+      throw new Error("Bracket not found");
+    }
+
+    if (bracket.format !== "roundRobin") {
+      throw new Error("Bracket is not round robin format");
+    }
+
+    const tournamentId = await getCategoryTournamentId(ctx, bracket.categoryId);
+    if (!tournamentId) {
+      throw new Error("Category not found");
+    }
+
+    await requireManageTournament(ctx, tournamentId);
+
+    const existingMatches = await ctx.db
+      .query("matches")
+      .withIndex("by_bracket", (q) => q.eq("bracketId", args.bracketId))
+      .collect();
+
+    const existingPairKeys = new Set(
+      existingMatches.map((m) => {
+        const ids = [m.participant1Id, m.participant2Id].sort();
+        return `${ids[0]}:${ids[1]}`;
+      }),
+    );
+
+    const bracketParticipants = await ctx.db
+      .query("bracketParticipants")
+      .withIndex("by_bracket", (q) => q.eq("bracketId", args.bracketId))
+      .order("asc")
+      .collect();
+
+    const participantIds = bracketParticipants.map((bp) => bp.categoryParticipantId);
+
+    if (participantIds.length < 2) {
+      throw new Error("Need at least 2 participants to generate round robin matches");
+    }
+
+    const created: Id<"matches">[] = [];
+    let matchOrder = existingMatches.length + 1;
+
+    for (let i = 0; i < participantIds.length; i++) {
+      for (let j = i + 1; j < participantIds.length; j++) {
+        const p1 = participantIds[i];
+        const p2 = participantIds[j];
+        const pairKey = [p1, p2].sort().join(":");
+
+        if (existingPairKeys.has(pairKey)) {
+          continue;
+        }
+
+        const matchId = await ctx.db.insert("matches", {
+          tournamentId,
+          bracketId: args.bracketId,
+          categoryId: bracket.categoryId,
+          participant1Id: p1,
+          participant2Id: p2,
+          status: "scheduled",
+          roundNumber: j - i,
+          matchOrder,
+          lastUpdatedAt: Date.now(),
+        });
+
+        created.push(matchId);
+        matchOrder++;
+      }
+    }
+
+    if (bracket.status === "upcoming" && created.length > 0) {
+      await ctx.db.patch(args.bracketId, { status: "inProgress" });
+    }
+
+    return { created: created.length };
+  },
+});
+
 export const remove = authedMutation({
   args: {
     matchId: v.id("matches"),
