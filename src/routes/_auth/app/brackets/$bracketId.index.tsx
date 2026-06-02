@@ -2,7 +2,7 @@ import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@convex/_generated/api.js";
 import { Id } from "@convex/_generated/dataModel.js";
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import {
   Loader2Icon,
@@ -27,17 +27,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export const Route = createFileRoute("/_auth/app/brackets/$bracketId/")({
   component: BracketDetailPage,
   loader: async ({ params, context }) => {
-    await context.queryClient.ensureQueryData(
-      convexQuery(api.app.brackets.getWithParticipants, {
-        bracketId: params.bracketId as Id<"brackets">,
-      }),
-    );
+    await Promise.all([
+      await context.queryClient.prefetchQuery(
+        convexQuery(api.app.matches.listByBracket, {
+          bracketId: params.bracketId as Id<"brackets">,
+        }),
+      ),
+      await context.queryClient.ensureQueryData(
+        convexQuery(api.app.brackets.getWithParticipants, {
+          bracketId: params.bracketId as Id<"brackets">,
+        }),
+      ),
+    ]);
   },
 });
 
 function BracketDetailPage() {
   const { bracketId } = Route.useParams();
-  const navigate = useNavigate();
   const { data: bracketData } = useQuery(
     convexQuery(api.app.brackets.getWithParticipants, {
       bracketId: bracketId as Id<"brackets">,

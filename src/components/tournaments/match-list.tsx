@@ -3,9 +3,10 @@
 import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@convex/_generated/api.js";
 import { Id } from "@convex/_generated/dataModel";
-import { useQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { SwordsIcon, CheckCircle2Icon, ClockIcon, PlayIcon, Loader2Icon } from "lucide-react";
+import { Suspense } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import {
@@ -98,20 +99,13 @@ function getSeedLabel(seed: number | null | undefined, bracketLabel?: string | n
   return `${bracketLabel ?? ""}${seed}`;
 }
 
-export function MatchList({ bracketId, bracketLabel, categoryType }: MatchListProps) {
-  const { data: matchData } = useQuery(convexQuery(api.app.matches.listByBracket, { bracketId }));
-  const matches = matchData?.matches;
+function MatchListContent({ bracketId, bracketLabel, categoryType }: MatchListProps) {
+  const { data: matchData } = useSuspenseQuery(
+    convexQuery(api.app.matches.listByBracket, { bracketId }),
+  );
+  const matches = matchData.matches;
 
   const navigate = useNavigate();
-
-  if (matches === undefined) {
-    return (
-      <div className="flex items-center justify-center py-12 text-muted-foreground">
-        <Loader2Icon className="size-6 animate-spin" />
-        <span className="ml-2 text-sm">Loading matches...</span>
-      </div>
-    );
-  }
 
   if (matches.length === 0) {
     return (
@@ -164,10 +158,11 @@ export function MatchList({ bracketId, bracketLabel, categoryType }: MatchListPr
                           return "—";
                         })()}
                       </span>
-                      <span className="text-xs text-muted-foreground">
-                        {match.matchOrder ? `M${match.matchOrder}` : ""}
-                        {match.courtNumber ? ` · Court ${match.courtNumber}` : ""}
-                      </span>
+                      {match.courtNumber ? (
+                        <span className="text-xs text-muted-foreground">
+                          Court {match.courtNumber}
+                        </span>
+                      ) : null}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -193,5 +188,20 @@ export function MatchList({ bracketId, bracketLabel, categoryType }: MatchListPr
         </Table>
       </div>
     </div>
+  );
+}
+
+export function MatchList(props: MatchListProps) {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center py-12 text-muted-foreground">
+          <Loader2Icon className="size-6 animate-spin" />
+          <span className="ml-2 text-sm">Loading matches...</span>
+        </div>
+      }
+    >
+      <MatchListContent {...props} />
+    </Suspense>
   );
 }
