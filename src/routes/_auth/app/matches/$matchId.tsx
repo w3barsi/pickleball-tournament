@@ -124,7 +124,7 @@ function MatchDetailPage() {
   const p2Wins = matchSets.filter((s) => s.winnerTeam === 2).length;
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       {/* Back Link */}
       <div>
         <Button

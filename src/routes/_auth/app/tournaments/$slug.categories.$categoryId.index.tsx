@@ -107,7 +107,7 @@ function CategoryDetailPage() {
   const totalMatches = brackets?.reduce((sum, b) => sum + (b.matchCount ?? 0), 0) ?? 0;
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       {/* Back Link */}
       <div>
         <Button
