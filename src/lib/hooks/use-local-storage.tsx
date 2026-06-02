@@ -19,36 +19,44 @@ export function useLocalStorage<T>(
 ): [T, React.Dispatch<React.SetStateAction<T>>, () => void] {
   const { initializeWithValue = true } = options;
 
-  const serializer = React.useCallback(
-    (value: T): string => {
-      if (options.serializer) {
-        return options.serializer(value);
-      }
-      return JSON.stringify(value);
-    },
-    [options],
-  );
+  const optionsRef = React.useRef(options);
+  optionsRef.current = options;
+
+  const initialValueRef = React.useRef(initialValue);
+  initialValueRef.current = initialValue;
+
+  const getDefaultValue = React.useCallback(() => {
+    const iv = initialValueRef.current;
+    return iv instanceof Function ? iv() : iv;
+  }, []);
+
+  const serializer = React.useCallback((value: T): string => {
+    if (optionsRef.current.serializer) {
+      return optionsRef.current.serializer(value);
+    }
+    return JSON.stringify(value);
+  }, []);
 
   const deserializer = React.useCallback(
     (value: string): T => {
-      if (options.deserializer) {
-        return options.deserializer(value);
+      if (optionsRef.current.deserializer) {
+        return optionsRef.current.deserializer(value);
       }
       if (value === "undefined") {
         return undefined as unknown as T;
       }
-      const defaultValue = initialValue instanceof Function ? initialValue() : initialValue;
+      const defaultValue = getDefaultValue();
       try {
         return JSON.parse(value) as T;
       } catch {
         return defaultValue;
       }
     },
-    [options, initialValue],
+    [getDefaultValue],
   );
 
   const readValue = React.useCallback((): T => {
-    const initialValueToUse = initialValue instanceof Function ? initialValue() : initialValue;
+    const initialValueToUse = getDefaultValue();
 
     if (IS_SERVER) {
       return initialValueToUse;
@@ -60,13 +68,13 @@ export function useLocalStorage<T>(
     } catch {
       return initialValueToUse;
     }
-  }, [initialValue, key, deserializer]);
+  }, [key, deserializer, getDefaultValue]);
 
   const [storedValue, setStoredValue] = React.useState<T>(() => {
     if (initializeWithValue) {
       return readValue();
     }
-    return initialValue instanceof Function ? initialValue() : initialValue;
+    return getDefaultValue();
   });
 
   const setValue: React.Dispatch<React.SetStateAction<T>> = React.useCallback(
@@ -92,12 +100,12 @@ export function useLocalStorage<T>(
       return;
     }
 
-    const defaultValue = initialValue instanceof Function ? initialValue() : initialValue;
+    const defaultValue = getDefaultValue();
 
     window.localStorage.removeItem(key);
     setStoredValue(defaultValue);
     window.dispatchEvent(new StorageEvent("local-storage", { key }));
-  }, [key, initialValue]);
+  }, [key, getDefaultValue]);
 
   React.useEffect(() => {
     setStoredValue(readValue());
