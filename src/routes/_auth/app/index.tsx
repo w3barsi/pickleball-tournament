@@ -86,7 +86,7 @@ function AppIndex() {
                     key={tournament._id}
                     to="/app/tournaments/$slug"
                     params={{ slug: tournament.slug }}
-                    className="group flex items-center justify-between rounded-xl border bg-muted/50 p-3 transition-colors hover:bg-muted"
+                    className="group flex items-center justify-between rounded-lg border bg-muted/50 p-2 transition-colors hover:bg-muted"
                   >
                     <div>
                       <p>{tournament.name}</p>

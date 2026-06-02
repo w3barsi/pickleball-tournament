@@ -142,7 +142,7 @@ function CategoryDetailPage() {
       </HeaderCard>
 
       {/* Stats Bar */}
-      <div className="flex items-center justify-around rounded-lg border bg-muted/20 px-4 py-5">
+      <div className="flex items-center justify-around rounded-xl border bg-muted/20 px-4 py-5">
         <div className="flex w-full items-center justify-center gap-3">
           <UsersIcon className="size-5 text-tournament-lime" />
           <div>

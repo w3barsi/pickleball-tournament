@@ -90,7 +90,7 @@ export function BracketList({ brackets, renderStageAction }: BracketListProps) {
           </div>
           <ItemGroup className="gap-2">
             {stageBrackets.map((bracket) => (
-              <Item key={bracket._id} variant="outline">
+              <Item key={bracket._id} variant="outline" className="rounded-xl">
                 <div>
                   <ItemMedia variant="icon">
                     <TrophyIcon className="size-5 text-tournament-lime" />

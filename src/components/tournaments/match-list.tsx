@@ -109,7 +109,7 @@ function MatchListContent({ bracketId, bracketLabel, categoryType }: MatchListPr
 
   if (matches.length === 0) {
     return (
-      <div className="rounded-lg border py-12 text-center text-muted-foreground">
+      <div className="rounded-xl border py-12 text-center text-muted-foreground">
         <SwordsIcon className="mx-auto size-8" />
         <p className="mt-4 text-lg font-bold">No matches yet</p>
         <p className="text-sm">Create a match to get started</p>
@@ -119,7 +119,7 @@ function MatchListContent({ bracketId, bracketLabel, categoryType }: MatchListPr
 
   return (
     <div className="space-y-4">
-      <div className="overflow-x-auto rounded-lg border">
+      <div className="overflow-x-auto rounded-xl border">
         <Table>
           <TableHeader>
             <TableRow>

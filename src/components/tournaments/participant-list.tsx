@@ -95,7 +95,7 @@ export function ParticipantList({ participants, categoryType, categoryId }: Part
 
   return (
     <div className="space-y-4">
-      <div className="rounded-lg border">
+      <div className="rounded-xl border">
         <Table>
           <TableHeader>
             <TableRow>
