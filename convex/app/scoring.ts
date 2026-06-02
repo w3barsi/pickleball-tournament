@@ -253,6 +253,71 @@ export const startMatch = authedMutation({
   },
 });
 
+export const startNextSet = authedMutation({
+  args: {
+    matchId: v.id("matches"),
+  },
+  handler: async (ctx, args) => {
+    const match = await ctx.db.get(args.matchId);
+    if (!match) {
+      throw new Error("Match not found");
+    }
+
+    await requireManageTournament(ctx, match.tournamentId);
+
+    if (match.status !== "inProgress") {
+      throw new Error("Match is not in progress");
+    }
+
+    const bracket = await ctx.db.get(match.bracketId);
+    if (!bracket) {
+      throw new Error("Bracket not found");
+    }
+
+    const sets = await ctx.db
+      .query("matchSets")
+      .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
+      .order("asc")
+      .collect();
+
+    const inProgressSet = sets.find((s) => s.status === "inProgress");
+    if (inProgressSet) {
+      throw new Error("A set is already in progress");
+    }
+
+    const completedSets = sets.filter((s) => s.status === "completed");
+    const nextSetNumber = completedSets.length + 1;
+    const totalSets = bracket.numberOfSets ?? 3;
+
+    if (nextSetNumber > totalSets) {
+      throw new Error("All sets have been played");
+    }
+
+    const team1SetWins = completedSets.filter((s) => s.winnerTeam === 1).length;
+    const team2SetWins = completedSets.filter((s) => s.winnerTeam === 2).length;
+    const needed = setsNeededToWin(totalSets);
+
+    if (team1SetWins >= needed || team2SetWins >= needed) {
+      throw new Error("Match is already decided");
+    }
+
+    const setId = await ctx.db.insert("matchSets", {
+      matchId: args.matchId,
+      setNumber: nextSetNumber,
+      team1Score: 0,
+      team2Score: 0,
+      targetScore: bracket.pointsPerGame ?? 11,
+      status: "inProgress",
+    });
+
+    await ctx.db.patch(args.matchId, {
+      lastUpdatedAt: Date.now(),
+    });
+
+    return { setId };
+  },
+});
+
 export const recordPoint = authedMutation({
   args: {
     matchId: v.id("matches"),
@@ -281,27 +346,9 @@ export const recordPoint = authedMutation({
       .order("desc")
       .collect();
 
-    let currentSet: Doc<"matchSets"> | null | undefined = sets.find(
-      (s) => s.status === "inProgress",
-    );
+    const currentSet = sets.find((s) => s.status === "inProgress");
     if (!currentSet) {
-      const completedSets = sets.filter((s) => s.status === "completed");
-      const nextSetNumber = completedSets.length + 1;
-      if (nextSetNumber > (bracket.numberOfSets ?? 3)) {
-        throw new Error("All sets have been played");
-      }
-      const newSetId = await ctx.db.insert("matchSets", {
-        matchId: args.matchId,
-        setNumber: nextSetNumber,
-        team1Score: 0,
-        team2Score: 0,
-        targetScore: bracket.pointsPerGame ?? 11,
-        status: "inProgress",
-      });
-      currentSet = await ctx.db.get(newSetId);
-      if (!currentSet) {
-        throw new Error("Failed to create set");
-      }
+      throw new Error("No set in progress");
     }
 
     const now = Date.now();
@@ -420,22 +467,11 @@ export const confirmSetComplete = authedMutation({
       });
 
       await updateParticipantRecords(ctx, winnerParticipantId, loserParticipantId, 1);
-    } else {
-      const nextSetNumber = sets.length + 1;
-      if (nextSetNumber <= (bracket.numberOfSets ?? 3)) {
-        await ctx.db.insert("matchSets", {
-          matchId: args.matchId,
-          setNumber: nextSetNumber,
-          team1Score: 0,
-          team2Score: 0,
-          targetScore: bracket.pointsPerGame ?? 11,
-          status: "inProgress",
-        });
-      }
-      await ctx.db.patch(args.matchId, {
-        lastUpdatedAt: now,
-      });
     }
+
+    await ctx.db.patch(args.matchId, {
+      lastUpdatedAt: now,
+    });
 
     return { success: true };
   },
@@ -620,6 +656,66 @@ export const forfeitMatch = authedMutation({
     });
 
     await updateParticipantRecords(ctx, winnerParticipantId, loserParticipantId, 1);
+
+    return { success: true };
+  },
+});
+
+export const cancelSet = authedMutation({
+  args: {
+    matchId: v.id("matches"),
+  },
+  handler: async (ctx, args) => {
+    const match = await ctx.db.get(args.matchId);
+    if (!match) {
+      throw new Error("Match not found");
+    }
+
+    await requireManageTournament(ctx, match.tournamentId);
+
+    if (match.status !== "inProgress") {
+      throw new Error("Match is not in progress");
+    }
+
+    const bracket = await ctx.db.get(match.bracketId);
+    if (!bracket) {
+      throw new Error("Bracket not found");
+    }
+
+    const sets = await ctx.db
+      .query("matchSets")
+      .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
+      .order("asc")
+      .collect();
+
+    const currentSet = sets.find((s) => s.status === "inProgress");
+    if (!currentSet) {
+      throw new Error("No set in progress");
+    }
+
+    const points = await ctx.db
+      .query("pickleballPoints")
+      .withIndex("by_match_set", (q) => q.eq("matchSetId", currentSet._id))
+      .collect();
+
+    for (const point of points) {
+      await ctx.db.delete(point._id);
+    }
+
+    await ctx.db.delete(currentSet._id);
+
+    await ctx.db.insert("matchSets", {
+      matchId: args.matchId,
+      setNumber: currentSet.setNumber,
+      team1Score: 0,
+      team2Score: 0,
+      targetScore: bracket.pointsPerGame ?? 11,
+      status: "inProgress",
+    });
+
+    await ctx.db.patch(args.matchId, {
+      lastUpdatedAt: Date.now(),
+    });
 
     return { success: true };
   },

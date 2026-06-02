@@ -186,33 +186,40 @@ export function CreateMatchDialog({
               )}
             </form.Field>
 
-            <form.Field name="participant2Id">
-              {(field) => (
-                <div className="space-y-2">
-                  <Label>Participant 2 *</Label>
-                  <Select
-                    value={field.state.value}
-                    onValueChange={(v) => v !== null && field.handleChange(v)}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue>
-                        {participantOptions.find((o) => o.value === field.state.value)?.label ??
-                          "Select participant..."}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        {participantOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                </div>
+            <form.Subscribe selector={(state) => state.values.participant1Id}>
+              {(participant1Id) => (
+                <form.Field name="participant2Id">
+                  {(field) => {
+                    const p2Options = participantOptions.filter((o) => o.value !== participant1Id);
+                    return (
+                      <div className="space-y-2">
+                        <Label>Participant 2 *</Label>
+                        <Select
+                          value={field.state.value}
+                          onValueChange={(v) => v !== null && field.handleChange(v)}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue>
+                              {participantOptions.find((o) => o.value === field.state.value)
+                                ?.label ?? "Select participant..."}
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectGroup>
+                              {p2Options.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectGroup>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    );
+                  }}
+                </form.Field>
               )}
-            </form.Field>
+            </form.Subscribe>
 
             <div className="grid grid-cols-2 gap-4">
               <form.Field name="courtNumber">

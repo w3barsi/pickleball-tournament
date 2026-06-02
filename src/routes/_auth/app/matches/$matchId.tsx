@@ -2,7 +2,8 @@ import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@convex/_generated/api.js";
 import { Id } from "@convex/_generated/dataModel.js";
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useMutation } from "convex/react";
 import {
   Loader2Icon,
   ChevronLeftIcon,
@@ -14,14 +15,17 @@ import {
   MapPinIcon,
   UserCheckIcon,
   StickyNoteIcon,
-  RadioIcon,
+  ArrowRightIcon,
 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 import { HeaderCard, HeaderCardDescription, HeaderCardHeading } from "@/components/header-card";
 import { EditMatchDialog } from "@/components/tournaments/edit-match-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_auth/app/matches/$matchId")({
   component: MatchDetailPage,
@@ -96,9 +100,16 @@ function formatDate(ts: number | undefined) {
 
 function MatchDetailPage() {
   const { matchId } = Route.useParams();
+  const navigate = useNavigate();
+  const [isStarting, setIsStarting] = useState(false);
+
   const { data: matchData } = useQuery(
     convexQuery(api.app.matches.getWithDetails, { matchId: matchId as Id<"matches"> }),
   );
+
+  const startMatchMutation = useMutation(api.app.scoring.startMatch);
+  const startNextSetMutation = useMutation(api.app.scoring.startNextSet);
+
   if (!matchData) {
     return (
       <div className="py-20 text-center">
@@ -122,6 +133,36 @@ function MatchDetailPage() {
   const isP2Winner = match.winnerParticipantId === match.participant2Id;
   const p1Wins = matchSets.filter((s) => s.winnerTeam === 1).length;
   const p2Wins = matchSets.filter((s) => s.winnerTeam === 2).length;
+
+  const handleStartAndGoToScorer = async () => {
+    setIsStarting(true);
+    try {
+      await startMatchMutation({ matchId: matchId as Id<"matches"> });
+      navigate({
+        to: "/g/$id",
+        params: { id: matchId },
+        search: { setNumber: 1 },
+      });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to start match");
+      setIsStarting(false);
+    }
+  };
+
+  const handleStartNextSet = async (nextSetNumber: number) => {
+    setIsStarting(true);
+    try {
+      await startNextSetMutation({ matchId: matchId as Id<"matches"> });
+      navigate({
+        to: "/g/$id",
+        params: { id: matchId },
+        search: { setNumber: nextSetNumber },
+      });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to start next set");
+      setIsStarting(false);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -158,19 +199,7 @@ function MatchDetailPage() {
             {bracket?.name ?? "Bracket"}
           </HeaderCardDescription>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            nativeButton={false}
-            render={
-              <Link to="/g/$id" params={{ id: matchId }}>
-                <RadioIcon className="mr-1 size-4" />
-                Go to Scorer
-              </Link>
-            }
-          />
-          {match && <EditMatchDialog match={match} />}
-        </div>
+        <div className="flex items-center gap-2">{match && <EditMatchDialog match={match} />}</div>
       </HeaderCard>
 
       {/* Match Score Cards */}
@@ -221,7 +250,24 @@ function MatchDetailPage() {
           <CardTitle className="text-base font-medium">Score</CardTitle>
         </CardHeader>
         <CardContent>
-          {matchSets.length > 0 ? (
+          {match.status === "scheduled" ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-8">
+              <p className="text-lg font-bold text-primary uppercase">Match Scheduled</p>
+              <p className="text-sm text-muted-foreground">Start the match to begin scoring</p>
+              <Button
+                className="mt-2 gap-2"
+                onClick={handleStartAndGoToScorer}
+                disabled={isStarting}
+              >
+                {isStarting ? (
+                  <Loader2Icon className="size-4 animate-spin" />
+                ) : (
+                  <PlayIcon className="size-4" />
+                )}
+                Start Match & Go to Scorer
+              </Button>
+            </div>
+          ) : matchSets.length > 0 ? (
             <div className="space-y-3">
               <div className="flex items-center justify-center gap-4 text-3xl font-black">
                 <span className={isP1Winner ? "text-green-600" : ""}>{p1Wins}</span>
@@ -229,24 +275,64 @@ function MatchDetailPage() {
                 <span className={isP2Winner ? "text-green-600" : ""}>{p2Wins}</span>
               </div>
               <div className="space-y-1">
-                {matchSets.map((set) => (
-                  <div
-                    key={set._id}
-                    className="flex items-center justify-between rounded-lg border px-4 py-2 text-sm"
-                  >
-                    <span className="font-medium text-muted-foreground">Set {set.setNumber}</span>
-                    <div className="flex items-center gap-3 font-mono text-base font-semibold">
-                      <span className={set.winnerTeam === 1 ? "text-green-600" : ""}>
-                        {set.team1Score}
-                      </span>
-                      <span className="text-muted-foreground">—</span>
-                      <span className={set.winnerTeam === 2 ? "text-green-600" : ""}>
-                        {set.team2Score}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                {matchSets.map((set) => {
+                  const isActive = set.status === "inProgress";
+                  return (
+                    <Link
+                      key={set._id}
+                      to="/g/$id"
+                      params={{ id: matchId }}
+                      search={{ setNumber: set.setNumber }}
+                      className={cn(
+                        "flex items-center justify-between rounded-lg border px-4 py-2 text-sm transition-colors hover:bg-muted",
+                        isActive && "border-primary bg-primary/5",
+                      )}
+                    >
+                      <span className="font-medium text-muted-foreground">Set {set.setNumber}</span>
+                      <div className="flex items-center gap-3 font-mono text-base font-semibold">
+                        <span className={set.winnerTeam === 1 ? "text-green-600" : ""}>
+                          {set.team1Score}
+                        </span>
+                        <span className="text-muted-foreground">—</span>
+                        <span className={set.winnerTeam === 2 ? "text-green-600" : ""}>
+                          {set.team2Score}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={isActive ? "default" : "secondary"}>
+                          {isActive ? "Score" : "View"}
+                        </Badge>
+                        <ArrowRightIcon className="size-4 text-muted-foreground" />
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
+              {match.status === "inProgress" &&
+                !matchSets.some((s) => s.status === "inProgress") && (
+                  <div className="flex flex-col items-center gap-3 py-4">
+                    <p className="text-sm text-muted-foreground">
+                      Start the next set to continue scoring
+                    </p>
+                    <Button
+                      className="gap-2"
+                      onClick={() =>
+                        handleStartNextSet(
+                          matchSets.filter((s) => s.status === "completed").length + 1,
+                        )
+                      }
+                      disabled={isStarting}
+                    >
+                      {isStarting ? (
+                        <Loader2Icon className="size-4 animate-spin" />
+                      ) : (
+                        <PlayIcon className="size-4" />
+                      )}
+                      Start Set {matchSets.filter((s) => s.status === "completed").length + 1} & Go
+                      to Scorer
+                    </Button>
+                  </div>
+                )}
             </div>
           ) : (
             <div className="py-6 text-center text-muted-foreground">No sets recorded yet.</div>

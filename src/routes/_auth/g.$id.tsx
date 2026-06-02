@@ -13,19 +13,38 @@ import {
   RadioIcon,
   PlayIcon,
   FlagIcon,
+  MoreHorizontalIcon,
+  XIcon,
 } from "lucide-react";
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_auth/g/$id")({
+  validateSearch: (search: Record<string, unknown>) => {
+    const raw = search.setNumber;
+    let setNumber: number | undefined;
+    if (raw !== undefined) {
+      const num = Number(raw);
+      if (!Number.isNaN(num)) {
+        setNumber = num;
+      }
+    }
+    return { setNumber };
+  },
   component: ScorerPage,
-  loader: async (ctx) => {
-    const matchId = ctx.params.id as Id<"matches">;
-    await ctx.context.queryClient.ensureQueryData(
+  loader: async ({ params, context }) => {
+    const matchId = params.id as Id<"matches">;
+    await context.queryClient.ensureQueryData(
       convexQuery(api.app.scoring.getMatchForScorer, { matchId }),
     );
   },
@@ -129,27 +148,26 @@ function ScorerPage() {
   const { id } = Route.useParams();
   const matchId = id as Id<"matches">;
   const navigate = useNavigate();
+  const { setNumber } = Route.useSearch();
 
-  const [viewSetNumber, setViewSetNumber] = useState<number | null>(null);
-
-  const queryArgs = viewSetNumber !== null ? { matchId, viewSetNumber } : { matchId };
+  const queryArgs: { matchId: Id<"matches">; viewSetNumber?: number } = { matchId };
+  if (setNumber !== undefined) {
+    queryArgs.viewSetNumber = setNumber;
+  }
 
   const { data: matchData, isLoading } = useQuery(
-    convexQuery(
-      api.app.scoring.getMatchForScorer,
-      queryArgs as { matchId: Id<"matches">; viewSetNumber?: number },
-    ),
+    convexQuery(api.app.scoring.getMatchForScorer, queryArgs),
   );
 
-  const startMatchMutation = useMutation(api.app.scoring.startMatch);
   const setMatchLiveMutation = useMutation(api.app.scoring.setMatchLive);
   const forfeitMatchMutation = useMutation(api.app.scoring.forfeitMatch);
   const confirmSetCompleteMutation = useMutation(api.app.scoring.confirmSetComplete);
+  const cancelSetMutation = useMutation(api.app.scoring.cancelSet);
 
   const recordPoint = useMutation(api.app.scoring.recordPoint).withOptimisticUpdate(
     (localStore, args) => {
-      const queryKey = viewSetNumber !== null ? { matchId, viewSetNumber } : { matchId };
-      const current = localStore.getQuery(api.app.scoring.getMatchForScorer, queryKey);
+      const localQueryKey = { ...queryArgs };
+      const current = localStore.getQuery(api.app.scoring.getMatchForScorer, localQueryKey);
       if (!current?.match || !current.currentSet || !current.computedState) return;
 
       const pointWinner = args.pointWinner as 1 | 2;
@@ -177,7 +195,7 @@ function ScorerPage() {
         current.bracket?.winByTwo ?? true,
       );
 
-      localStore.setQuery(api.app.scoring.getMatchForScorer, queryKey, {
+      localStore.setQuery(api.app.scoring.getMatchForScorer, localQueryKey, {
         ...current,
         currentSetPoints: newPoints,
         computedState: newState,
@@ -187,8 +205,8 @@ function ScorerPage() {
 
   const undoPoint = useMutation(api.app.scoring.undoLastPoint).withOptimisticUpdate(
     (localStore) => {
-      const queryKey = viewSetNumber !== null ? { matchId, viewSetNumber } : { matchId };
-      const current = localStore.getQuery(api.app.scoring.getMatchForScorer, queryKey);
+      const localQueryKey = { ...queryArgs };
+      const current = localStore.getQuery(api.app.scoring.getMatchForScorer, localQueryKey);
       if (!current?.currentSetPoints.length || !current.currentSet) return;
 
       const newPoints = current.currentSetPoints.slice(0, -1);
@@ -198,7 +216,7 @@ function ScorerPage() {
         current.bracket?.winByTwo ?? true,
       );
 
-      localStore.setQuery(api.app.scoring.getMatchForScorer, queryKey, {
+      localStore.setQuery(api.app.scoring.getMatchForScorer, localQueryKey, {
         ...current,
         currentSetPoints: newPoints,
         computedState: newState,
@@ -268,15 +286,6 @@ function ScorerPage() {
     }
   }, [matchId, currentSetPoints.length, undoPoint, isViewingActiveSet, currentSet?._id]);
 
-  const handleStartMatch = useCallback(async () => {
-    try {
-      await startMatchMutation({ matchId });
-      toast.success("Match started");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to start match");
-    }
-  }, [matchId, startMatchMutation]);
-
   const handleGoLive = useCallback(async () => {
     try {
       await setMatchLiveMutation({ matchId });
@@ -302,12 +311,12 @@ function ScorerPage() {
   const handleConfirmSetComplete = useCallback(async () => {
     try {
       await confirmSetCompleteMutation({ matchId });
-      setViewSetNumber(null);
       toast.success("Set confirmed");
+      navigate({ to: "/app/matches/$matchId", params: { matchId } });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to confirm set");
     }
-  }, [matchId, confirmSetCompleteMutation]);
+  }, [matchId, confirmSetCompleteMutation, navigate]);
 
   if (isLoading || !match) {
     return <div className="py-12 text-center text-muted-foreground">Loading match...</div>;
@@ -378,67 +387,63 @@ function ScorerPage() {
             History
           </Button>
           {isInProgress && isViewingActiveSet && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowForfeitChoice(true)}
-              className="gap-1 text-amber-600"
-            >
-              <FlagIcon className="size-3" />
-              Forfeit
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button variant="outline" size="sm">
+                    <MoreHorizontalIcon className="size-4" />
+                  </Button>
+                }
+              />
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={() => setShowForfeitChoice(true)}
+                  className="text-amber-600"
+                >
+                  <FlagIcon className="size-4" />
+                  Forfeit
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={async () => {
+                    try {
+                      await cancelSetMutation({ matchId });
+                      toast.success("Set cancelled");
+                      navigate({ to: "/app/matches/$matchId", params: { matchId } });
+                    } catch (err) {
+                      toast.error(err instanceof Error ? err.message : "Failed to cancel set");
+                    }
+                  }}
+                >
+                  <XIcon className="size-4" />
+                  Cancel Set
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </div>
       </div>
-
-      {/* Set Progress */}
-      {allSets.length > 0 && (
-        <div className="flex items-center justify-center gap-4">
-          <div className="flex items-center gap-2 text-sm">
-            <span className="font-semibold">{team1Name}</span>
-            <div className="flex gap-1">
-              {Array.from({ length: totalSets }).map((_, i) => {
-                const set = allSets.find((s) => s.setNumber === i + 1);
-                const isViewed = set?.setNumber === currentSet?.setNumber;
-                return (
-                  <button
-                    key={i}
-                    type="button"
-                    disabled={!set}
-                    onClick={() => setViewSetNumber(set?.setNumber ?? null)}
-                    className={cn(
-                      "flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold transition-all",
-                      set?.winnerTeam === 1
-                        ? "bg-green-500 text-white"
-                        : set?.winnerTeam === 2
-                          ? "bg-slate-200 text-slate-400"
-                          : set?.status === "inProgress"
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-slate-100 text-slate-400",
-                      isViewed && "ring-2 ring-amber-500 ring-offset-1",
-                      set && "cursor-pointer hover:opacity-80",
-                    )}
-                  >
-                    {set?.winnerTeam === 1 ? "W" : set?.winnerTeam === 2 ? "L" : i + 1}
-                  </button>
-                );
-              })}
-            </div>
-            <span className="font-semibold">{team2Name}</span>
-          </div>
-        </div>
-      )}
 
       {/* Scheduled State */}
       {isScheduled && (
         <Card className="border-2 border-dashed bg-slate-50">
           <CardContent className="flex flex-col items-center justify-center py-8">
             <p className="text-lg font-bold text-primary uppercase">Match Scheduled</p>
-            <p className="text-sm text-muted-foreground">Start the match to begin scoring</p>
-            <Button className="mt-4 gap-2" onClick={handleStartMatch}>
-              <PlayIcon className="size-4" />
-              Start Match
-            </Button>
+            <p className="text-sm text-muted-foreground">
+              Start the match from the match page to begin scoring
+            </p>
+            <Button
+              variant="outline"
+              render={
+                <Link
+                  to="/app/matches/$matchId"
+                  params={{ matchId }}
+                  className="mt-4 flex items-center gap-2"
+                >
+                  <ArrowLeftIcon className="size-4" />
+                  Go to Match Page
+                </Link>
+              }
+            />
           </CardContent>
         </Card>
       )}
@@ -578,7 +583,7 @@ function ScorerPage() {
             </div>
             <Button className="mt-2 gap-2" onClick={handleConfirmSetComplete}>
               <PlayIcon className="size-4" />
-              Confirm & Start Next Set
+              Confirm & Return to Match
             </Button>
           </CardContent>
         </Card>

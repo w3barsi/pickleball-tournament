@@ -327,16 +327,14 @@ export const create = authedMutation({
 
     const bp1 = await ctx.db
       .query("bracketParticipants")
-      .withIndex("by_category_participant", (q) =>
-        q.eq("categoryParticipantId", args.participant1Id),
-      )
+      .withIndex("by_bracket", (q) => q.eq("bracketId", args.bracketId))
+      .filter((q) => q.eq(q.field("categoryParticipantId"), args.participant1Id))
       .unique();
 
     const bp2 = await ctx.db
       .query("bracketParticipants")
-      .withIndex("by_category_participant", (q) =>
-        q.eq("categoryParticipantId", args.participant2Id),
-      )
+      .withIndex("by_bracket", (q) => q.eq("bracketId", args.bracketId))
+      .filter((q) => q.eq(q.field("categoryParticipantId"), args.participant2Id))
       .unique();
 
     if (!bp1 || bp1.bracketId !== args.bracketId) {
