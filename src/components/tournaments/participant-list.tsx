@@ -3,7 +3,7 @@
 import { api } from "@convex/_generated/api.js";
 import { Id } from "@convex/_generated/dataModel";
 import { useMutation } from "convex/react";
-import { Trash2Icon } from "lucide-react";
+import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon, Trash2Icon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -27,6 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useLocalStorage } from "@/lib/hooks/use-local-storage";
 
 interface SinglesParticipant {
   _id: Id<"categoryParticipants">;
@@ -54,6 +55,14 @@ interface ParticipantListProps {
   categoryId: Id<"categories">;
 }
 
+type SortColumn = "name" | "record";
+type SortDirection = "asc" | "desc";
+
+interface SortConfig {
+  column: SortColumn;
+  direction: SortDirection;
+}
+
 function getStatusBadge(status: string) {
   switch (status) {
     case "active":
@@ -69,6 +78,47 @@ function getStatusBadge(status: string) {
 
 export function ParticipantList({ participants, categoryType, categoryId }: ParticipantListProps) {
   const [removeTarget, setRemoveTarget] = useState<Id<"categoryParticipants"> | null>(null);
+  const [sortConfig, setSortConfig] = useLocalStorage<SortConfig>("participant-list-sort", {
+    column: "record",
+    direction: "desc",
+  });
+
+  const handleSort = (column: SortColumn) => {
+    setSortConfig((current) => {
+      if (current.column === column) {
+        return { column, direction: current.direction === "asc" ? "desc" : "asc" };
+      }
+      return { column, direction: column === "record" ? "desc" : "asc" };
+    });
+  };
+
+  const sortedParticipants = [...participants].sort((a, b) => {
+    const dir = sortConfig.direction === "asc" ? 1 : -1;
+
+    if (sortConfig.column === "name") {
+      const nameA =
+        categoryType === "singles"
+          ? ((a as SinglesParticipant).player?.fullName ?? "")
+          : ((a as DoublesParticipant).pair?.teamName ??
+            (a as DoublesParticipant).playerOne?.fullName ??
+            "");
+      const nameB =
+        categoryType === "singles"
+          ? ((b as SinglesParticipant).player?.fullName ?? "")
+          : ((b as DoublesParticipant).pair?.teamName ??
+            (b as DoublesParticipant).playerOne?.fullName ??
+            "");
+      return nameA.localeCompare(nameB) * dir;
+    }
+
+    if (sortConfig.column === "record") {
+      const winDiff = (a.wins - b.wins) * dir;
+      if (winDiff !== 0) return winDiff;
+      return (a.losses - b.losses) * -dir;
+    }
+
+    return 0;
+  });
 
   const unregister = useMutation(api.app.categoryParticipants.unregister).withOptimisticUpdate(
     (localStore, args) => {
@@ -98,22 +148,54 @@ export function ParticipantList({ participants, categoryType, categoryId }: Part
       <div className="rounded-xl border">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Participant</TableHead>
+            <TableRow className="hover:bg-transparent">
+              <TableHead
+                className="cursor-pointer select-none hover:bg-muted/50"
+                onClick={() => handleSort("name")}
+              >
+                <span className="flex items-center gap-1">
+                  Participant
+                  {sortConfig.column === "name" ? (
+                    sortConfig.direction === "asc" ? (
+                      <ArrowUpIcon className="size-3" />
+                    ) : (
+                      <ArrowDownIcon className="size-3" />
+                    )
+                  ) : (
+                    <ArrowUpDownIcon className="size-3 text-muted-foreground" />
+                  )}
+                </span>
+              </TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Record</TableHead>
+              <TableHead
+                className="cursor-pointer select-none hover:bg-muted/50"
+                onClick={() => handleSort("record")}
+              >
+                <span className="flex items-center gap-1">
+                  Record
+                  {sortConfig.column === "record" ? (
+                    sortConfig.direction === "asc" ? (
+                      <ArrowUpIcon className="size-3" />
+                    ) : (
+                      <ArrowDownIcon className="size-3" />
+                    )
+                  ) : (
+                    <ArrowUpDownIcon className="size-3 text-muted-foreground" />
+                  )}
+                </span>
+              </TableHead>
               <TableHead className="w-16" />
             </TableRow>
           </TableHeader>
           <TableBody>
-            {participants.length === 0 ? (
+            {sortedParticipants.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
                   No participants registered yet
                 </TableCell>
               </TableRow>
             ) : (
-              participants.map((p) => (
+              sortedParticipants.map((p) => (
                 <TableRow key={p._id}>
                   <TableCell className="font-medium">
                     {categoryType === "singles" ? (
