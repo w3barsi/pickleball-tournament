@@ -1,7 +1,7 @@
 "use client";
 
 import { Id } from "@convex/_generated/dataModel";
-import { Trash2Icon } from "lucide-react";
+import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon, Trash2Icon } from "lucide-react";
 import { useState } from "react";
 
 import {
@@ -24,6 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useLocalStorage } from "@/lib/hooks/use-local-storage";
 
 interface BracketParticipant {
   _id: Id<"bracketParticipants">;
@@ -48,6 +49,14 @@ interface BracketParticipantListProps {
   onRemove: (bracketParticipantId: Id<"bracketParticipants">) => void;
 }
 
+type SortColumn = "label" | "name" | "record";
+type SortDirection = "asc" | "desc";
+
+interface SortConfig {
+  column: SortColumn;
+  direction: SortDirection;
+}
+
 function getStatusBadge(status: string) {
   switch (status) {
     case "active":
@@ -68,6 +77,53 @@ export function BracketParticipantList({
   onRemove,
 }: BracketParticipantListProps) {
   const [removeTarget, setRemoveTarget] = useState<Id<"bracketParticipants"> | null>(null);
+  const [sortConfig, setSortConfig] = useLocalStorage<SortConfig>("bracket-participant-list-sort", {
+    column: "record",
+    direction: "desc",
+  });
+
+  const handleSort = (column: SortColumn) => {
+    setSortConfig((current) => {
+      if (current.column === column) {
+        return { column, direction: current.direction === "asc" ? "desc" : "asc" };
+      }
+      return { column, direction: column === "record" ? "desc" : "asc" };
+    });
+  };
+
+  const sortedParticipants = [...participants].sort((a, b) => {
+    const dir = sortConfig.direction === "asc" ? 1 : -1;
+
+    if (sortConfig.column === "label") {
+      const seedA = a.seed ?? Infinity;
+      const seedB = b.seed ?? Infinity;
+      return (seedA - seedB) * dir;
+    }
+
+    if (sortConfig.column === "name") {
+      const nameA =
+        categoryType === "singles"
+          ? (a.categoryParticipant.player?.fullName ?? "")
+          : (a.categoryParticipant.pair?.teamName ??
+            a.categoryParticipant.playerOne?.fullName ??
+            "");
+      const nameB =
+        categoryType === "singles"
+          ? (b.categoryParticipant.player?.fullName ?? "")
+          : (b.categoryParticipant.pair?.teamName ??
+            b.categoryParticipant.playerOne?.fullName ??
+            "");
+      return nameA.localeCompare(nameB) * dir;
+    }
+
+    if (sortConfig.column === "record") {
+      const winDiff = (a.categoryParticipant.wins - b.categoryParticipant.wins) * dir;
+      if (winDiff !== 0) return winDiff;
+      return (a.categoryParticipant.losses - b.categoryParticipant.losses) * -dir;
+    }
+
+    return 0;
+  });
 
   const handleConfirmRemove = () => {
     if (removeTarget) {
@@ -78,26 +134,74 @@ export function BracketParticipantList({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-lg border">
+      <div className="rounded-xl border">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Label</TableHead>
-              <TableHead>Participant</TableHead>
+            <TableRow className="hover:bg-transparent">
+              <TableHead
+                className="cursor-pointer select-none hover:bg-muted/50"
+                onClick={() => handleSort("label")}
+              >
+                <span className="flex items-center gap-1">
+                  Label
+                  {sortConfig.column === "label" ? (
+                    sortConfig.direction === "asc" ? (
+                      <ArrowUpIcon className="size-3" />
+                    ) : (
+                      <ArrowDownIcon className="size-3" />
+                    )
+                  ) : (
+                    <ArrowUpDownIcon className="size-3 text-muted-foreground" />
+                  )}
+                </span>
+              </TableHead>
+              <TableHead
+                className="cursor-pointer select-none hover:bg-muted/50"
+                onClick={() => handleSort("name")}
+              >
+                <span className="flex items-center gap-1">
+                  Participant
+                  {sortConfig.column === "name" ? (
+                    sortConfig.direction === "asc" ? (
+                      <ArrowUpIcon className="size-3" />
+                    ) : (
+                      <ArrowDownIcon className="size-3" />
+                    )
+                  ) : (
+                    <ArrowUpDownIcon className="size-3 text-muted-foreground" />
+                  )}
+                </span>
+              </TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Record</TableHead>
+              <TableHead
+                className="cursor-pointer select-none hover:bg-muted/50"
+                onClick={() => handleSort("record")}
+              >
+                <span className="flex items-center gap-1">
+                  Record
+                  {sortConfig.column === "record" ? (
+                    sortConfig.direction === "asc" ? (
+                      <ArrowUpIcon className="size-3" />
+                    ) : (
+                      <ArrowDownIcon className="size-3" />
+                    )
+                  ) : (
+                    <ArrowUpDownIcon className="size-3 text-muted-foreground" />
+                  )}
+                </span>
+              </TableHead>
               <TableHead className="w-16" />
             </TableRow>
           </TableHeader>
           <TableBody>
-            {participants.length === 0 ? (
+            {sortedParticipants.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
                   No participants in this bracket yet
                 </TableCell>
               </TableRow>
             ) : (
-              participants.map((bp) => {
+              sortedParticipants.map((bp) => {
                 const cp = bp.categoryParticipant;
                 const name =
                   categoryType === "singles"

@@ -103,7 +103,11 @@ function MatchListContent({ bracketId, bracketLabel, categoryType }: MatchListPr
   const { data: matchData } = useSuspenseQuery(
     convexQuery(api.app.matches.listByBracket, { bracketId }),
   );
-  const matches = matchData.matches;
+  const matches = [...matchData.matches].sort((a, b) => {
+    const aOrder = a.matchOrder ?? Infinity;
+    const bOrder = b.matchOrder ?? Infinity;
+    return aOrder - bOrder;
+  });
 
   const navigate = useNavigate();
 
@@ -123,6 +127,7 @@ function MatchListContent({ bracketId, bracketLabel, categoryType }: MatchListPr
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-16 whitespace-nowrap">Order</TableHead>
               <TableHead className="w-24 whitespace-nowrap">Match</TableHead>
               <TableHead>Participants</TableHead>
               <TableHead className="w-28">Status</TableHead>
@@ -146,6 +151,9 @@ function MatchListContent({ bracketId, bracketLabel, categoryType }: MatchListPr
                     })
                   }
                 >
+                  <TableCell className="whitespace-nowrap text-muted-foreground">
+                    {match.matchOrder ?? "—"}
+                  </TableCell>
                   <TableCell className="font-medium whitespace-nowrap">
                     <div className="flex flex-col gap-0.5">
                       <span>

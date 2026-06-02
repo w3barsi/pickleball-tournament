@@ -389,9 +389,62 @@ export const update = authedMutation({
 
     await requireManageTournament(ctx, match.tournamentId);
 
-    const { matchId, ...updates } = args;
+    const { matchId, matchOrder: newOrder, ...otherUpdates } = args;
+    const oldOrder = match.matchOrder;
+
+    if (newOrder !== oldOrder) {
+      const bracketMatches = await ctx.db
+        .query("matches")
+        .withIndex("by_bracket", (q) => q.eq("bracketId", match.bracketId))
+        .collect();
+
+      if (oldOrder == null && newOrder != null) {
+        // Assigning a new order: shift existing matches >= newOrder up by 1
+        for (const m of bracketMatches) {
+          if (m._id !== matchId && m.matchOrder != null && m.matchOrder >= newOrder) {
+            await ctx.db.patch(m._id, { matchOrder: m.matchOrder + 1 });
+          }
+        }
+      } else if (oldOrder != null && newOrder == null) {
+        // Removing order: shift existing matches > oldOrder down by 1
+        for (const m of bracketMatches) {
+          if (m._id !== matchId && m.matchOrder != null && m.matchOrder > oldOrder) {
+            await ctx.db.patch(m._id, { matchOrder: m.matchOrder - 1 });
+          }
+        }
+      } else if (oldOrder != null && newOrder != null) {
+        // Reordering within bracket
+        if (newOrder < oldOrder) {
+          // Moving up: shift matches in [newOrder, oldOrder) up by 1
+          for (const m of bracketMatches) {
+            if (
+              m._id !== matchId &&
+              m.matchOrder != null &&
+              m.matchOrder >= newOrder &&
+              m.matchOrder < oldOrder
+            ) {
+              await ctx.db.patch(m._id, { matchOrder: m.matchOrder + 1 });
+            }
+          }
+        } else {
+          // Moving down: shift matches in (oldOrder, newOrder] down by 1
+          for (const m of bracketMatches) {
+            if (
+              m._id !== matchId &&
+              m.matchOrder != null &&
+              m.matchOrder > oldOrder &&
+              m.matchOrder <= newOrder
+            ) {
+              await ctx.db.patch(m._id, { matchOrder: m.matchOrder - 1 });
+            }
+          }
+        }
+      }
+    }
+
     await ctx.db.patch(matchId, {
-      ...updates,
+      ...otherUpdates,
+      matchOrder: newOrder,
       lastUpdatedAt: Date.now(),
     });
     return { success: true };
