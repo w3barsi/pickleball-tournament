@@ -46,41 +46,39 @@ export function TournamentHeader({ tournament }: { tournament: Doc<"tournaments"
       <div>
         <HeaderCardHeading>{tournament.name}</HeaderCardHeading>
         <HeaderCardDescription>Organized by {tournament.organizerName}</HeaderCardDescription>
-
-        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-white/90">
-          <div className="flex items-center gap-1.5">
-            <CalendarIcon className="size-4" />
-            <span>{formatDate(tournament.date)}</span>
-            {tournament.endDate && <span>– {formatDate(tournament.endDate)}</span>}
-          </div>
-          <span className="hidden text-white/40 sm:inline">|</span>
-          <div className="flex items-center gap-1.5">
-            <MapPinIcon className="size-4" />
-            <span>{tournament.venueName ?? "No venue set"}</span>
-          </div>
-          <span className="hidden text-white/40 sm:inline">|</span>
-          <div className="flex items-center gap-1.5">
-            <LayoutGridIcon className="size-4" />
-            <span>{categories?.length ?? 0} categories</span>
-          </div>
-          <span className="hidden text-white/40 sm:inline">|</span>
-          <div className="flex items-center gap-1.5">
-            <TrophyIcon className="size-4" />
-            <span>{totalBrackets} brackets</span>
-          </div>
-          <span className="hidden text-white/40 sm:inline">|</span>
-          <div className="flex items-center gap-1.5">
-            <SwordsIcon className="size-4" />
-            <span>{liveMatches?.length ?? 0} live</span>
-          </div>
-          <span className="hidden text-white/40 sm:inline">|</span>
-          <div className="flex items-center gap-1.5">
-            <UsersIcon className="size-4" />
-            <span>{totalParticipants} participants</span>
-          </div>
-        </div>
+        <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/70">
+          <span className="flex items-center gap-1">
+            <CalendarIcon className="size-3" />
+            {formatDate(tournament.date)}
+            {tournament.endDate && ` – ${formatDate(tournament.endDate)}`}
+          </span>
+          <span className="hidden sm:inline">·</span>
+          <span className="flex items-center gap-1">
+            <MapPinIcon className="size-3" />
+            {tournament.venueName ?? "No venue set"}
+          </span>
+          <span className="hidden sm:inline">·</span>
+          <span className="flex items-center gap-1">
+            <LayoutGridIcon className="size-3" />
+            {categories?.length ?? 0} categories
+          </span>
+          <span className="hidden sm:inline">·</span>
+          <span className="flex items-center gap-1">
+            <TrophyIcon className="size-3" />
+            {totalBrackets} brackets
+          </span>
+          <span className="hidden sm:inline">·</span>
+          <span className="flex items-center gap-1">
+            <SwordsIcon className="size-3" />
+            {liveMatches?.length ?? 0} live
+          </span>
+          <span className="hidden sm:inline">·</span>
+          <span className="flex items-center gap-1">
+            <UsersIcon className="size-3" />
+            {totalParticipants} participants
+          </span>
+        </p>
       </div>
-
       <TournamentSettingsDialog tournament={tournament} />
     </HeaderCard>
   );

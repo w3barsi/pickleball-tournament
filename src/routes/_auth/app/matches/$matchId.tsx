@@ -146,7 +146,7 @@ function MatchDetailPage() {
       {/* Header */}
       <HeaderCard>
         <div>
-          <div className="mb-2 flex items-center gap-3">
+          <div className="flex items-center gap-3">
             <HeaderCardHeading>
               Match
               {match.matchOrder ? ` · M${match.matchOrder}` : ""}

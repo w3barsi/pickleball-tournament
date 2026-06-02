@@ -86,7 +86,7 @@ function TournamentsPage() {
       {/* Hero Header */}
 
       <HeaderCard>
-        <div className="text-center sm:text-left">
+        <div>
           <HeaderCardHeading>TOURNAMENTS</HeaderCardHeading>
           <HeaderCardDescription>Manage Your Pickleball Events</HeaderCardDescription>
         </div>

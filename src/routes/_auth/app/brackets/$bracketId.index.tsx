@@ -134,22 +134,22 @@ function BracketDetailPage() {
       {/* Header */}
       <HeaderCard>
         <div>
-          <div className="mb-2 flex items-center gap-3">
+          <div className="flex items-center gap-3">
             <HeaderCardHeading>{bracket.name}</HeaderCardHeading>
             {getStatusBadge(bracket.status)}
           </div>
           <HeaderCardDescription>
             {tournament.name} · {category.name} · Stage {bracket.stage}
           </HeaderCardDescription>
-          <p className="mt-1 flex items-center gap-2 text-xs font-semibold tracking-wide text-white/70">
+          <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/70">
             <span>{getFormatLabel(bracket.format)}</span>
-            <span className="text-white/40">·</span>
+            <span className="hidden sm:inline">·</span>
             <span>Best of {bracket.numberOfSets}</span>
-            <span className="text-white/40">·</span>
+            <span className="hidden sm:inline">·</span>
             <span>First to {bracket.pointsPerGame}</span>
             {bracket.winByTwo && (
               <>
-                <span className="text-white/40">·</span>
+                <span className="hidden sm:inline">·</span>
                 <span>Win by 2</span>
               </>
             )}

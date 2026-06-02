@@ -22,7 +22,5 @@ export function HeaderCardHeading({ children, n }: { children: React.ReactNode; 
 }
 
 export function HeaderCardDescription({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="mt-3 text-sm font-bold tracking-[0.2em] text-white/90 uppercase">{children}</p>
-  );
+  return <p className="mt-3 text-sm font-medium text-white/90">{children}</p>;
 }

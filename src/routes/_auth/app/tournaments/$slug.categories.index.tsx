@@ -60,7 +60,7 @@ function CategoriesPage() {
     <div className="space-y-6">
       {/* Header */}
       <HeaderCard>
-        <div className="text-center sm:text-left">
+        <div>
           <HeaderCardHeading>CATEGORIES</HeaderCardHeading>
           <HeaderCardDescription>
             {tournament ? tournament.name : "Loading..."}

@@ -129,7 +129,7 @@ function CategoryDetailPage() {
       {/* Header */}
       <HeaderCard>
         <div>
-          <div className="mb-2 flex items-center gap-3">
+          <div className="flex items-center gap-3">
             <HeaderCardHeading>{category.name}</HeaderCardHeading>
             {getRatingBadge(category.rating)}
           </div>
@@ -137,6 +137,23 @@ function CategoryDetailPage() {
             {tournament.name} · {getCategoryLabel(category.category)} ·{" "}
             {getTypeLabel(category.type)}
           </HeaderCardDescription>
+          <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/70">
+            <span className="flex items-center gap-1">
+              <UsersIcon className="size-3" />
+              {participants?.length ?? 0}
+              {category.maxParticipants ? ` / ${category.maxParticipants}` : ""} participants
+            </span>
+            <span className="hidden sm:inline">·</span>
+            <span className="flex items-center gap-1">
+              <TrophyIcon className="size-3" />
+              {brackets?.length ?? 0} brackets
+            </span>
+            <span className="hidden sm:inline">·</span>
+            <span className="flex items-center gap-1">
+              <SwordsIcon className="size-3" />
+              {totalMatches} matches
+            </span>
+          </p>
         </div>
         <EditCategoryDialog category={category} tournamentSlug={slug} />
       </HeaderCard>

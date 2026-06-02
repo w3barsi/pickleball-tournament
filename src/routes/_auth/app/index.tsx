@@ -36,17 +36,15 @@ function AppIndex() {
           </HeaderCardDescription>
         </div>
 
-        <div className="flex flex-col gap-3 px-4">
-          <Button
-            nativeButton={false}
-            render={
-              <Link to="/app/tournaments">
-                <TrophyIcon />
-                VIEW TOURNAMENTS
-              </Link>
-            }
-          />
-        </div>
+        <Button
+          nativeButton={false}
+          render={
+            <Link to="/app/tournaments">
+              <TrophyIcon />
+              VIEW TOURNAMENTS
+            </Link>
+          }
+        />
       </HeaderCard>
 
       {/* Tournaments Card */}
