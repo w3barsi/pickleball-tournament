@@ -121,7 +121,7 @@ export function EditCategoryDialog({ category, tournamentSlug }: EditCategoryDia
       setIsDeleteAlertOpen(false);
       setOpen(false);
       navigate({
-        to: "/app/tournaments/$slug/categories",
+        to: "/app/tournaments/$slug",
         params: { slug: tournamentSlug },
       });
     } catch (err) {

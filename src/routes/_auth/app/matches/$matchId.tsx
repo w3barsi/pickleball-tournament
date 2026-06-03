@@ -186,7 +186,7 @@ function MatchDetailPage() {
 
       {/* Header */}
       <HeaderCard>
-        <div>
+        <div className="flex flex-col items-center md:items-start">
           <div className="flex items-center gap-3">
             <HeaderCardHeading>
               Match
@@ -199,6 +199,80 @@ function MatchDetailPage() {
             {bracket?.name ?? "Bracket"}
           </HeaderCardDescription>
         </div>
+
+        {/* Matchup */}
+        <div className="flex flex-col items-center gap-2">
+          <div className="flex items-center gap-3 md:gap-6">
+            <div className="text-right">
+              <div className="max-w-[140px] text-base leading-tight font-bold text-white md:max-w-[200px] md:text-lg">
+                {category?.type === "singles"
+                  ? (participant1?.player?.fullName ?? "TBD")
+                  : (participant1?.pair?.teamName ??
+                    `${participant1?.playerOne?.fullName ?? "Unknown"} / ${participant1?.playerTwo?.fullName ?? "Unknown"}`)}
+              </div>
+              {isP1Winner && (
+                <div className="flex items-center justify-end gap-1 text-xs font-semibold text-lime-300">
+                  <TrophyIcon className="size-3" />
+                  Winner
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 font-mono text-xl font-black text-white md:text-2xl">
+              {match.status === "scheduled" ? (
+                <span className="text-sm font-medium text-white/70">vs</span>
+              ) : (
+                <>
+                  <span className={isP1Winner ? "text-lime-300" : ""}>{p1Wins}</span>
+                  <span className="text-white/50">—</span>
+                  <span className={isP2Winner ? "text-lime-300" : ""}>{p2Wins}</span>
+                </>
+              )}
+            </div>
+
+            <div className="text-left">
+              <div className="max-w-[140px] text-base leading-tight font-bold text-white md:max-w-[200px] md:text-lg">
+                {category?.type === "singles"
+                  ? (participant2?.player?.fullName ?? "TBD")
+                  : (participant2?.pair?.teamName ??
+                    `${participant2?.playerOne?.fullName ?? "Unknown"} / ${participant2?.playerTwo?.fullName ?? "Unknown"}`)}
+              </div>
+              {isP2Winner && (
+                <div className="flex items-center gap-1 text-xs font-semibold text-lime-300">
+                  <TrophyIcon className="size-3" />
+                  Winner
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Quick metadata */}
+          <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs text-white/70">
+            {match.courtNumber && <span>Court {match.courtNumber}</span>}
+            {match.courtNumber && <span>·</span>}
+            <span>
+              {bracket?.numberOfSets ?? 3} {bracket?.numberOfSets === 1 ? "set" : "sets"}
+            </span>
+            <span>·</span>
+            <span>
+              {bracket?.pointsPerGame ?? 11} pts
+              {bracket?.winByTwo ? " (win by 2)" : ""}
+            </span>
+            {match.scheduledAt && (
+              <>
+                <span>·</span>
+                <span>
+                  {new Date(match.scheduledAt).toLocaleDateString()}{" "}
+                  {new Date(match.scheduledAt).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+              </>
+            )}
+          </div>
+        </div>
+
         <div className="flex items-center gap-2">{match && <EditMatchDialog match={match} />}</div>
       </HeaderCard>
 

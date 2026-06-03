@@ -115,12 +115,12 @@ function CategoryDetailPage() {
           nativeButton={false}
           render={
             <Link
-              to="/app/tournaments/$slug/categories"
+              to="/app/tournaments/$slug"
               params={{ slug }}
               className="flex items-center gap-1 text-muted-foreground"
             >
               <ChevronLeftIcon className="size-4" />
-              Back to Categories
+              Back to Tournament
             </Link>
           }
         />

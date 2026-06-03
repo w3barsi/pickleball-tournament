@@ -24,10 +24,6 @@ function useTournamentSlug(): string | null {
     from: "/_auth/app/tournaments/$slug/",
     shouldThrow: false,
   });
-  const categoriesMatch = useMatch({
-    from: "/_auth/app/tournaments/$slug/categories/",
-    shouldThrow: false,
-  });
   const categoryMatch = useMatch({
     from: "/_auth/app/tournaments/$slug/categories/$categoryId/",
     shouldThrow: false,
@@ -41,7 +37,7 @@ function useTournamentSlug(): string | null {
     shouldThrow: false,
   });
 
-  const isOnTournamentRoute = tournamentMatch || categoriesMatch || categoryMatch;
+  const isOnTournamentRoute = tournamentMatch || categoryMatch;
 
   const { data: bracketData } = useQuery(
     convexQuery(
@@ -61,7 +57,6 @@ function useTournamentSlug(): string | null {
   );
 
   if (tournamentMatch) return tournamentMatch.params.slug;
-  if (categoriesMatch) return categoriesMatch.params.slug;
   if (categoryMatch) return categoryMatch.params.slug;
   if (bracketData?.tournament?.slug) return bracketData.tournament.slug;
   if (matchData?.tournament?.slug) return matchData.tournament.slug;

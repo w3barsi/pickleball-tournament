@@ -3,8 +3,9 @@ import { api } from "@convex/_generated/api.js";
 import { Id } from "@convex/_generated/dataModel.js";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { TrophyIcon, ChevronRightIcon } from "lucide-react";
-import { Suspense } from "react";
+import { useMutation } from "convex/react";
+import { ChevronRightIcon, PlusIcon, TrophyIcon } from "lucide-react";
+import { Suspense, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -17,6 +18,8 @@ import {
 } from "@/components/ui/item";
 import { Skeleton } from "@/components/ui/skeleton";
 
+import { CreateCategoryDialog } from "./create-category-dialog";
+
 export function CategoriesSection({
   slug,
   tournamentId,
@@ -24,21 +27,41 @@ export function CategoriesSection({
   slug: string;
   tournamentId: Id<"tournaments">;
 }) {
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const createCategory = useMutation(api.app.categories.create);
+
+  const handleCreate = async (data: {
+    name: string;
+    type: "singles" | "doubles";
+    rating: "beginner" | "intermediate" | "advanced";
+    category: "womens" | "mens" | "mixed" | "open";
+    maxParticipants?: number;
+  }) => {
+    try {
+      await createCategory({ tournamentId, ...data });
+      return {};
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      return { error: `Failed to create category: ${message}` };
+    }
+  };
+
   return (
     <section className="space-y-3">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold">Categories</h2>
-        <Button
-          variant="ghost"
-          size="sm"
-          nativeButton={false}
-          render={<Link to="/app/tournaments/$slug/categories" params={{ slug }} />}
-        >
-          View all <ChevronRightIcon className="size-4" />
-        </Button>
+        <CreateCategoryDialog
+          open={isCreateOpen}
+          onOpenChange={setIsCreateOpen}
+          onCreate={handleCreate}
+        />
       </div>
       <Suspense fallback={<CategoriesFallback />}>
-        <CategoriesSectionInner slug={slug} tournamentId={tournamentId} />
+        <CategoriesSectionInner
+          slug={slug}
+          tournamentId={tournamentId}
+          onCreateOpen={() => setIsCreateOpen(true)}
+        />
       </Suspense>
     </section>
   );
@@ -47,9 +70,11 @@ export function CategoriesSection({
 export function CategoriesSectionInner({
   slug,
   tournamentId,
+  onCreateOpen,
 }: {
   slug: string;
   tournamentId: Id<"tournaments">;
+  onCreateOpen: () => void;
 }) {
   const { data: categories } = useSuspenseQuery(
     convexQuery(api.app.categories.listByTournament, { tournamentId }),
@@ -65,6 +90,10 @@ export function CategoriesSectionInner({
           <TrophyIcon className="mx-auto size-8 text-muted-foreground" />
           <p className="mt-4 text-lg font-bold">No categories yet</p>
           <p className="text-sm text-muted-foreground">Create a category to get started</p>
+          <Button className="mt-4" variant="secondary" onClick={onCreateOpen}>
+            <PlusIcon className="size-4" />
+            Create Category
+          </Button>
         </div>
       ) : (
         <ItemGroup className="gap-2">

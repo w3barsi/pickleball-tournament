@@ -2,11 +2,8 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 
 import { IntroPageDeleteMe } from "@/components/_DELETE_ME_intro_page";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_public/")({
   component: HomePage,
-  beforeLoad: () => {
-    throw redirect({ to: "/app" });
-  },
 });
 
 function HomePage() {
