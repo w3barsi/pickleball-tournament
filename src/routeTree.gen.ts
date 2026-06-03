@@ -21,6 +21,7 @@ import { Route as AuthAdminRouteRouteImport } from './routes/_auth/admin/route'
 import { Route as AuthAppIndexRouteImport } from './routes/_auth/app/index'
 import { Route as AuthAdminIndexRouteImport } from './routes/_auth/admin/index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as PublicTSlugRouteImport } from './routes/_public/t.$slug'
 import { Route as AuthGIdRouteImport } from './routes/_auth/g.$id'
 import { Route as AuthAppPlayersRouteImport } from './routes/_auth/app/players'
 import { Route as AuthAppPlayerPairsRouteImport } from './routes/_auth/app/playerPairs'
@@ -88,6 +89,11 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PublicTSlugRoute = PublicTSlugRouteImport.update({
+  id: '/t/$slug',
+  path: '/t/$slug',
+  getParentRoute: () => PublicRouteRoute,
+} as any)
 const AuthGIdRoute = AuthGIdRouteImport.update({
   id: '/g/$id',
   path: '/g/$id',
@@ -148,6 +154,7 @@ export interface FileRoutesByFullPath {
   '/app/playerPairs': typeof AuthAppPlayerPairsRoute
   '/app/players': typeof AuthAppPlayersRoute
   '/g/$id': typeof AuthGIdRoute
+  '/t/$slug': typeof PublicTSlugRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/admin/': typeof AuthAdminIndexRoute
   '/app/': typeof AuthAppIndexRoute
@@ -166,6 +173,7 @@ export interface FileRoutesByTo {
   '/app/playerPairs': typeof AuthAppPlayerPairsRoute
   '/app/players': typeof AuthAppPlayersRoute
   '/g/$id': typeof AuthGIdRoute
+  '/t/$slug': typeof PublicTSlugRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/admin': typeof AuthAdminIndexRoute
   '/app': typeof AuthAppIndexRoute
@@ -190,6 +198,7 @@ export interface FileRoutesById {
   '/_auth/app/playerPairs': typeof AuthAppPlayerPairsRoute
   '/_auth/app/players': typeof AuthAppPlayersRoute
   '/_auth/g/$id': typeof AuthGIdRoute
+  '/_public/t/$slug': typeof PublicTSlugRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/_auth/admin/': typeof AuthAdminIndexRoute
   '/_auth/app/': typeof AuthAppIndexRoute
@@ -212,6 +221,7 @@ export interface FileRouteTypes {
     | '/app/playerPairs'
     | '/app/players'
     | '/g/$id'
+    | '/t/$slug'
     | '/api/auth/$'
     | '/admin/'
     | '/app/'
@@ -230,6 +240,7 @@ export interface FileRouteTypes {
     | '/app/playerPairs'
     | '/app/players'
     | '/g/$id'
+    | '/t/$slug'
     | '/api/auth/$'
     | '/admin'
     | '/app'
@@ -253,6 +264,7 @@ export interface FileRouteTypes {
     | '/_auth/app/playerPairs'
     | '/_auth/app/players'
     | '/_auth/g/$id'
+    | '/_public/t/$slug'
     | '/api/auth/$'
     | '/_auth/admin/'
     | '/_auth/app/'
@@ -356,6 +368,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/auth/$'
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_public/t/$slug': {
+      id: '/_public/t/$slug'
+      path: '/t/$slug'
+      fullPath: '/t/$slug'
+      preLoaderRoute: typeof PublicTSlugRouteImport
+      parentRoute: typeof PublicRouteRoute
     }
     '/_auth/g/$id': {
       id: '/_auth/g/$id'
@@ -496,10 +515,12 @@ const GuestRouteRouteWithChildren = GuestRouteRoute._addFileChildren(
 
 interface PublicRouteRouteChildren {
   PublicIndexRoute: typeof PublicIndexRoute
+  PublicTSlugRoute: typeof PublicTSlugRoute
 }
 
 const PublicRouteRouteChildren: PublicRouteRouteChildren = {
   PublicIndexRoute: PublicIndexRoute,
+  PublicTSlugRoute: PublicTSlugRoute,
 }
 
 const PublicRouteRouteWithChildren = PublicRouteRoute._addFileChildren(

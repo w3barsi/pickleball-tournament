@@ -207,11 +207,7 @@ function HomePage() {
                     </span>
                   </div>
                 </div>
-                <Link
-                  to="/app/tournaments/$slug"
-                  params={{ slug: featured.slug }}
-                  className="shrink-0"
-                >
+                <Link to="/t/$slug" params={{ slug: featured.slug }} className="shrink-0">
                   <span className="inline-flex items-center gap-2 rounded-xl bg-foreground px-6 py-3 text-sm font-semibold text-background transition-transform hover:scale-105">
                     View Tournament
                     <ChevronRightIcon className="size-4" />
@@ -355,7 +351,7 @@ function TournamentCard({
   index: number;
 }) {
   return (
-    <Link to="/app/tournaments/$slug" params={{ slug: tournament.slug }}>
+    <Link to="/t/$slug" params={{ slug: tournament.slug }}>
       <Card className="group h-full overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
         <div className={`h-1 w-full ${getStatusAccent(tournament.status)}`} />
         <CardContent className="flex flex-1 flex-col gap-4 pt-5">
