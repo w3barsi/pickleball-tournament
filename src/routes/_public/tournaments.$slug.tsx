@@ -1,6 +1,5 @@
 import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@convex/_generated/api.js";
-import { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import {
@@ -15,10 +14,9 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
-export const Route = createFileRoute("/_public/t/$slug")({
+export const Route = createFileRoute("/_public/tournaments/$slug")({
   component: TournamentDetailPage,
   loader: async ({ params, context }) => {
     const data = await context.queryClient.ensureQueryData(
@@ -33,6 +31,124 @@ export const Route = createFileRoute("/_public/t/$slug")({
 });
 
 function TournamentDetailPage() {
+  return (
+    <div className="flex flex-col">
+      <TournamentHeroSection />
+      <TournamentStatsBar />
+      <TournamentMainContent />
+    </div>
+  );
+}
+
+/* ---------- Hero ---------- */
+
+function TournamentHeroSection() {
+  const { slug } = Route.useParams();
+  const { data } = useQuery(convexQuery(api.public.tournaments.getDetails, { slug }));
+
+  if (!data) return null;
+
+  const { tournament } = data;
+
+  return (
+    <section className="relative overflow-hidden bg-[#1a3a2a] px-4 py-16 text-white md:px-6 md:py-20">
+      <div className="pointer-events-none absolute inset-0">
+        <div
+          className="absolute -top-1/4 -right-1/4 h-[50vw] w-[50vw] rounded-full opacity-20 blur-3xl"
+          style={{
+            background: "radial-gradient(circle, #4ade80 0%, transparent 70%)",
+          }}
+        />
+        <div
+          className="absolute -bottom-1/4 -left-1/4 h-[40vw] w-[40vw] rounded-full opacity-15 blur-3xl"
+          style={{
+            background: "radial-gradient(circle, #a3e635 0%, transparent 70%)",
+          }}
+        />
+      </div>
+
+      <div className="relative z-10 mx-auto max-w-7xl">
+        <Link
+          to="/"
+          className="mb-6 inline-flex items-center gap-1.5 text-sm text-white/60 transition-colors hover:text-white"
+        >
+          <ArrowLeftIcon className="size-4" />
+          All Tournaments
+        </Link>
+
+        <h1 className="font-heading text-4xl leading-[1.05] font-black tracking-tight md:text-5xl lg:text-6xl">
+          {tournament.name}
+        </h1>
+
+        {tournament.description && (
+          <p className="mt-4 max-w-2xl text-lg leading-relaxed text-white/70">
+            {tournament.description}
+          </p>
+        )}
+
+        <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-white/70">
+          <span className="flex items-center gap-2">
+            <CalendarIcon className="size-4 shrink-0" />
+            {formatDateRange(tournament.date, tournament.endDate)}
+          </span>
+          {tournament.venueName && (
+            <span className="flex items-center gap-2">
+              <MapPinIcon className="size-4 shrink-0" />
+              {tournament.venueName}
+              {tournament.venueAddress && `, ${tournament.venueAddress}`}
+            </span>
+          )}
+          <span className="flex items-center gap-2">
+            <UsersIcon className="size-4 shrink-0" />
+            {tournament.organizerName}
+          </span>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ---------- Stats Bar ---------- */
+
+function TournamentStatsBar() {
+  const { slug } = Route.useParams();
+  const { data } = useQuery(convexQuery(api.public.tournaments.getDetails, { slug }));
+
+  if (!data) return null;
+
+  const { tournament, categories, totalIndividualPlayers } = data;
+  const totalBrackets = categories.reduce((sum, c) => sum + c.brackets.length, 0);
+
+  return (
+    <section className="border-b bg-background px-4 md:px-6">
+      <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-6 py-5">
+        <div className="flex items-center gap-3">{getStatusBadge(tournament.status)}</div>
+        <div className="hidden h-8 w-px bg-border md:block" />
+        <div className="flex items-center gap-6 text-sm">
+          <div className="flex items-center gap-2">
+            <SwordsIcon className="size-4 text-muted-foreground" />
+            <span className="font-semibold">{categories.length}</span>
+            <span className="text-muted-foreground">Categories</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <TrophyIcon className="size-4 text-muted-foreground" />
+            <span className="font-semibold">{totalBrackets}</span>
+            <span className="text-muted-foreground">Brackets</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <UsersIcon className="size-4 text-muted-foreground" />
+            <span className="font-semibold">{totalIndividualPlayers}</span>
+            <span className="text-muted-foreground">Players</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ---------- Main Content ---------- */
+
+function TournamentMainContent() {
   const { slug } = Route.useParams();
   const { data } = useQuery(convexQuery(api.public.tournaments.getDetails, { slug }));
 
@@ -44,134 +160,48 @@ function TournamentDetailPage() {
     );
   }
 
-  const { tournament, categories, singlesPlayers, doublesPairs, totalIndividualPlayers } = data;
-  const totalBrackets = categories.reduce((sum, c) => sum + c.brackets.length, 0);
+  const { categories, singlesPlayers, doublesPairs } = data;
 
   return (
-    <div className="flex flex-col">
-      {/* Hero */}
-      <section className="relative overflow-hidden bg-[#1a3a2a] px-4 py-16 text-white md:px-6 md:py-20">
-        <div className="pointer-events-none absolute inset-0">
-          <div
-            className="absolute -top-1/4 -right-1/4 h-[50vw] w-[50vw] rounded-full opacity-20 blur-3xl"
-            style={{
-              background: "radial-gradient(circle, #4ade80 0%, transparent 70%)",
-            }}
-          />
-          <div
-            className="absolute -bottom-1/4 -left-1/4 h-[40vw] w-[40vw] rounded-full opacity-15 blur-3xl"
-            style={{
-              background: "radial-gradient(circle, #a3e635 0%, transparent 70%)",
-            }}
-          />
-        </div>
-
-        <div className="relative z-10 mx-auto flex max-w-7xl items-center justify-between">
+    <div className="mx-auto w-full max-w-7xl px-4 py-10 md:px-6 md:py-16">
+      <div className="flex flex-col gap-16">
+        {/* Categories & Brackets */}
+        <section className="flex flex-col gap-8">
           <div>
-            <Link
-              to="/"
-              className="mb-6 inline-flex items-center gap-1.5 text-sm text-white/60 transition-colors hover:text-white"
-            >
-              <ArrowLeftIcon className="size-4" />
-              All Tournaments
-            </Link>
-
-            <h1 className="font-heading text-4xl leading-[1.05] font-black tracking-tight md:text-5xl lg:text-6xl">
-              {tournament.name}
-            </h1>
-
-            {tournament.description && (
-              <p className="mt-4 max-w-2xl text-lg leading-relaxed text-white/70">
-                {tournament.description}
-              </p>
-            )}
-
-            <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-white/70">
-              <span className="flex items-center gap-2">
-                <CalendarIcon className="size-4 shrink-0" />
-                {formatDateRange(tournament.date, tournament.endDate)}
-              </span>
-              {tournament.venueName && (
-                <span className="flex items-center gap-2">
-                  <MapPinIcon className="size-4 shrink-0" />
-                  {tournament.venueName}
-                  {tournament.venueAddress && `, ${tournament.venueAddress}`}
-                </span>
-              )}
-              <span className="flex items-center gap-2">
-                <UsersIcon className="size-4 shrink-0" />
-                {tournament.organizerName}
-              </span>
-            </div>
+            <h2 className="font-heading text-2xl font-bold tracking-tight">
+              Categories & Brackets
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Competition divisions and bracket configurations
+            </p>
           </div>
-          <Button variant="ghost">Manage Tournament</Button>
-        </div>
-      </section>
 
-      {/* Stats bar */}
-      <section className="border-b bg-background px-4 md:px-6">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-6 py-5">
-          <div className="flex items-center gap-3">{getStatusBadge(tournament.status)}</div>
-          <div className="hidden h-8 w-px bg-border md:block" />
-          <div className="flex items-center gap-6 text-sm">
-            <div className="flex items-center gap-2">
-              <SwordsIcon className="size-4 text-muted-foreground" />
-              <span className="font-semibold">{categories.length}</span>
-              <span className="text-muted-foreground">Categories</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <TrophyIcon className="size-4 text-muted-foreground" />
-              <span className="font-semibold">{totalBrackets}</span>
-              <span className="text-muted-foreground">Brackets</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <UsersIcon className="size-4 text-muted-foreground" />
-              <span className="font-semibold">{totalIndividualPlayers}</span>
-              <span className="text-muted-foreground">Players</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Main content */}
-      <div className="mx-auto w-full max-w-7xl px-4 py-10 md:px-6 md:py-16">
-        <div className="grid gap-10 lg:grid-cols-[1fr_400px]">
-          {/* Left: Categories & Brackets */}
-          <div className="flex flex-col gap-8">
-            <div>
-              <h2 className="font-heading text-2xl font-bold tracking-tight">
-                Categories & Brackets
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Competition divisions and bracket configurations
+          {categories.length === 0 ? (
+            <div className="rounded-2xl border border-dashed py-16 text-center">
+              <CircleIcon className="mx-auto size-8 text-muted-foreground" />
+              <p className="mt-3 text-sm text-muted-foreground">
+                No categories have been set up yet.
               </p>
             </div>
+          ) : (
+            <div className="flex flex-col gap-6">
+              {categories.map(({ category, brackets }) => (
+                <CategorySection key={category._id} category={category} brackets={brackets} />
+              ))}
+            </div>
+          )}
+        </section>
 
-            {categories.length === 0 ? (
-              <div className="rounded-2xl border border-dashed py-16 text-center">
-                <CircleIcon className="mx-auto size-8 text-muted-foreground" />
-                <p className="mt-3 text-sm text-muted-foreground">
-                  No categories have been set up yet.
-                </p>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-6">
-                {categories.map(({ category, brackets }) => (
-                  <CategorySection key={category._id} category={category} brackets={brackets} />
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Right: Players sidebar */}
-          <div className="flex flex-col gap-8">
-            <PlayersSidebar singlesPlayers={singlesPlayers} doublesPairs={doublesPairs} />
-          </div>
-        </div>
+        {/* Players — at the bottom */}
+        <section className="flex flex-col gap-8">
+          <CompetitorsSection singlesPlayers={singlesPlayers} doublesPairs={doublesPairs} />
+        </section>
       </div>
     </div>
   );
 }
+
+/* ---------- Category Section ---------- */
 
 function CategorySection({
   category,
@@ -306,9 +336,9 @@ function SpecPill({ children, icon }: { children: React.ReactNode; icon: React.R
   );
 }
 
-/* ---------- Players Sidebar ---------- */
+/* ---------- Competitors Section ---------- */
 
-function PlayersSidebar({
+function CompetitorsSection({
   singlesPlayers,
   doublesPairs,
 }: {
@@ -350,7 +380,6 @@ function PlayersSidebar({
 
   return (
     <div className="flex flex-col gap-8">
-      {/* Header */}
       <div>
         <h2 className="font-heading text-2xl font-bold tracking-tight">Competitors</h2>
         <p className="mt-1 text-sm text-muted-foreground">{totalEntries} total entries</p>
@@ -368,7 +397,7 @@ function PlayersSidebar({
               {singlesPlayers.length}
             </Badge>
           </div>
-          <div className="flex flex-col gap-2">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {singlesPlayers.map((player) => (
               <PlayerRow key={player._id} player={player} />
             ))}
@@ -388,7 +417,7 @@ function PlayersSidebar({
               {doublesPairs.length}
             </Badge>
           </div>
-          <div className="flex flex-col gap-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {doublesPairs.map((entry) => (
               <DoublesPairCard key={entry.playerOne._id + entry.playerTwo._id} entry={entry} />
             ))}
@@ -514,27 +543,26 @@ function MiniPlayer({
   );
 }
 
+/* ---------- Helpers ---------- */
+
 function getStatusBadge(status: string) {
   switch (status) {
     case "completed":
       return (
         <Badge className="bg-slate-100 font-normal text-slate-600 hover:bg-slate-100">
-          {" "}
-          Completed{" "}
+          Completed
         </Badge>
       );
     case "inProgress":
       return (
         <Badge className="bg-amber-50 font-normal text-amber-600 hover:bg-amber-50">
-          {" "}
-          In Progress{" "}
+          In Progress
         </Badge>
       );
     default:
       return (
         <Badge className="bg-emerald-50 font-normal text-emerald-600 hover:bg-emerald-50">
-          {" "}
-          Upcoming{" "}
+          Upcoming
         </Badge>
       );
   }

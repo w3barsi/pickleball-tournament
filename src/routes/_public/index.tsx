@@ -207,7 +207,7 @@ function HomePage() {
                     </span>
                   </div>
                 </div>
-                <Link to="/t/$slug" params={{ slug: featured.slug }} className="shrink-0">
+                <Link to="/tournaments/$slug" params={{ slug: featured.slug }} className="shrink-0">
                   <span className="inline-flex items-center gap-2 rounded-xl bg-foreground px-6 py-3 text-sm font-semibold text-background transition-transform hover:scale-105">
                     View Tournament
                     <ChevronRightIcon className="size-4" />
@@ -238,11 +238,11 @@ function HomePage() {
           </div>
 
           {tournaments === undefined ? (
-            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            <div className="flex flex-col gap-4">
               {Array.from({ length: 6 }).map((_, i) => (
                 <div
                   key={i}
-                  className="h-64 animate-pulse rounded-xl bg-muted"
+                  className="h-24 animate-pulse rounded-xl bg-muted"
                   style={{ animationDelay: `${i * 100}ms` }}
                 />
               ))}
@@ -258,9 +258,9 @@ function HomePage() {
               </p>
             </div>
           ) : (
-            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-              {remaining.map((tournament, i) => (
-                <TournamentCard key={tournament._id} tournament={tournament} index={i} />
+            <div className="flex flex-col gap-4">
+              {remaining.map((tournament) => (
+                <TournamentListItem key={tournament._id} tournament={tournament} />
               ))}
             </div>
           )}
@@ -333,9 +333,8 @@ function HomePage() {
   );
 }
 
-function TournamentCard({
+function TournamentListItem({
   tournament,
-  index,
 }: {
   tournament: {
     _id: Id<"tournaments">;
@@ -348,50 +347,51 @@ function TournamentCard({
     venueName?: string;
     description?: string;
   };
-  index: number;
 }) {
   return (
-    <Link to="/t/$slug" params={{ slug: tournament.slug }}>
-      <Card className="group h-full overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
-        <div className={`h-1 w-full ${getStatusAccent(tournament.status)}`} />
-        <CardContent className="flex flex-1 flex-col gap-4 pt-5">
-          <div className="flex items-start justify-between gap-2">
+    <Link to="/tournaments/$slug" params={{ slug: tournament.slug }}>
+      <div className="group flex items-center gap-4 rounded-xl border bg-card p-4 transition-all duration-200 hover:bg-muted/40 sm:gap-6 sm:p-5">
+        {/* Status accent strip */}
+        <div
+          className={`hidden h-12 w-1 shrink-0 rounded-full sm:block ${getStatusAccent(tournament.status)}`}
+        />
+
+        {/* Content */}
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="font-heading text-base font-semibold tracking-tight text-foreground transition-colors group-hover:text-tournament-blue sm:text-lg">
+              {tournament.name}
+            </h3>
             {getStatusBadge(tournament.status)}
           </div>
 
-          <h3 className="font-heading text-lg font-semibold tracking-tight text-foreground transition-colors group-hover:text-tournament-blue">
-            {tournament.name}
-          </h3>
-
-          <div className="space-y-2 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <CalendarIcon className="size-4 shrink-0 text-muted-foreground/60" />
-              <span>{formatDateRange(tournament.date, tournament.endDate)}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <UsersIcon className="size-4 shrink-0 text-muted-foreground/60" />
-              <span>{tournament.organizerName}</span>
-            </div>
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <CalendarIcon className="size-3.5 shrink-0 text-muted-foreground/60" />
+              {formatDateRange(tournament.date, tournament.endDate)}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <UsersIcon className="size-3.5 shrink-0 text-muted-foreground/60" />
+              {tournament.organizerName}
+            </span>
             {tournament.venueName && (
-              <div className="flex items-center gap-2">
-                <MapPinIcon className="size-4 shrink-0 text-muted-foreground/60" />
-                <span>{tournament.venueName}</span>
-              </div>
+              <span className="flex items-center gap-1.5">
+                <MapPinIcon className="size-3.5 shrink-0 text-muted-foreground/60" />
+                {tournament.venueName}
+              </span>
             )}
           </div>
 
           {tournament.description && (
-            <p className="line-clamp-2 text-sm text-muted-foreground/80">
+            <p className="mt-2 line-clamp-1 text-sm text-muted-foreground/80">
               {tournament.description}
             </p>
           )}
-        </CardContent>
+        </div>
 
-        <CardFooter className="gap-1 text-sm font-medium text-foreground">
-          View details
-          <ChevronRightIcon className="size-4 transition-transform group-hover:translate-x-1" />
-        </CardFooter>
-      </Card>
+        {/* Arrow */}
+        <ChevronRightIcon className="size-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1" />
+      </div>
     </Link>
   );
 }
