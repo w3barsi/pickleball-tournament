@@ -10,6 +10,9 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 export const Route = createFileRoute("/_auth/app/")({
   component: AppIndex,
+  loader: async (ctx) => {
+    await ctx.context.queryClient.ensureQueryData(convexQuery(api.app.tournaments.listAll, {}));
+  },
 });
 
 function AppIndex() {
