@@ -29,11 +29,11 @@ function useTournamentSlug(): string | null {
     shouldThrow: false,
   });
   const bracketMatch = useMatch({
-    from: "/_auth/app/brackets/$bracketId/",
+    from: "/_auth/app/tournaments/$slug/categories/$categoryId/brackets/$bracketId/",
     shouldThrow: false,
   });
   const matchMatch = useMatch({
-    from: "/_auth/app/matches/$matchId",
+    from: "/_auth/app/tournaments/$slug/categories/$categoryId/matches/$matchId/",
     shouldThrow: false,
   });
 
@@ -85,10 +85,10 @@ export function AppSidebar() {
             matchFrom="/_auth/app/players"
           />
           <SidebarMenuLinkItem
-            to="/app/playerPairs"
+            to="/app/player-pairs"
             icon={UserPlusIcon}
             label="Player Pairs"
-            matchFrom="/_auth/app/playerPairs"
+            matchFrom="/_auth/app/player-pairs"
           />
           <SidebarMenuLinkItem
             to="/admin"

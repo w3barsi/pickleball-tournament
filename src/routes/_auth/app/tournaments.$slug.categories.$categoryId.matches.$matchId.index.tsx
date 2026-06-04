@@ -6,7 +6,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import {
   Loader2Icon,
-  ChevronLeftIcon,
+  ArrowLeftIcon,
   SwordsIcon,
   ClockIcon,
   PlayIcon,
@@ -27,7 +27,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/_auth/app/matches/$matchId")({
+export const Route = createFileRoute(
+  "/_auth/app/tournaments/$slug/categories/$categoryId/matches/$matchId/",
+)({
   component: MatchDetailPage,
   loader: async ({ params, context }) => {
     await context.queryClient.ensureQueryData(
@@ -99,7 +101,7 @@ function formatDate(ts: number | undefined) {
 }
 
 function MatchDetailPage() {
-  const { matchId } = Route.useParams();
+  const { slug, categoryId, matchId } = Route.useParams();
   const navigate = useNavigate();
   const [isStarting, setIsStarting] = useState(false);
 
@@ -139,7 +141,7 @@ function MatchDetailPage() {
     try {
       await startMatchMutation({ matchId: matchId as Id<"matches"> });
       navigate({
-        to: "/g/$id",
+        to: "/app/scorer/$id",
         params: { id: matchId },
         search: { setNumber: 1 },
       });
@@ -154,7 +156,7 @@ function MatchDetailPage() {
     try {
       await startNextSetMutation({ matchId: matchId as Id<"matches"> });
       navigate({
-        to: "/g/$id",
+        to: "/app/scorer/$id",
         params: { id: matchId },
         search: { setNumber: nextSetNumber },
       });
@@ -166,27 +168,17 @@ function MatchDetailPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Back Link */}
-      <div>
-        <Button
-          variant="ghost"
-          nativeButton={false}
-          render={
-            <Link
-              to="/app/brackets/$bracketId"
-              params={{ bracketId: bracket?._id ?? "" }}
-              className="flex items-center gap-1 text-muted-foreground"
-            >
-              <ChevronLeftIcon className="size-4" />
-              Back to Bracket
-            </Link>
-          }
-        />
-      </div>
-
       {/* Header */}
       <HeaderCard>
         <div className="flex flex-col items-center md:items-start">
+          <Link
+            to="/app/tournaments/$slug/categories/$categoryId/brackets/$bracketId"
+            params={{ slug, categoryId, bracketId: bracket?._id ?? "" }}
+            className="mb-6 inline-flex items-center gap-1.5 text-sm text-white/60 transition-colors hover:text-white"
+          >
+            <ArrowLeftIcon className="size-4" />
+            Back to Bracket
+          </Link>
           <div className="flex items-center gap-3">
             <HeaderCardHeading>
               Match
@@ -354,7 +346,7 @@ function MatchDetailPage() {
                   return (
                     <Link
                       key={set._id}
-                      to="/g/$id"
+                      to="/app/scorer/$id"
                       params={{ id: matchId }}
                       search={{ setNumber: set.setNumber }}
                       className={cn(

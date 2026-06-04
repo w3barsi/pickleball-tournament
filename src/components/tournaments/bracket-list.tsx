@@ -31,6 +31,8 @@ interface BracketItem {
 
 interface BracketListProps {
   brackets: BracketItem[];
+  slug: string;
+  categoryId: string;
   renderStageAction?: (stage: number, stageBrackets: BracketItem[]) => ReactNode;
 }
 
@@ -56,7 +58,7 @@ function getStatusBadge(status: string) {
   }
 }
 
-export function BracketList({ brackets, renderStageAction }: BracketListProps) {
+export function BracketList({ brackets, slug, categoryId, renderStageAction }: BracketListProps) {
   if (brackets.length === 0) {
     return (
       <div className="rounded-xl border border-dashed py-12 text-center">
@@ -103,7 +105,10 @@ export function BracketList({ brackets, renderStageAction }: BracketListProps) {
                         className="h-auto w-auto px-0"
                         variant="link"
                         render={
-                          <Link to="/app/brackets/$bracketId" params={{ bracketId: bracket._id }} />
+                          <Link
+                            to="/app/tournaments/$slug/categories/$categoryId/brackets/$bracketId"
+                            params={{ slug, categoryId, bracketId: bracket._id }}
+                          />
                         }
                         nativeButton={false}
                       >
@@ -137,7 +142,10 @@ export function BracketList({ brackets, renderStageAction }: BracketListProps) {
                     size="sm"
                     nativeButton={false}
                     render={
-                      <Link to="/app/brackets/$bracketId" params={{ bracketId: bracket._id }}>
+                      <Link
+                        to="/app/tournaments/$slug/categories/$categoryId/brackets/$bracketId"
+                        params={{ slug, categoryId, bracketId: bracket._id }}
+                      >
                         View
                         <ArrowRightIcon className="ml-1 size-3" />
                       </Link>

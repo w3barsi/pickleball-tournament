@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/_auth/g/$id")({
+export const Route = createFileRoute("/_auth/app/scorer/$id")({
   validateSearch: (search: Record<string, unknown>) => {
     const raw = search.setNumber;
     let setNumber: number | undefined;
@@ -230,6 +230,8 @@ function ScorerPage() {
 
   const match = matchData?.match;
   const bracket = matchData?.bracket;
+  const tournament = matchData?.tournament;
+  const category = matchData?.category;
   const participant1 = matchData?.participant1;
   const participant2 = matchData?.participant2;
   const categoryType = matchData?.categoryType ?? "singles";
@@ -312,11 +314,18 @@ function ScorerPage() {
     try {
       await confirmSetCompleteMutation({ matchId });
       toast.success("Set confirmed");
-      navigate({ to: "/app/matches/$matchId", params: { matchId } });
+      navigate({
+        to: "/app/tournaments/$slug/categories/$categoryId/matches/$matchId",
+        params: {
+          slug: tournament?.slug ?? "",
+          categoryId: category?._id ?? "",
+          matchId,
+        },
+      });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to confirm set");
     }
-  }, [matchId, confirmSetCompleteMutation, navigate]);
+  }, [matchId, confirmSetCompleteMutation, navigate, tournament, category]);
 
   if (isLoading || !match) {
     return <div className="py-12 text-center text-muted-foreground">Loading match...</div>;
@@ -333,8 +342,12 @@ function ScorerPage() {
           variant="ghost"
           render={
             <Link
-              to="/app/brackets/$bracketId"
-              params={{ bracketId: match.bracketId }}
+              to="/app/tournaments/$slug/categories/$categoryId/brackets/$bracketId"
+              params={{
+                slug: tournament?.slug ?? "",
+                categoryId: category?._id ?? "",
+                bracketId: match.bracketId,
+              }}
               className="flex items-center gap-1"
             >
               <ArrowLeftIcon className="size-4" />
@@ -408,7 +421,14 @@ function ScorerPage() {
                     try {
                       await cancelSetMutation({ matchId });
                       toast.success("Set cancelled");
-                      navigate({ to: "/app/matches/$matchId", params: { matchId } });
+                      navigate({
+                        to: "/app/tournaments/$slug/categories/$categoryId/matches/$matchId",
+                        params: {
+                          slug: tournament?.slug ?? "",
+                          categoryId: category?._id ?? "",
+                          matchId,
+                        },
+                      });
                     } catch (err) {
                       toast.error(err instanceof Error ? err.message : "Failed to cancel set");
                     }
@@ -435,8 +455,12 @@ function ScorerPage() {
               variant="outline"
               render={
                 <Link
-                  to="/app/matches/$matchId"
-                  params={{ matchId }}
+                  to="/app/tournaments/$slug/categories/$categoryId/matches/$matchId"
+                  params={{
+                    slug: tournament?.slug ?? "",
+                    categoryId: category?._id ?? "",
+                    matchId,
+                  }}
                   className="mt-4 flex items-center gap-2"
                 >
                   <ArrowLeftIcon className="size-4" />

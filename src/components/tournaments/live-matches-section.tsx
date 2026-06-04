@@ -10,7 +10,13 @@ import { Badge } from "@/components/ui/badge";
 
 import { LiveMatchesEmpty, LiveMatchesFallback } from "./live-matches-fallback";
 
-export function LiveMatchesSection({ tournamentId }: { tournamentId: Id<"tournaments"> }) {
+export function LiveMatchesSection({
+  tournamentId,
+  slug,
+}: {
+  tournamentId: Id<"tournaments">;
+  slug: string;
+}) {
   return (
     <section className="space-y-3">
       <div className="flex items-center gap-2">
@@ -19,14 +25,20 @@ export function LiveMatchesSection({ tournamentId }: { tournamentId: Id<"tournam
       </div>
       <div className="grid gap-3 md:grid-cols-2">
         <Suspense fallback={<LiveMatchesFallback />}>
-          <LiveMatchesSectionInner tournamentId={tournamentId} />
+          <LiveMatchesSectionInner tournamentId={tournamentId} slug={slug} />
         </Suspense>
       </div>
     </section>
   );
 }
 
-export function LiveMatchesSectionInner({ tournamentId }: { tournamentId: Id<"tournaments"> }) {
+export function LiveMatchesSectionInner({
+  tournamentId,
+  slug,
+}: {
+  tournamentId: Id<"tournaments">;
+  slug: string;
+}) {
   const { data: liveMatchIds } = useSuspenseQuery(
     convexQuery(api.app.matches.listLiveMatchIdsByTournament, { tournamentId }),
   );
@@ -42,7 +54,7 @@ export function LiveMatchesSectionInner({ tournamentId }: { tournamentId: Id<"to
   return (
     <>
       {liveMatchIds.map((match) => (
-        <LiveMatchCard key={match._id} matchId={match._id} />
+        <LiveMatchCard key={match._id} matchId={match._id} slug={slug} />
       ))}
     </>
   );
@@ -60,7 +72,7 @@ export function LiveMatchesSectionLayout({ children }: { children: React.ReactNo
   );
 }
 
-function LiveMatchCard({ matchId }: { matchId: Id<"matches"> }) {
+function LiveMatchCard({ matchId, slug }: { matchId: Id<"matches">; slug: string }) {
   const navigate = useNavigate();
   const { data: match } = useSuspenseQuery(
     convexQuery(api.app.matches.getLiveMatchDetails, { matchId }),
@@ -71,7 +83,16 @@ function LiveMatchCard({ matchId }: { matchId: Id<"matches"> }) {
   return (
     <div
       className="cursor-pointer rounded-xl border border-red-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
-      onClick={() => navigate({ to: "/app/matches/$matchId", params: { matchId: match._id } })}
+      onClick={() =>
+        navigate({
+          to: "/app/tournaments/$slug/categories/$categoryId/matches/$matchId",
+          params: {
+            slug,
+            categoryId: match.category?._id ?? "",
+            matchId: match._id,
+          },
+        })
+      }
     >
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-muted-foreground">

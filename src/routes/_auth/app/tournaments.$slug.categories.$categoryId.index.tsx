@@ -3,7 +3,7 @@ import { api } from "@convex/_generated/api.js";
 import { Id } from "@convex/_generated/dataModel.js";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Loader2Icon, ChevronLeftIcon, SwordsIcon, UsersIcon, TrophyIcon } from "lucide-react";
+import { Loader2Icon, ArrowLeftIcon, SwordsIcon, UsersIcon, TrophyIcon } from "lucide-react";
 
 import { HeaderCard, HeaderCardDescription, HeaderCardHeading } from "@/components/header-card";
 import { AssignPlayersDialog } from "@/components/tournaments/assign-players-dialog";
@@ -13,7 +13,6 @@ import { EditCategoryDialog } from "@/components/tournaments/edit-category-dialo
 import { ParticipantList } from "@/components/tournaments/participant-list";
 import { RegisterParticipantDialog } from "@/components/tournaments/register-participant-dialog";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
 export const Route = createFileRoute("/_auth/app/tournaments/$slug/categories/$categoryId/")({
@@ -108,27 +107,17 @@ function CategoryDetailPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Back Link */}
-      <div>
-        <Button
-          variant="ghost"
-          nativeButton={false}
-          render={
-            <Link
-              to="/app/tournaments/$slug"
-              params={{ slug }}
-              className="flex items-center gap-1 text-muted-foreground"
-            >
-              <ChevronLeftIcon className="size-4" />
-              Back to Tournament
-            </Link>
-          }
-        />
-      </div>
-
       {/* Header */}
       <HeaderCard>
         <div>
+          <Link
+            to="/app/tournaments/$slug"
+            params={{ slug }}
+            className="mb-6 inline-flex items-center gap-1.5 text-sm text-white/60 transition-colors hover:text-white"
+          >
+            <ArrowLeftIcon className="size-4" />
+            Back to Tournament
+          </Link>
           <div className="flex items-center gap-3">
             <HeaderCardHeading>{category.name}</HeaderCardHeading>
             {getRatingBadge(category.rating)}
@@ -215,6 +204,8 @@ function CategoryDetailPage() {
         ) : (
           <BracketList
             brackets={brackets}
+            slug={slug}
+            categoryId={categoryId}
             renderStageAction={(stage, stageBrackets) => (
               <AssignPlayersDialog
                 categoryId={categoryId as Id<"categories">}

@@ -180,6 +180,8 @@ export const getMatchForScorer = authedQuery({
     }
 
     const bracket = await ctx.db.get(match.bracketId);
+    const tournament = await ctx.db.get(match.tournamentId);
+    const category = bracket ? await ctx.db.get(bracket.categoryId) : null;
     let currentSetPoints: Doc<"pickleballPoints">[] = [];
     let computedState: SetState | null = null;
 
@@ -198,6 +200,8 @@ export const getMatchForScorer = authedQuery({
     return {
       match,
       bracket,
+      tournament,
+      category,
       participant1,
       participant2,
       categoryType,

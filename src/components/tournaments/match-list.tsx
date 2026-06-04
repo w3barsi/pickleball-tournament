@@ -42,6 +42,8 @@ interface MatchListProps {
   bracketId: Id<"brackets">;
   bracketLabel?: string | null;
   categoryType: "singles" | "doubles";
+  slug: string;
+  categoryId: string;
 }
 
 function getStatusBadge(status: string) {
@@ -99,7 +101,13 @@ function getSeedLabel(seed: number | null | undefined, bracketLabel?: string | n
   return `${bracketLabel ?? ""}${seed}`;
 }
 
-function MatchListContent({ bracketId, bracketLabel, categoryType }: MatchListProps) {
+function MatchListContent({
+  bracketId,
+  bracketLabel,
+  categoryType,
+  slug,
+  categoryId,
+}: MatchListProps) {
   const { data: matchData } = useSuspenseQuery(
     convexQuery(api.app.matches.listByBracket, { bracketId }),
   );
@@ -146,8 +154,8 @@ function MatchListContent({ bracketId, bracketLabel, categoryType }: MatchListPr
                   className="cursor-pointer hover:bg-muted/50"
                   onClick={() =>
                     navigate({
-                      to: "/app/matches/$matchId",
-                      params: { matchId: match._id },
+                      to: "/app/tournaments/$slug/categories/$categoryId/matches/$matchId",
+                      params: { slug, categoryId, matchId: match._id },
                     })
                   }
                 >

@@ -42,7 +42,7 @@ function TournamentDetailPage() {
   return (
     <div className="flex flex-col gap-10">
       <TournamentHeader tournament={tournament} />
-      <LiveMatchesSection tournamentId={tournamentId} />
+      <LiveMatchesSection tournamentId={tournamentId} slug={slug} />
       <CategoriesSection slug={slug} tournamentId={tournamentId} />
       <ParticipantsSection tournamentId={tournamentId} />
     </div>

@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/table";
 import { useAuthSuspense } from "@/lib/auth/hooks";
 
-export const Route = createFileRoute("/_auth/app/playerPairs")({
+export const Route = createFileRoute("/_auth/app/player-pairs")({
   component: PlayerPairsPage,
   loader: async (ctx) => {
     await ctx.context.queryClient.ensureQueryData(convexQuery(api.app.playerPairs.listAll, {}));

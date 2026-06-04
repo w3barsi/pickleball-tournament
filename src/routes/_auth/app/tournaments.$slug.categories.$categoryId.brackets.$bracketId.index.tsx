@@ -6,7 +6,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import {
   Loader2Icon,
-  ChevronLeftIcon,
+  ArrowLeftIcon,
   TrophyIcon,
   UsersIcon,
   SwordsIcon,
@@ -24,7 +24,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export const Route = createFileRoute("/_auth/app/brackets/$bracketId/")({
+export const Route = createFileRoute(
+  "/_auth/app/tournaments/$slug/categories/$categoryId/brackets/$bracketId/",
+)({
   component: BracketDetailPage,
   loader: async ({ params, context }) => {
     await Promise.all([
@@ -43,7 +45,7 @@ export const Route = createFileRoute("/_auth/app/brackets/$bracketId/")({
 });
 
 function BracketDetailPage() {
-  const { bracketId } = Route.useParams();
+  const { slug, categoryId, bracketId } = Route.useParams();
   const { data: bracketData } = useQuery(
     convexQuery(api.app.brackets.getWithParticipants, {
       bracketId: bracketId as Id<"brackets">,
@@ -113,27 +115,17 @@ function BracketDetailPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Back Link */}
-      <div>
-        <Button
-          variant="ghost"
-          nativeButton={false}
-          render={
-            <Link
-              to="/app/tournaments/$slug/categories/$categoryId"
-              params={{ slug: tournament.slug, categoryId: category._id }}
-              className="flex items-center gap-1 text-muted-foreground"
-            >
-              <ChevronLeftIcon className="size-4" />
-              Back to Category
-            </Link>
-          }
-        />
-      </div>
-
       {/* Header */}
       <HeaderCard>
         <div>
+          <Link
+            to="/app/tournaments/$slug/categories/$categoryId"
+            params={{ slug: tournament.slug, categoryId: category._id }}
+            className="mb-6 inline-flex items-center gap-1.5 text-sm text-white/60 transition-colors hover:text-white"
+          >
+            <ArrowLeftIcon className="size-4" />
+            Back to Category
+          </Link>
           <div className="flex items-center gap-3">
             <HeaderCardHeading>{bracket.name}</HeaderCardHeading>
             {getStatusBadge(bracket.status)}
@@ -234,6 +226,8 @@ function BracketDetailPage() {
           bracketId={bracketId as Id<"brackets">}
           bracketLabel={bracket.label}
           categoryType={category.type}
+          slug={slug}
+          categoryId={categoryId}
         />
       </div>
 

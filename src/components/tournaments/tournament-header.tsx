@@ -2,7 +2,9 @@ import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@convex/_generated/api.js";
 import { Doc } from "@convex/_generated/dataModel.js";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import {
+  ArrowLeftIcon,
   CalendarIcon,
   MapPinIcon,
   LayoutGridIcon,
@@ -44,6 +46,13 @@ export function TournamentHeader({ tournament }: { tournament: Doc<"tournaments"
   return (
     <HeaderCard>
       <div>
+        <Link
+          to="/app/tournaments"
+          className="mb-6 inline-flex items-center gap-1.5 text-sm text-white/60 transition-colors hover:text-white"
+        >
+          <ArrowLeftIcon className="size-4" />
+          All Tournaments
+        </Link>
         <HeaderCardHeading>{tournament.name}</HeaderCardHeading>
         <HeaderCardDescription>Organized by {tournament.organizerName}</HeaderCardDescription>
         <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/70">
