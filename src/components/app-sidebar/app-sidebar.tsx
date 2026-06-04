@@ -2,7 +2,7 @@ import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@convex/_generated/api.js";
 import { Id } from "@convex/_generated/dataModel.js";
 import { useQuery } from "@tanstack/react-query";
-import { useMatch } from "@tanstack/react-router";
+import { Link, useMatch } from "@tanstack/react-router";
 import {
   HomeIcon,
   TrophyIcon,
@@ -71,7 +71,7 @@ export function AppSidebar() {
     <BaseSidebar
       header={
         <span className={cn("font-semibold text-sidebar-foreground", isAdmin && "text-red-600")}>
-          Pickle Tournament
+          <Link to="/">Pickle Tournament</Link>
         </span>
       }
     >
