@@ -9,6 +9,12 @@ export const Route = createFileRoute("/_guest")({
     // or after successful login/signup
     const REDIRECT_URL = "/app";
 
+    if (context.isAuthenticated) {
+      throw redirect({
+        to: REDIRECT_URL,
+      });
+    }
+
     // const user = await context.queryClient.ensureQueryData(
     //   convexQuery(api.auth.getCurrentUser, {}),
     // );

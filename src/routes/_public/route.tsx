@@ -21,8 +21,13 @@ function PublicLayout() {
           </Link>
 
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" render={<Link to="/login">Sign In</Link>} />
-            <Button size="sm" render={<Link to="/signup">Get Started</Link>} />
+            <Button
+              variant="ghost"
+              size="sm"
+              render={<Link to="/login">Sign In</Link>}
+              nativeButton={false}
+            />
+            <Button size="sm" render={<Link to="/signup">Get Started</Link>} nativeButton={false} />
           </div>
         </div>
       </header>

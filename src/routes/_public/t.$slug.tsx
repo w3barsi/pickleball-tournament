@@ -1,20 +1,21 @@
 import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@convex/_generated/api.js";
+import { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import {
   ArrowLeftIcon,
   CalendarIcon,
-  ChevronRightIcon,
   CircleIcon,
   MapPinIcon,
+  ShieldIcon,
   SwordsIcon,
   TrophyIcon,
-  UserIcon,
   UsersIcon,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 export const Route = createFileRoute("/_public/t/$slug")({
@@ -31,68 +32,6 @@ export const Route = createFileRoute("/_public/t/$slug")({
   notFoundComponent: () => <div>Tournament not found</div>,
 });
 
-function getStatusBadge(status: string) {
-  switch (status) {
-    case "completed":
-      return (
-        <Badge className="bg-slate-100 font-normal text-slate-600 hover:bg-slate-100">
-          Completed
-        </Badge>
-      );
-    case "inProgress":
-      return (
-        <Badge className="bg-amber-50 font-normal text-amber-600 hover:bg-amber-50">
-          In Progress
-        </Badge>
-      );
-    default:
-      return (
-        <Badge className="bg-emerald-50 font-normal text-emerald-600 hover:bg-emerald-50">
-          Upcoming
-        </Badge>
-      );
-  }
-}
-
-function getStatusAccent(status: string) {
-  switch (status) {
-    case "completed":
-      return "bg-slate-500";
-    case "inProgress":
-      return "bg-amber-500";
-    default:
-      return "bg-emerald-500";
-  }
-}
-
-function formatDateRange(start: number, end?: number | undefined) {
-  const startDate = new Date(start);
-  const startStr = startDate.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-  if (!end) return startStr;
-  const endDate = new Date(end);
-  const endStr = endDate.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-  return `${startStr} — ${endStr}`;
-}
-
-function formatBracketFormat(format: string) {
-  switch (format) {
-    case "roundRobin":
-      return "Round Robin";
-    case "singleElimination":
-      return "Single Elimination";
-    default:
-      return format;
-  }
-}
-
 function TournamentDetailPage() {
   const { slug } = Route.useParams();
   const { data } = useQuery(convexQuery(api.public.tournaments.getDetails, { slug }));
@@ -105,7 +44,7 @@ function TournamentDetailPage() {
     );
   }
 
-  const { tournament, categories, players } = data;
+  const { tournament, categories, singlesPlayers, doublesPairs, totalIndividualPlayers } = data;
   const totalBrackets = categories.reduce((sum, c) => sum + c.brackets.length, 0);
 
   return (
@@ -127,46 +66,45 @@ function TournamentDetailPage() {
           />
         </div>
 
-        <div className="relative z-10 mx-auto max-w-7xl">
-          <Link
-            to="/"
-            className="mb-6 inline-flex items-center gap-1.5 text-sm text-white/60 transition-colors hover:text-white"
-          >
-            <ArrowLeftIcon className="size-4" />
-            All Tournaments
-          </Link>
+        <div className="relative z-10 mx-auto flex max-w-7xl items-center justify-between">
+          <div>
+            <Link
+              to="/"
+              className="mb-6 inline-flex items-center gap-1.5 text-sm text-white/60 transition-colors hover:text-white"
+            >
+              <ArrowLeftIcon className="size-4" />
+              All Tournaments
+            </Link>
 
-          <div
-            className={`mb-4 inline-block h-1 w-16 rounded-full ${getStatusAccent(tournament.status)}`}
-          />
+            <h1 className="font-heading text-4xl leading-[1.05] font-black tracking-tight md:text-5xl lg:text-6xl">
+              {tournament.name}
+            </h1>
 
-          <h1 className="font-heading text-4xl leading-[1.05] font-black tracking-tight md:text-5xl lg:text-6xl">
-            {tournament.name}
-          </h1>
-
-          {tournament.description && (
-            <p className="mt-4 max-w-2xl text-lg leading-relaxed text-white/70">
-              {tournament.description}
-            </p>
-          )}
-
-          <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-white/70">
-            <span className="flex items-center gap-2">
-              <CalendarIcon className="size-4 shrink-0" />
-              {formatDateRange(tournament.date, tournament.endDate)}
-            </span>
-            {tournament.venueName && (
-              <span className="flex items-center gap-2">
-                <MapPinIcon className="size-4 shrink-0" />
-                {tournament.venueName}
-                {tournament.venueAddress && `, ${tournament.venueAddress}`}
-              </span>
+            {tournament.description && (
+              <p className="mt-4 max-w-2xl text-lg leading-relaxed text-white/70">
+                {tournament.description}
+              </p>
             )}
-            <span className="flex items-center gap-2">
-              <UsersIcon className="size-4 shrink-0" />
-              {tournament.organizerName}
-            </span>
+
+            <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-white/70">
+              <span className="flex items-center gap-2">
+                <CalendarIcon className="size-4 shrink-0" />
+                {formatDateRange(tournament.date, tournament.endDate)}
+              </span>
+              {tournament.venueName && (
+                <span className="flex items-center gap-2">
+                  <MapPinIcon className="size-4 shrink-0" />
+                  {tournament.venueName}
+                  {tournament.venueAddress && `, ${tournament.venueAddress}`}
+                </span>
+              )}
+              <span className="flex items-center gap-2">
+                <UsersIcon className="size-4 shrink-0" />
+                {tournament.organizerName}
+              </span>
+            </div>
           </div>
+          <Button variant="ghost">Manage Tournament</Button>
         </div>
       </section>
 
@@ -188,7 +126,7 @@ function TournamentDetailPage() {
             </div>
             <div className="flex items-center gap-2">
               <UsersIcon className="size-4 text-muted-foreground" />
-              <span className="font-semibold">{players.length}</span>
+              <span className="font-semibold">{totalIndividualPlayers}</span>
               <span className="text-muted-foreground">Players</span>
             </div>
           </div>
@@ -197,7 +135,7 @@ function TournamentDetailPage() {
 
       {/* Main content */}
       <div className="mx-auto w-full max-w-7xl px-4 py-10 md:px-6 md:py-16">
-        <div className="grid gap-10 lg:grid-cols-[1fr_360px]">
+        <div className="grid gap-10 lg:grid-cols-[1fr_400px]">
           {/* Left: Categories & Brackets */}
           <div className="flex flex-col gap-8">
             <div>
@@ -226,27 +164,8 @@ function TournamentDetailPage() {
           </div>
 
           {/* Right: Players sidebar */}
-          <div className="flex flex-col gap-6">
-            <div>
-              <h2 className="font-heading text-2xl font-bold tracking-tight">Players</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {players.length} registered across all categories
-              </p>
-            </div>
-
-            {players.length === 0 ? (
-              <Card>
-                <CardContent className="py-10 text-center text-sm text-muted-foreground">
-                  No players registered yet.
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-2">
-                {players.map((player) => (
-                  <PlayerChip key={player._id} player={player} />
-                ))}
-              </div>
-            )}
+          <div className="flex flex-col gap-8">
+            <PlayersSidebar singlesPlayers={singlesPlayers} doublesPairs={doublesPairs} />
           </div>
         </div>
       </div>
@@ -344,7 +263,7 @@ function CategorySection({
                     Race to {bracket.pointsPerGame}
                   </SpecPill>
                   {bracket.winByTwo && (
-                    <SpecPill icon={<ChevronRightIcon className="size-3" />}>Win by 2</SpecPill>
+                    <SpecPill icon={<ShieldIcon className="size-3" />}>Win by 2</SpecPill>
                   )}
                 </div>
               </div>
@@ -387,7 +306,100 @@ function SpecPill({ children, icon }: { children: React.ReactNode; icon: React.R
   );
 }
 
-function PlayerChip({
+/* ---------- Players Sidebar ---------- */
+
+function PlayersSidebar({
+  singlesPlayers,
+  doublesPairs,
+}: {
+  singlesPlayers: Array<{
+    _id: string;
+    fullName: string;
+    nickname?: string;
+    photoUrl?: string;
+  }>;
+  doublesPairs: Array<{
+    pair: {
+      teamName?: string;
+    };
+    playerOne: {
+      _id: string;
+      fullName: string;
+      nickname?: string;
+      photoUrl?: string;
+    };
+    playerTwo: {
+      _id: string;
+      fullName: string;
+      nickname?: string;
+      photoUrl?: string;
+    };
+  }>;
+}) {
+  const totalEntries = singlesPlayers.length + doublesPairs.length;
+
+  if (totalEntries === 0) {
+    return (
+      <Card>
+        <CardContent className="py-10 text-center text-sm text-muted-foreground">
+          No players registered yet.
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-8">
+      {/* Header */}
+      <div>
+        <h2 className="font-heading text-2xl font-bold tracking-tight">Competitors</h2>
+        <p className="mt-1 text-sm text-muted-foreground">{totalEntries} total entries</p>
+      </div>
+
+      {/* Singles */}
+      {singlesPlayers.length > 0 && (
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-2">
+            <UsersIcon className="size-4 text-muted-foreground" />
+            <h3 className="text-sm font-semibold tracking-wider text-muted-foreground uppercase">
+              Singles Players
+            </h3>
+            <Badge variant="outline" className="text-xs">
+              {singlesPlayers.length}
+            </Badge>
+          </div>
+          <div className="flex flex-col gap-2">
+            {singlesPlayers.map((player) => (
+              <PlayerRow key={player._id} player={player} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Doubles */}
+      {doublesPairs.length > 0 && (
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-2">
+            <ShieldIcon className="size-4 text-muted-foreground" />
+            <h3 className="text-sm font-semibold tracking-wider text-muted-foreground uppercase">
+              Doubles Teams
+            </h3>
+            <Badge variant="outline" className="text-xs">
+              {doublesPairs.length}
+            </Badge>
+          </div>
+          <div className="flex flex-col gap-3">
+            {doublesPairs.map((entry) => (
+              <DoublesPairCard key={entry.playerOne._id + entry.playerTwo._id} entry={entry} />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PlayerRow({
   player,
 }: {
   player: {
@@ -405,15 +417,15 @@ function PlayerChip({
     .toUpperCase();
 
   return (
-    <div className="flex items-center gap-2.5 rounded-xl border bg-card p-2.5 transition-colors hover:bg-muted/50">
+    <div className="flex items-center gap-3 rounded-xl border bg-card p-3 transition-colors hover:bg-muted/40">
       {player.photoUrl ? (
         <img
           src={player.photoUrl}
           alt={player.fullName}
-          className="h-9 w-9 rounded-full object-cover"
+          className="h-10 w-10 rounded-full object-cover"
         />
       ) : (
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-tournament-blue/10 text-xs font-bold text-tournament-blue">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-tournament-blue/10 text-sm font-bold text-tournament-blue">
           {initials}
         </div>
       )}
@@ -425,4 +437,144 @@ function PlayerChip({
       </div>
     </div>
   );
+}
+
+function DoublesPairCard({
+  entry,
+}: {
+  entry: {
+    pair: {
+      teamName?: string;
+    };
+    playerOne: {
+      _id: string;
+      fullName: string;
+      nickname?: string;
+      photoUrl?: string;
+    };
+    playerTwo: {
+      _id: string;
+      fullName: string;
+      nickname?: string;
+      photoUrl?: string;
+    };
+  };
+}) {
+  const { pair, playerOne, playerTwo } = entry;
+  const teamName = pair.teamName || undefined;
+
+  return (
+    <div className="rounded-xl border bg-card p-4 transition-colors hover:bg-muted/30">
+      {teamName && <p className="mb-3 text-sm font-semibold text-foreground">{teamName}</p>}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+        <MiniPlayer player={playerOne} />
+        <span className="hidden text-xs font-bold text-muted-foreground sm:block">&</span>
+        <MiniPlayer player={playerTwo} />
+      </div>
+    </div>
+  );
+}
+
+function MiniPlayer({
+  player,
+}: {
+  player: {
+    fullName: string;
+    nickname?: string;
+    photoUrl?: string;
+  };
+}) {
+  const initials = player.fullName
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  return (
+    <div className="flex items-center gap-2.5">
+      {player.photoUrl ? (
+        <img
+          src={player.photoUrl}
+          alt={player.fullName}
+          className="h-8 w-8 rounded-full object-cover"
+        />
+      ) : (
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-tournament-blue/10 text-xs font-bold text-tournament-blue">
+          {initials}
+        </div>
+      )}
+      <div className="min-w-0">
+        <p className="truncate text-sm leading-tight font-medium">{player.fullName}</p>
+        {player.nickname && (
+          <p className="truncate text-xs text-muted-foreground">{player.nickname}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function getStatusBadge(status: string) {
+  switch (status) {
+    case "completed":
+      return (
+        <Badge className="bg-slate-100 font-normal text-slate-600 hover:bg-slate-100">
+          {" "}
+          Completed{" "}
+        </Badge>
+      );
+    case "inProgress":
+      return (
+        <Badge className="bg-amber-50 font-normal text-amber-600 hover:bg-amber-50">
+          {" "}
+          In Progress{" "}
+        </Badge>
+      );
+    default:
+      return (
+        <Badge className="bg-emerald-50 font-normal text-emerald-600 hover:bg-emerald-50">
+          {" "}
+          Upcoming{" "}
+        </Badge>
+      );
+  }
+}
+
+function getStatusAccent(status: string) {
+  switch (status) {
+    case "completed":
+      return "bg-slate-500";
+    case "inProgress":
+      return "bg-amber-500";
+    default:
+      return "bg-emerald-500";
+  }
+}
+
+function formatDateRange(start: number, end?: number | undefined) {
+  const startDate = new Date(start);
+  const startStr = startDate.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+  if (!end) return startStr;
+  const endDate = new Date(end);
+  const endStr = endDate.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+  return `${startStr} — ${endStr}`;
+}
+
+function formatBracketFormat(format: string) {
+  switch (format) {
+    case "roundRobin":
+      return "Round Robin";
+    case "singleElimination":
+      return "Single Elimination";
+    default:
+      return format;
+  }
 }

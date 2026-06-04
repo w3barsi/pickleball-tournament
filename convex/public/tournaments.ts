@@ -90,7 +90,11 @@ export const getDetails = query({
       });
     }
 
-    // Collect all unique players
+    // Collect singles players and doubles pairs separately
+    const singlesPlayersMap = new Map();
+    const doublesPairsMap = new Map();
+    const allIndividualPlayersMap = new Map();
+
     for (const category of categories) {
       const participants = await ctx.db
         .query("categoryParticipants")
@@ -101,11 +105,9 @@ export const getDetails = query({
         for (const p of participants) {
           if (p.playerId) {
             const player = await ctx.db.get(p.playerId);
-            if (player && player.deletedAt === undefined && !allPlayersMap.has(player._id)) {
-              allPlayersMap.set(player._id, {
-                ...player,
-                _entryType: "singles" as const,
-              });
+            if (player && player.deletedAt === undefined) {
+              singlesPlayersMap.set(player._id, player);
+              allIndividualPlayersMap.set(player._id, player);
             }
           }
         }
@@ -113,20 +115,17 @@ export const getDetails = query({
         for (const p of participants) {
           if (p.pairId) {
             const pair = await ctx.db.get(p.pairId);
-            if (pair) {
+            if (pair && pair.deletedAt === undefined) {
               const p1 = await ctx.db.get(pair.playerOne);
               const p2 = await ctx.db.get(pair.playerTwo);
-              if (p1 && p1.deletedAt === undefined && !allPlayersMap.has(p1._id)) {
-                allPlayersMap.set(p1._id, {
-                  ...p1,
-                  _entryType: "doubles" as const,
+              if (p1 && p2 && p1.deletedAt === undefined && p2.deletedAt === undefined) {
+                doublesPairsMap.set(pair._id, {
+                  pair,
+                  playerOne: p1,
+                  playerTwo: p2,
                 });
-              }
-              if (p2 && p2.deletedAt === undefined && !allPlayersMap.has(p2._id)) {
-                allPlayersMap.set(p2._id, {
-                  ...p2,
-                  _entryType: "doubles" as const,
-                });
+                allIndividualPlayersMap.set(p1._id, p1);
+                allIndividualPlayersMap.set(p2._id, p2);
               }
             }
           }
@@ -137,9 +136,15 @@ export const getDetails = query({
     return {
       tournament,
       categories: categoryDetails,
-      players: Array.from(allPlayersMap.values()).sort((a, b) =>
+      singlesPlayers: Array.from(singlesPlayersMap.values()).sort((a, b) =>
         a.fullName.localeCompare(b.fullName),
       ),
+      doublesPairs: Array.from(doublesPairsMap.values()).sort((a, b) => {
+        const aName = a.pair.teamName || `${a.playerOne.fullName} / ${a.playerTwo.fullName}`;
+        const bName = b.pair.teamName || `${b.playerOne.fullName} / ${b.playerTwo.fullName}`;
+        return aName.localeCompare(bName);
+      }),
+      totalIndividualPlayers: allIndividualPlayersMap.size,
     };
   },
 });
