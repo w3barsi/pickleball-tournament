@@ -221,6 +221,7 @@ function CategorySection({
   brackets: Array<{
     name: string;
     label?: string;
+    stage: number;
     format: string;
     status: string;
     maxParticipants?: number;
@@ -234,6 +235,15 @@ function CategorySection({
   const typeLabel = category.type === "singles" ? "Singles" : "Doubles";
   const ratingLabel = category.rating.charAt(0).toUpperCase() + category.rating.slice(1);
   const categoryLabel = category.category.charAt(0).toUpperCase() + category.category.slice(1);
+
+  const stageGroups = brackets.reduce<Map<number, typeof brackets>>((acc, bracket) => {
+    const group = acc.get(bracket.stage) ?? [];
+    group.push(bracket);
+    acc.set(bracket.stage, group);
+    return acc;
+  }, new Map());
+
+  const sortedStages = Array.from(stageGroups.entries()).sort((a, b) => a[0] - b[0]);
 
   return (
     <Card className="overflow-hidden">
@@ -273,46 +283,57 @@ function CategorySection({
         {brackets.length === 0 ? (
           <p className="text-sm text-muted-foreground">No brackets in this category yet.</p>
         ) : (
-          brackets.map((bracket) => (
-            <div
-              key={bracket.name + bracket.format}
-              className="group flex flex-col gap-3 rounded-xl border bg-muted/30 p-4 transition-colors hover:bg-muted/60 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="font-heading text-sm font-semibold">{bracket.name}</span>
-                  {bracket.label && (
-                    <span className="text-xs text-muted-foreground">{bracket.label}</span>
-                  )}
-                  <BracketStatusDot status={bracket.status} />
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <SpecPill icon={<SwordsIcon className="size-3" />}>
-                    {formatBracketFormat(bracket.format)}
-                  </SpecPill>
-                  <SpecPill icon={<TrophyIcon className="size-3" />}>
-                    {bracket.numberOfSets} sets
-                  </SpecPill>
-                  <SpecPill icon={<CircleIcon className="size-3" />}>
-                    Race to {bracket.pointsPerGame}
-                  </SpecPill>
-                  {bracket.winByTwo && (
-                    <SpecPill icon={<ShieldIcon className="size-3" />}>Win by 2</SpecPill>
-                  )}
-                </div>
-              </div>
+          sortedStages.map(([stage, stageBrackets]) => (
+            <div key={stage} className="space-y-3">
+              {sortedStages.length > 1 && (
+                <h4 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                  Stage {stage}
+                </h4>
+              )}
+              {stageBrackets.map((bracket) => (
+                <div
+                  key={bracket.name + bracket.format}
+                  className="group flex flex-col gap-3 rounded-md border bg-muted/30 p-4 transition-colors hover:bg-muted/60 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-heading text-sm font-semibold">{bracket.name}</span>
+                      {bracket.label && (
+                        <span className="text-xs text-muted-foreground">{bracket.label}</span>
+                      )}
+                      <BracketStatusDot status={bracket.status} />
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <SpecPill icon={<SwordsIcon className="size-3" />}>
+                        {formatBracketFormat(bracket.format)}
+                      </SpecPill>
+                      <SpecPill icon={<TrophyIcon className="size-3" />}>
+                        {bracket.numberOfSets} sets
+                      </SpecPill>
+                      <SpecPill icon={<CircleIcon className="size-3" />}>
+                        Race to {bracket.pointsPerGame}
+                      </SpecPill>
+                      {bracket.winByTwo && (
+                        <SpecPill icon={<ShieldIcon className="size-3" />}>Win by 2</SpecPill>
+                      )}
+                    </div>
+                  </div>
 
-              <div className="flex items-center gap-4 text-xs text-muted-foreground sm:text-right">
-                <div>
-                  <div className="font-semibold text-foreground">{bracket.participantCount}</div>
-                  <div>Players</div>
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground sm:text-right">
+                    <div>
+                      <div className="font-semibold text-foreground">
+                        {bracket.participantCount}
+                      </div>
+                      <div>Players</div>
+                    </div>
+                    <div className="h-8 w-px bg-border" />
+                    <div>
+                      <div className="font-semibold text-foreground">{bracket.matchCount}</div>
+                      <div>Matches</div>
+                    </div>
+                  </div>
                 </div>
-                <div className="h-8 w-px bg-border" />
-                <div>
-                  <div className="font-semibold text-foreground">{bracket.matchCount}</div>
-                  <div>Matches</div>
-                </div>
-              </div>
+              ))}
             </div>
           ))
         )}

@@ -75,9 +75,11 @@ function LiveGameCard({
       team1Score: number;
       team2Score: number;
       targetScore: number;
+      setNumber: number;
     } | null;
     team1SetWins: number;
     team2SetWins: number;
+    numberOfSets: number;
   };
 }) {
   const team1Name = getParticipantName(game.participant1, game.categoryType);
@@ -156,7 +158,8 @@ function LiveGameCard({
         {game.currentSet && (
           <div className="flex items-center justify-center gap-1 rounded-lg bg-background/60 py-1.5 text-xs text-muted-foreground">
             <TrophyIcon className="size-3" />
-            Current set — race to {game.currentSet.targetScore}
+            Set {game.currentSet.setNumber} of {game.numberOfSets} — race to{" "}
+            {game.currentSet.targetScore}
           </div>
         )}
       </CardContent>

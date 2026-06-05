@@ -54,6 +54,7 @@ export const getLiveGames = query({
         completedSets,
         team1SetWins,
         team2SetWins,
+        numberOfSets: bracket?.numberOfSets ?? 3,
       });
     }
 
