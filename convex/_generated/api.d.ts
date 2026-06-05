@@ -24,6 +24,7 @@ import type * as app_tournaments from "../app/tournaments.js";
 import type * as auth from "../auth.js";
 import type * as http from "../http.js";
 import type * as migrations from "../migrations.js";
+import type * as public_games from "../public/games.js";
 import type * as public_tournaments from "../public/tournaments.js";
 
 import type {
@@ -49,6 +50,7 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   http: typeof http;
   migrations: typeof migrations;
+  "public/games": typeof public_games;
   "public/tournaments": typeof public_tournaments;
 }>;
 

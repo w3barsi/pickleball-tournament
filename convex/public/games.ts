@@ -1,0 +1,85 @@
+import { v } from "convex/values";
+
+import { query } from "../_generated/server";
+
+export const getLiveGames = query({
+  args: {
+    tournamentId: v.id("tournaments"),
+  },
+  handler: async (ctx, args) => {
+    const matches = await ctx.db
+      .query("matches")
+      .withIndex("by_tournament", (q) => q.eq("tournamentId", args.tournamentId))
+      .collect();
+
+    const liveOrInProgress = matches.filter(
+      (m) => m.deletedAt === undefined && (m.status === "inProgress" || m.isLive === true),
+    );
+
+    if (liveOrInProgress.length === 0) {
+      return [];
+    }
+
+    const results = [];
+
+    for (const match of liveOrInProgress) {
+      const bracket = await ctx.db.get(match.bracketId);
+      const category = bracket ? await ctx.db.get(bracket.categoryId) : null;
+
+      const categoryType = category?.type ?? "singles";
+
+      const participant1 = await resolveParticipant(ctx, match.participant1Id, categoryType);
+      const participant2 = await resolveParticipant(ctx, match.participant2Id, categoryType);
+
+      const allSets = await ctx.db
+        .query("matchSets")
+        .withIndex("by_match", (q) => q.eq("matchId", match._id))
+        .order("asc")
+        .collect();
+
+      const currentSet = allSets.find((s) => s.status === "inProgress") ?? null;
+      const completedSets = allSets.filter((s) => s.status === "completed");
+
+      const team1SetWins = completedSets.filter((s) => s.winnerTeam === 1).length;
+      const team2SetWins = completedSets.filter((s) => s.winnerTeam === 2).length;
+
+      results.push({
+        match,
+        bracket,
+        category,
+        participant1,
+        participant2,
+        categoryType,
+        currentSet,
+        completedSets,
+        team1SetWins,
+        team2SetWins,
+      });
+    }
+
+    return results;
+  },
+});
+
+async function resolveParticipant(
+  ctx: any,
+  participantId: any,
+  categoryType: "singles" | "doubles",
+) {
+  const cp = await ctx.db.get(participantId);
+  if (!cp) return null;
+
+  if (categoryType === "singles") {
+    const player = cp.playerId ? await ctx.db.get(cp.playerId) : null;
+    return { ...cp, player };
+  }
+
+  const pair = cp.pairId ? await ctx.db.get(cp.pairId) : null;
+  let playerOne = null;
+  let playerTwo = null;
+  if (pair) {
+    playerOne = await ctx.db.get(pair.playerOne);
+    playerTwo = await ctx.db.get(pair.playerTwo);
+  }
+  return { ...cp, pair, playerOne, playerTwo };
+}

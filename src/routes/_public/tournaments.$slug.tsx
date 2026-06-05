@@ -13,6 +13,7 @@ import {
   UsersIcon,
 } from "lucide-react";
 
+import { PublicTournamentLiveGames } from "@/components/public/public-tournament-live-games";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
@@ -160,13 +161,16 @@ function TournamentMainContent() {
     );
   }
 
-  const { categories, singlesPlayers, doublesPairs } = data;
+  const { tournament, categories, singlesPlayers, doublesPairs } = data;
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-10 md:px-6 md:py-16">
-      <div className="flex flex-col gap-16">
+    <div className="mx-auto w-full max-w-7xl px-4 py-6 md:px-6 md:py-8">
+      <div className="flex flex-col gap-8">
+        {/* Live Games */}
+        <PublicTournamentLiveGames tournamentId={tournament._id} />
+
         {/* Categories & Brackets */}
-        <section className="flex flex-col gap-8">
+        <section className="flex flex-col gap-5">
           <div>
             <h2 className="font-heading text-2xl font-bold tracking-tight">
               Categories & Brackets
@@ -184,7 +188,7 @@ function TournamentMainContent() {
               </p>
             </div>
           ) : (
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-4">
               {categories.map(({ category, brackets }) => (
                 <CategorySection key={category._id} category={category} brackets={brackets} />
               ))}
@@ -193,7 +197,7 @@ function TournamentMainContent() {
         </section>
 
         {/* Players — at the bottom */}
-        <section className="flex flex-col gap-8">
+        <section className="flex flex-col gap-5">
           <CompetitorsSection singlesPlayers={singlesPlayers} doublesPairs={doublesPairs} />
         </section>
       </div>
