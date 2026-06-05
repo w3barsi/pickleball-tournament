@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { UsersIcon } from "lucide-react";
+import { TrophyIcon, UsersIcon } from "lucide-react";
 
 import { SidebarGroup, SidebarMenu } from "@/components/ui/sidebar";
 
@@ -21,6 +21,12 @@ export function AdminSidebar() {
             icon={UsersIcon}
             label="Manage Users"
             matchFrom="/_auth/admin/users"
+          />
+          <SidebarMenuLinkItem
+            to="/admin/tournaments"
+            icon={TrophyIcon}
+            label="Manage Tournaments"
+            matchFrom="/_auth/admin/tournaments"
           />
         </SidebarMenu>
       </SidebarGroup>

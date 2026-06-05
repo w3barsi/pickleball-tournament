@@ -73,7 +73,7 @@ function HomePage() {
   const inProgress = tournaments?.filter((t) => t.status === "inProgress") || [];
   const completed = tournaments?.filter((t) => t.status === "completed") || [];
 
-  const featured = inProgress[0] ?? upcoming[0] ?? completed[0];
+  const featured = tournaments?.find((t) => t.isFeaturedEvent === true);
   const remaining = tournaments?.filter((t) => t._id !== featured?._id) || [];
 
   return (
@@ -127,7 +127,7 @@ function HomePage() {
               <br />
               <span className="text-lime-400 italic">Champions</span>
               <br />
-              Are Made
+              Are forged
             </h1>
 
             <p className="max-w-md text-lg leading-relaxed text-white/70">
@@ -144,7 +144,7 @@ function HomePage() {
                 <ChevronRightIcon className="size-4" />
               </Link>
               <a
-                href="#tournaments"
+                href="#featured-event"
                 className="inline-flex items-center gap-2 rounded-xl border border-white/20 px-6 py-3 text-sm font-medium text-white backdrop-blur-sm transition-colors hover:bg-white/10"
               >
                 Browse Events
@@ -172,7 +172,7 @@ function HomePage() {
 
       {/* Featured Tournament */}
       {featured && (
-        <section className="relative mx-4 -mt-8 md:mx-6">
+        <section id="featured-event" className="relative mx-4 -mt-8 md:mx-6">
           <div className="mx-auto max-w-7xl">
             <div className="overflow-hidden rounded-2xl bg-card shadow-xl ring-1 ring-foreground/10">
               <div className="flex flex-col gap-6 p-6 md:flex-row md:items-center md:p-8">
@@ -238,16 +238,16 @@ function HomePage() {
           </div>
 
           {tournaments === undefined ? (
-            <div className="flex flex-col gap-4">
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {Array.from({ length: 6 }).map((_, i) => (
                 <div
                   key={i}
-                  className="h-24 animate-pulse rounded-xl bg-muted"
+                  className="aspect-[4/3] animate-pulse rounded-2xl bg-muted"
                   style={{ animationDelay: `${i * 100}ms` }}
                 />
               ))}
             </div>
-          ) : remaining.length === 0 && !featured ? (
+          ) : tournaments.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed py-24 text-center">
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
                 <TrophyIcon className="size-7 text-muted-foreground" />
@@ -258,9 +258,9 @@ function HomePage() {
               </p>
             </div>
           ) : (
-            <div className="flex flex-col gap-4">
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {remaining.map((tournament) => (
-                <TournamentListItem key={tournament._id} tournament={tournament} />
+                <TournamentCard key={tournament._id} tournament={tournament} />
               ))}
             </div>
           )}
@@ -333,7 +333,9 @@ function HomePage() {
   );
 }
 
-function TournamentListItem({
+const PLACEHOLDER_IMAGE = "https://drive.darcygraphix.com/8fc5bdd6-81e2-4479-9ac9-0791d7efae15";
+
+function TournamentCard({
   tournament,
 }: {
   tournament: {
@@ -346,51 +348,70 @@ function TournamentListItem({
     organizerName: string;
     venueName?: string;
     description?: string;
+    bannerImageUrl?: string;
   };
 }) {
+  const imageUrl = tournament.bannerImageUrl || PLACEHOLDER_IMAGE;
+
   return (
     <Link to="/tournaments/$slug" params={{ slug: tournament.slug }}>
-      <div className="group flex items-center gap-4 rounded-xl border bg-card p-4 transition-all duration-200 hover:bg-muted/40 sm:gap-6 sm:p-5">
-        {/* Status accent strip */}
-        <div
-          className={`hidden h-12 w-1 shrink-0 rounded-full sm:block ${getStatusAccent(tournament.status)}`}
+      <div className="group relative isolate aspect-[4/3] overflow-hidden rounded-2xl transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl">
+        {/* Background image */}
+        <img
+          src={imageUrl}
+          alt={tournament.name}
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
 
-        {/* Content */}
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="font-heading text-base font-semibold tracking-tight text-foreground transition-colors group-hover:text-tournament-blue sm:text-lg">
-              {tournament.name}
-            </h3>
-            {getStatusBadge(tournament.status)}
-          </div>
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
 
-          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+        {/* Top status badge */}
+        <div className="absolute top-4 left-4 z-10">
+          <span
+            className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-sm ${
+              tournament.status === "completed"
+                ? "bg-slate-500/80"
+                : tournament.status === "inProgress"
+                  ? "bg-amber-500/80"
+                  : "bg-emerald-500/80"
+            }`}
+          >
+            {tournament.status === "inProgress"
+              ? "In Progress"
+              : tournament.status === "completed"
+                ? "Completed"
+                : "Upcoming"}
+          </span>
+        </div>
+
+        {/* Bottom content */}
+        <div className="absolute right-0 bottom-0 left-0 z-10 p-5">
+          <h3 className="font-heading text-lg leading-tight font-bold text-white">
+            {tournament.name}
+          </h3>
+
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-white/80">
             <span className="flex items-center gap-1.5">
-              <CalendarIcon className="size-3.5 shrink-0 text-muted-foreground/60" />
+              <CalendarIcon className="size-3.5 shrink-0 text-white/70" />
               {formatDateRange(tournament.date, tournament.endDate)}
             </span>
             <span className="flex items-center gap-1.5">
-              <UsersIcon className="size-3.5 shrink-0 text-muted-foreground/60" />
+              <UsersIcon className="size-3.5 shrink-0 text-white/70" />
               {tournament.organizerName}
             </span>
             {tournament.venueName && (
               <span className="flex items-center gap-1.5">
-                <MapPinIcon className="size-3.5 shrink-0 text-muted-foreground/60" />
+                <MapPinIcon className="size-3.5 shrink-0 text-white/70" />
                 {tournament.venueName}
               </span>
             )}
           </div>
 
           {tournament.description && (
-            <p className="mt-2 line-clamp-1 text-sm text-muted-foreground/80">
-              {tournament.description}
-            </p>
+            <p className="mt-2 line-clamp-2 text-sm text-white/70">{tournament.description}</p>
           )}
         </div>
-
-        {/* Arrow */}
-        <ChevronRightIcon className="size-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1" />
       </div>
     </Link>
   );

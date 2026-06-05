@@ -15,6 +15,7 @@ import {
 
 import { PublicTournamentLiveGames } from "@/components/public/public-tournament-live-games";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 export const Route = createFileRoute("/_public/tournaments/$slug")({
@@ -69,15 +70,18 @@ function TournamentHeroSection() {
       </div>
 
       <div className="relative z-10 mx-auto max-w-7xl">
-        <Link
-          to="/"
-          className="mb-6 inline-flex items-center gap-1.5 text-sm text-white/60 transition-colors hover:text-white"
-        >
-          <ArrowLeftIcon className="size-4" />
-          All Tournaments
-        </Link>
+        <Button
+          variant="ghost"
+          nativeButton={false}
+          render={
+            <Link to="/">
+              <ArrowLeftIcon className="size-4" />
+              All Tournaments
+            </Link>
+          }
+        ></Button>
 
-        <h1 className="font-heading text-4xl leading-[1.05] font-black tracking-tight md:text-5xl lg:text-6xl">
+        <h1 className="mt-4 font-heading text-4xl leading-[1.05] font-black tracking-tight md:text-5xl lg:text-6xl">
           {tournament.name}
         </h1>
 

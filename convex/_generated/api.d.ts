@@ -10,6 +10,7 @@
 
 import type * as admin_lib from "../admin/lib.js";
 import type * as admin_players from "../admin/players.js";
+import type * as admin_tournaments from "../admin/tournaments.js";
 import type * as admin_users from "../admin/users.js";
 import type * as app_brackets from "../app/brackets.js";
 import type * as app_categories from "../app/categories.js";
@@ -36,6 +37,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   "admin/lib": typeof admin_lib;
   "admin/players": typeof admin_players;
+  "admin/tournaments": typeof admin_tournaments;
   "admin/users": typeof admin_users;
   "app/brackets": typeof app_brackets;
   "app/categories": typeof app_categories;

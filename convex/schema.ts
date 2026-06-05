@@ -45,13 +45,15 @@ export default defineSchema({
     bannerImageUrl: v.optional(v.string()),
     registrationDeadline: v.optional(v.number()),
     isPublic: v.optional(v.boolean()),
+    isFeaturedEvent: v.optional(v.boolean()),
     status: v.union(v.literal("upcoming"), v.literal("inProgress"), v.literal("completed")),
     createdBy: v.string(),
     deletedAt: v.optional(v.number()),
   })
     .index("by_slug", ["slug"])
     .index("by_createdBy", ["createdBy"])
-    .index("by_deletedAt", ["deletedAt"]),
+    .index("by_deletedAt", ["deletedAt"])
+    .index("by_featured_event", ["isFeaturedEvent"]),
 
   categories: defineTable({
     tournamentId: v.id("tournaments"),

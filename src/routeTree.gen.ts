@@ -26,6 +26,7 @@ import { Route as PublicTournamentsSlugRouteImport } from './routes/_public/tour
 import { Route as AuthAppPlayersRouteImport } from './routes/_auth/app/players'
 import { Route as AuthAppPlayerPairsRouteImport } from './routes/_auth/app/player-pairs'
 import { Route as AuthAdminUsersRouteImport } from './routes/_auth/admin/users'
+import { Route as AuthAdminTournamentsRouteImport } from './routes/_auth/admin/tournaments'
 import { Route as AuthAppTournamentsIndexRouteImport } from './routes/_auth/app/tournaments.index'
 import { Route as AuthAppScorerIdRouteImport } from './routes/_auth/app/scorer.$id'
 import { Route as AuthAppTournamentsSlugIndexRouteImport } from './routes/_auth/app/tournaments.$slug.index'
@@ -115,6 +116,11 @@ const AuthAdminUsersRoute = AuthAdminUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => AuthAdminRouteRoute,
 } as any)
+const AuthAdminTournamentsRoute = AuthAdminTournamentsRouteImport.update({
+  id: '/tournaments',
+  path: '/tournaments',
+  getParentRoute: () => AuthAdminRouteRoute,
+} as any)
 const AuthAppTournamentsIndexRoute = AuthAppTournamentsIndexRouteImport.update({
   id: '/tournaments/',
   path: '/tournaments/',
@@ -162,6 +168,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof GuestLoginRoute
   '/signup': typeof GuestSignupRoute
   '/score/$matchId': typeof ScoreMatchIdRoute
+  '/admin/tournaments': typeof AuthAdminTournamentsRoute
   '/admin/users': typeof AuthAdminUsersRoute
   '/app/player-pairs': typeof AuthAppPlayerPairsRoute
   '/app/players': typeof AuthAppPlayersRoute
@@ -182,6 +189,7 @@ export interface FileRoutesByTo {
   '/login': typeof GuestLoginRoute
   '/signup': typeof GuestSignupRoute
   '/score/$matchId': typeof ScoreMatchIdRoute
+  '/admin/tournaments': typeof AuthAdminTournamentsRoute
   '/admin/users': typeof AuthAdminUsersRoute
   '/app/player-pairs': typeof AuthAppPlayerPairsRoute
   '/app/players': typeof AuthAppPlayersRoute
@@ -208,6 +216,7 @@ export interface FileRoutesById {
   '/_guest/signup': typeof GuestSignupRoute
   '/score/$matchId': typeof ScoreMatchIdRoute
   '/_public/': typeof PublicIndexRoute
+  '/_auth/admin/tournaments': typeof AuthAdminTournamentsRoute
   '/_auth/admin/users': typeof AuthAdminUsersRoute
   '/_auth/app/player-pairs': typeof AuthAppPlayerPairsRoute
   '/_auth/app/players': typeof AuthAppPlayersRoute
@@ -232,6 +241,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/score/$matchId'
+    | '/admin/tournaments'
     | '/admin/users'
     | '/app/player-pairs'
     | '/app/players'
@@ -252,6 +262,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/score/$matchId'
+    | '/admin/tournaments'
     | '/admin/users'
     | '/app/player-pairs'
     | '/app/players'
@@ -277,6 +288,7 @@ export interface FileRouteTypes {
     | '/_guest/signup'
     | '/score/$matchId'
     | '/_public/'
+    | '/_auth/admin/tournaments'
     | '/_auth/admin/users'
     | '/_auth/app/player-pairs'
     | '/_auth/app/players'
@@ -422,6 +434,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthAdminUsersRouteImport
       parentRoute: typeof AuthAdminRouteRoute
     }
+    '/_auth/admin/tournaments': {
+      id: '/_auth/admin/tournaments'
+      path: '/tournaments'
+      fullPath: '/admin/tournaments'
+      preLoaderRoute: typeof AuthAdminTournamentsRouteImport
+      parentRoute: typeof AuthAdminRouteRoute
+    }
     '/_auth/app/tournaments/': {
       id: '/_auth/app/tournaments/'
       path: '/tournaments'
@@ -468,11 +487,13 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthAdminRouteRouteChildren {
+  AuthAdminTournamentsRoute: typeof AuthAdminTournamentsRoute
   AuthAdminUsersRoute: typeof AuthAdminUsersRoute
   AuthAdminIndexRoute: typeof AuthAdminIndexRoute
 }
 
 const AuthAdminRouteRouteChildren: AuthAdminRouteRouteChildren = {
+  AuthAdminTournamentsRoute: AuthAdminTournamentsRoute,
   AuthAdminUsersRoute: AuthAdminUsersRoute,
   AuthAdminIndexRoute: AuthAdminIndexRoute,
 }
