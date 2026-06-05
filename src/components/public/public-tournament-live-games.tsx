@@ -3,7 +3,7 @@ import { api } from "@convex/_generated/api.js";
 import { Id } from "@convex/_generated/dataModel.js";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { ActivityIcon, CircleIcon, MapPinIcon, TrophyIcon } from "lucide-react";
+import { ActivityIcon, ChevronRightIcon, MapPinIcon, TrophyIcon } from "lucide-react";
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
@@ -36,7 +36,7 @@ export function PublicTournamentLiveGames({ tournamentId }: PublicTournamentLive
             key={game.match._id}
             to="/score/$matchId"
             params={{ matchId: game.match._id }}
-            className="block transition-transform hover:scale-[1.02]"
+            className="block cursor-pointer"
           >
             <LiveGameCard game={game} />
           </Link>
@@ -94,7 +94,7 @@ function LiveGameCard({
   const team2Name = getParticipantName(game.participant2, game.categoryType);
 
   return (
-    <Card className="overflow-hidden border-amber-200/60 bg-amber-50/30">
+    <Card className="group overflow-hidden border-amber-200/60 bg-amber-50/30 transition-all hover:border-amber-400 hover:shadow-md hover:shadow-amber-500/10">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -106,12 +106,15 @@ function LiveGameCard({
               Live
             </span>
           </div>
-          {game.match.courtNumber !== undefined && (
-            <span className="flex items-center gap-1 text-xs text-muted-foreground">
-              <MapPinIcon className="size-3" />
-              Court {game.match.courtNumber}
-            </span>
-          )}
+          <div className="flex items-center gap-2">
+            {game.match.courtNumber !== undefined && (
+              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                <MapPinIcon className="size-3" />
+                Court {game.match.courtNumber}
+              </span>
+            )}
+            <ChevronRightIcon className="size-4 text-amber-500 transition-transform group-hover:translate-x-0.5" />
+          </div>
         </div>
         <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           {game.category && (
@@ -170,6 +173,12 @@ function LiveGameCard({
             {game.currentSet.targetScore}
           </div>
         )}
+
+        {/* View score link */}
+        <div className="flex items-center justify-center gap-1 border-t border-amber-200/40 pt-3 text-xs font-medium text-amber-600 transition-colors group-hover:text-amber-700">
+          <span>View Score</span>
+          <ChevronRightIcon className="size-3 transition-transform group-hover:translate-x-0.5" />
+        </div>
       </CardContent>
     </Card>
   );
