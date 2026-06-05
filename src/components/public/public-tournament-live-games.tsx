@@ -94,7 +94,7 @@ function LiveGameCard({
   const team2Name = getParticipantName(game.participant2, game.categoryType);
 
   return (
-    <Card className="group overflow-hidden border-amber-200/60 bg-amber-50/30 transition-all hover:border-amber-400 hover:shadow-md hover:shadow-amber-500/10">
+    <Card className="group overflow-hidden bg-amber-50/30 ring-amber-500/50 transition-all hover:border-amber-400 hover:shadow-lg hover:shadow-amber-500/10">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
