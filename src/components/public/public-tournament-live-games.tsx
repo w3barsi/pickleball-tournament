@@ -2,6 +2,7 @@ import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@convex/_generated/api.js";
 import { Id } from "@convex/_generated/dataModel.js";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { ActivityIcon, CircleIcon, MapPinIcon, TrophyIcon } from "lucide-react";
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -31,7 +32,14 @@ export function PublicTournamentLiveGames({ tournamentId }: PublicTournamentLive
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {liveGames.map((game) => (
-          <LiveGameCard key={game.match._id} game={game} />
+          <Link
+            key={game.match._id}
+            to="/score/$matchId"
+            params={{ matchId: game.match._id }}
+            className="block transition-transform hover:scale-[1.02]"
+          >
+            <LiveGameCard game={game} />
+          </Link>
         ))}
       </div>
     </section>

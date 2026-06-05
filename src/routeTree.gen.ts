@@ -14,6 +14,7 @@ import { Route as PublicRouteRouteImport } from './routes/_public/route'
 import { Route as GuestRouteRouteImport } from './routes/_guest/route'
 import { Route as AuthRouteRouteImport } from './routes/_auth/route'
 import { Route as PublicIndexRouteImport } from './routes/_public/index'
+import { Route as ScoreMatchIdRouteImport } from './routes/score.$matchId'
 import { Route as GuestSignupRouteImport } from './routes/_guest/signup'
 import { Route as GuestLoginRouteImport } from './routes/_guest/login'
 import { Route as AuthAppRouteRouteImport } from './routes/_auth/app/route'
@@ -53,6 +54,11 @@ const PublicIndexRoute = PublicIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => PublicRouteRoute,
+} as any)
+const ScoreMatchIdRoute = ScoreMatchIdRouteImport.update({
+  id: '/score/$matchId',
+  path: '/score/$matchId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const GuestSignupRoute = GuestSignupRouteImport.update({
   id: '/signup',
@@ -155,6 +161,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AuthAppRouteRouteWithChildren
   '/login': typeof GuestLoginRoute
   '/signup': typeof GuestSignupRoute
+  '/score/$matchId': typeof ScoreMatchIdRoute
   '/admin/users': typeof AuthAdminUsersRoute
   '/app/player-pairs': typeof AuthAppPlayerPairsRoute
   '/app/players': typeof AuthAppPlayersRoute
@@ -174,6 +181,7 @@ export interface FileRoutesByTo {
   '/showcase': typeof ShowcaseRoute
   '/login': typeof GuestLoginRoute
   '/signup': typeof GuestSignupRoute
+  '/score/$matchId': typeof ScoreMatchIdRoute
   '/admin/users': typeof AuthAdminUsersRoute
   '/app/player-pairs': typeof AuthAppPlayerPairsRoute
   '/app/players': typeof AuthAppPlayersRoute
@@ -198,6 +206,7 @@ export interface FileRoutesById {
   '/_auth/app': typeof AuthAppRouteRouteWithChildren
   '/_guest/login': typeof GuestLoginRoute
   '/_guest/signup': typeof GuestSignupRoute
+  '/score/$matchId': typeof ScoreMatchIdRoute
   '/_public/': typeof PublicIndexRoute
   '/_auth/admin/users': typeof AuthAdminUsersRoute
   '/_auth/app/player-pairs': typeof AuthAppPlayerPairsRoute
@@ -222,6 +231,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/login'
     | '/signup'
+    | '/score/$matchId'
     | '/admin/users'
     | '/app/player-pairs'
     | '/app/players'
@@ -241,6 +251,7 @@ export interface FileRouteTypes {
     | '/showcase'
     | '/login'
     | '/signup'
+    | '/score/$matchId'
     | '/admin/users'
     | '/app/player-pairs'
     | '/app/players'
@@ -264,6 +275,7 @@ export interface FileRouteTypes {
     | '/_auth/app'
     | '/_guest/login'
     | '/_guest/signup'
+    | '/score/$matchId'
     | '/_public/'
     | '/_auth/admin/users'
     | '/_auth/app/player-pairs'
@@ -285,6 +297,7 @@ export interface RootRouteChildren {
   GuestRouteRoute: typeof GuestRouteRouteWithChildren
   PublicRouteRoute: typeof PublicRouteRouteWithChildren
   ShowcaseRoute: typeof ShowcaseRoute
+  ScoreMatchIdRoute: typeof ScoreMatchIdRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
@@ -324,6 +337,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof PublicIndexRouteImport
       parentRoute: typeof PublicRouteRoute
+    }
+    '/score/$matchId': {
+      id: '/score/$matchId'
+      path: '/score/$matchId'
+      fullPath: '/score/$matchId'
+      preLoaderRoute: typeof ScoreMatchIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_guest/signup': {
       id: '/_guest/signup'
@@ -539,6 +559,7 @@ const rootRouteChildren: RootRouteChildren = {
   GuestRouteRoute: GuestRouteRouteWithChildren,
   PublicRouteRoute: PublicRouteRouteWithChildren,
   ShowcaseRoute: ShowcaseRoute,
+  ScoreMatchIdRoute: ScoreMatchIdRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport
