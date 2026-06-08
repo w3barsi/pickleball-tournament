@@ -21,7 +21,7 @@ function AppLayout() {
         {/* Mobile Navigation Header */}
         <header className="flex h-14 items-center gap-4 border-b bg-background px-4 md:hidden">
           <SidebarTrigger />
-          <span className="font-semibold">Pickle Tournament</span>
+          <span className="font-semibold">Pickle Forge</span>
         </header>
 
         {/* Main Content */}

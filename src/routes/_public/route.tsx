@@ -17,7 +17,7 @@ function PublicLayout() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-tournament-blue">
               <TrophyIcon className="size-4 text-white" />
             </div>
-            <span className="font-heading text-lg font-bold tracking-tight">Pickle Tournament</span>
+            <span className="font-heading text-lg font-bold tracking-tight">Pickle Forge</span>
           </Link>
 
           <div className="flex items-center gap-3">
@@ -27,7 +27,6 @@ function PublicLayout() {
               render={<Link to="/login">Sign In</Link>}
               nativeButton={false}
             />
-            <Button size="sm" render={<Link to="/signup">Get Started</Link>} nativeButton={false} />
           </div>
         </div>
       </header>
@@ -40,10 +39,16 @@ function PublicLayout() {
       {/* Public Footer */}
       <footer className="border-t bg-muted/30">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 text-sm text-muted-foreground md:px-6">
-          <p>&copy; {new Date().getFullYear()} Pickle Tournament</p>
+          <p>&copy; {new Date().getFullYear()} Pickle Forge</p>
           <div className="flex items-center gap-4">
             <Link to="/" className="transition-colors hover:text-foreground">
               Tournaments
+            </Link>
+            <Link
+              to="/signup"
+              className="inline-flex items-center rounded-full bg-lime-400 px-3 py-1 text-xs font-bold text-[#1a3a2a] transition-colors hover:bg-lime-300"
+            >
+              Host a Tournament
             </Link>
             <Link to="/login" className="transition-colors hover:text-foreground">
               Sign In

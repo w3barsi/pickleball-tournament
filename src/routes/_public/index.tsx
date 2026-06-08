@@ -136,18 +136,18 @@ function HomePage() {
             </p>
 
             <div className="mt-2 flex flex-wrap items-center gap-4">
-              <Link
-                to="/signup"
+              <a
+                href="#tournaments"
                 className="inline-flex items-center gap-2 rounded-xl bg-lime-400 px-6 py-3 text-sm font-bold text-[#1a3a2a] transition-transform hover:scale-105 active:scale-95"
               >
-                Host a Tournament
+                Browse Tournaments
                 <ChevronRightIcon className="size-4" />
-              </Link>
+              </a>
               <a
                 href="#featured-event"
                 className="inline-flex items-center gap-2 rounded-xl border border-white/20 px-6 py-3 text-sm font-medium text-white backdrop-blur-sm transition-colors hover:bg-white/10"
               >
-                Browse Events
+                View Featured
               </a>
             </div>
 
@@ -172,7 +172,7 @@ function HomePage() {
 
       {/* Featured Tournament */}
       {featured && (
-        <section id="featured-event" className="relative mx-4 -mt-8 md:mx-6">
+        <section id="featured-event" className="relative mx-4 -mt-8 scroll-mt-[15vh] md:mx-6">
           <div className="mx-auto max-w-7xl">
             <div className="overflow-hidden rounded-2xl bg-card shadow-xl ring-1 ring-foreground/10">
               <div className="flex flex-col gap-6 p-6 md:flex-row md:items-center md:p-8">
@@ -220,7 +220,7 @@ function HomePage() {
       )}
 
       {/* Tournament Grid */}
-      <section id="tournaments" className="px-4 py-16 md:px-6 md:py-24">
+      <section id="tournaments" className="scroll-mt-[15vh] px-4 py-16 md:px-6 md:py-24">
         <div className="mx-auto max-w-7xl">
           <div className="mb-10 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>
@@ -288,20 +288,20 @@ function HomePage() {
 
             <div className="relative z-10 mx-auto max-w-2xl">
               <h2 className="font-heading text-3xl font-black tracking-tight md:text-5xl">
-                Ready to Compete?
+                Find Your Next Tournament
               </h2>
               <p className="mx-auto mt-4 max-w-lg text-white/70">
-                Create your own tournament, manage registrations, and track matches in real-time.
-                It&apos;s free to get started.
+                Discover upcoming pickleball events, follow live matches, and never miss a
+                championship moment.
               </p>
               <div className="mt-8 flex flex-wrap justify-center gap-4">
-                <Link
-                  to="/signup"
+                <a
+                  href="#tournaments"
                   className="inline-flex items-center gap-2 rounded-xl bg-lime-400 px-8 py-3 text-sm font-bold text-[#1a3a2a] transition-transform hover:scale-105 active:scale-95"
                 >
-                  Start Your Tournament
+                  Browse Events
                   <ChevronRightIcon className="size-4" />
-                </Link>
+                </a>
                 <Link
                   to="/login"
                   className="inline-flex items-center gap-2 rounded-xl border border-white/20 px-8 py-3 text-sm font-medium text-white backdrop-blur-sm transition-colors hover:bg-white/10"

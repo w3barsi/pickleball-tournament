@@ -71,7 +71,7 @@ export function AppSidebar() {
     <BaseSidebar
       header={
         <span className={cn("font-semibold text-sidebar-foreground", isAdmin && "text-red-600")}>
-          <Link to="/">Pickle Tournament</Link>
+          <Link to="/">Pickle Forge</Link>
         </span>
       }
     >

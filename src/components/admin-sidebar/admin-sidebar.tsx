@@ -10,7 +10,7 @@ export function AdminSidebar() {
     <BaseSidebar
       header={
         <Link to="/app" className="font-semibold text-sidebar-foreground">
-          Pickle Tournament
+          Pickle Forge
         </Link>
       }
     >
