@@ -94,9 +94,9 @@ export function CreateCategoryDialog({ open, onOpenChange, onCreate }: CreateCat
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger
         render={
-          <Button size="lg" variant="outline">
-            <PlusIcon className="size-6 transition-transform group-hover:rotate-90" />
-            NEW CATEGORY
+          <Button variant="outline">
+            <PlusIcon />
+            New Category
           </Button>
         }
       />

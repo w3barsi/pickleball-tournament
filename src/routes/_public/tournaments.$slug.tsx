@@ -71,7 +71,8 @@ function TournamentHeroSection() {
 
       <div className="relative z-10 mx-auto max-w-7xl">
         <Button
-          variant="ghost"
+          variant="ghost-border"
+          className="border-0"
           nativeButton={false}
           render={
             <Link to="/">

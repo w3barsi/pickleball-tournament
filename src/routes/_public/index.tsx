@@ -6,7 +6,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { CalendarIcon, ChevronRightIcon, MapPinIcon, TrophyIcon, UsersIcon } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 export const Route = createFileRoute("/_public/")({
   component: HomePage,
@@ -79,7 +81,7 @@ function HomePage() {
   return (
     <div className="flex flex-col">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-[#1a3a2a] px-4 py-20 text-white md:px-6 md:py-28">
+      <section className="relative overflow-hidden bg-[#1a3a2a] px-4 pt-8 pb-16 text-white md:px-6 md:pt-10 md:pb-20">
         {/* Animated mesh background */}
         <div className="pointer-events-none absolute inset-0">
           <div
@@ -135,24 +137,29 @@ function HomePage() {
               updates — all in one place.
             </p>
 
-            <div className="mt-2 flex flex-wrap items-center gap-4">
-              <a
-                href="#tournaments"
-                className="inline-flex items-center gap-2 rounded-xl bg-lime-400 px-6 py-3 text-sm font-bold text-[#1a3a2a] transition-transform hover:scale-105 active:scale-95"
+            <div className="flex flex-wrap items-center gap-4">
+              <Button
+                size="xl"
+                variant="green"
+                render={<a href="#tournaments" />}
+                nativeButton={false}
               >
                 Browse Tournaments
                 <ChevronRightIcon className="size-4" />
-              </a>
-              <a
-                href="#featured-event"
-                className="inline-flex items-center gap-2 rounded-xl border border-white/20 px-6 py-3 text-sm font-medium text-white backdrop-blur-sm transition-colors hover:bg-white/10"
+              </Button>
+              <Button
+                size="xl"
+                variant="ghost-border"
+                render={<a href="#featured-event" />}
+                nativeButton={false}
               >
                 View Featured
-              </a>
+              </Button>
             </div>
 
-            {/* Stats strip */}
-            <div className="mt-8 flex gap-8 border-t border-white/10 pt-6">
+            <Separator className="bg-white/10" />
+            {/* Statsstrip */}
+            <div className="flex gap-8">
               <div>
                 <div className="font-heading text-2xl font-black">{upcoming.length}</div>
                 <div className="text-xs tracking-wider text-white/50 uppercase">Upcoming</div>
@@ -207,12 +214,13 @@ function HomePage() {
                     </span>
                   </div>
                 </div>
-                <Link to="/tournaments/$slug" params={{ slug: featured.slug }} className="shrink-0">
-                  <span className="inline-flex items-center gap-2 rounded-xl bg-foreground px-6 py-3 text-sm font-semibold text-background transition-transform hover:scale-105">
-                    View Tournament
-                    <ChevronRightIcon className="size-4" />
-                  </span>
-                </Link>
+                <Button
+                  className="px-6"
+                  render={<Link to="/tournaments/$slug" params={{ slug: featured.slug }} />}
+                >
+                  View Tournament
+                  <ChevronRightIcon className="size-4" />
+                </Button>
               </div>
             </div>
           </div>
@@ -295,19 +303,23 @@ function HomePage() {
                 championship moment.
               </p>
               <div className="mt-8 flex flex-wrap justify-center gap-4">
-                <a
-                  href="#tournaments"
-                  className="inline-flex items-center gap-2 rounded-xl bg-lime-400 px-8 py-3 text-sm font-bold text-[#1a3a2a] transition-transform hover:scale-105 active:scale-95"
+                <Button
+                  variant="green"
+                  nativeButton={false}
+                  render={<a href="#tournaments" />}
+                  size="xl"
                 >
                   Browse Events
                   <ChevronRightIcon className="size-4" />
-                </a>
-                <Link
-                  to="/login"
-                  className="inline-flex items-center gap-2 rounded-xl border border-white/20 px-8 py-3 text-sm font-medium text-white backdrop-blur-sm transition-colors hover:bg-white/10"
+                </Button>
+                <Button
+                  variant="ghost-border"
+                  size="xl"
+                  nativeButton={false}
+                  render={<Link to="/login" />}
                 >
                   Sign In
-                </Link>
+                </Button>
               </div>
             </div>
           </div>

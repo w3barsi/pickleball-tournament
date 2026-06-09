@@ -25,6 +25,7 @@
 - DO NOT USE asChild prop! Remember this is base-ui and not Radix, so it uses the "render" prop.
 - Dialogs, popovers, and other overlay components are built on `@base-ui/react` primitives.
 - A `shadcn` skill is available for shadcn/ui component management, debugging, and styling workflows.
+- When rendering an `<a>` tag or `<Link>`, always use the `Button` component with `nativeButton={false}` and configure it via `variant` and `size` props.
 
 ## Topic-specific Guidelines
 
