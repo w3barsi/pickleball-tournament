@@ -157,7 +157,21 @@ function ScorerPage() {
     convexQuery(api.app.scoring.getMatchForScorer, queryArgs),
   );
 
-  const setMatchLiveMutation = useMutation(api.app.scoring.setMatchLive);
+  const setMatchLiveMutation = useMutation(api.app.scoring.setMatchLive).withOptimisticUpdate(
+    (localStore, args) => {
+      const localQueryKey = { ...queryArgs };
+      const current = localStore.getQuery(api.app.scoring.getMatchForScorer, localQueryKey);
+      if (!current?.match) return;
+
+      localStore.setQuery(api.app.scoring.getMatchForScorer, localQueryKey, {
+        ...current,
+        match: {
+          ...current.match,
+          isLive: args.isLive,
+        },
+      });
+    },
+  );
   const forfeitMatchMutation = useMutation(api.app.scoring.forfeitMatch);
   const confirmSetCompleteMutation = useMutation(api.app.scoring.confirmSetComplete);
   const cancelSetMutation = useMutation(api.app.scoring.cancelSet);
@@ -288,8 +302,8 @@ function ScorerPage() {
 
   const handleGoLive = useCallback(async () => {
     try {
-      await setMatchLiveMutation({ matchId });
-      toast.success(match?.isLive ? "Match is live" : "Match set to live");
+      await setMatchLiveMutation({ matchId, isLive: !match?.isLive });
+      toast.success(match?.isLive ? "Match is no longer live" : "Match is now live");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to set live");
     }
