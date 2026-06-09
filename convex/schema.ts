@@ -46,6 +46,7 @@ export default defineSchema({
     registrationDeadline: v.optional(v.number()),
     isPublic: v.optional(v.boolean()),
     isFeaturedEvent: v.optional(v.boolean()),
+    showcaseOrder: v.optional(v.number()),
     status: v.union(v.literal("upcoming"), v.literal("inProgress"), v.literal("completed")),
     createdBy: v.string(),
     deletedAt: v.optional(v.number()),
@@ -53,7 +54,8 @@ export default defineSchema({
     .index("by_slug", ["slug"])
     .index("by_createdBy", ["createdBy"])
     .index("by_deletedAt", ["deletedAt"])
-    .index("by_featured_event", ["isFeaturedEvent"]),
+    .index("by_featured_event", ["isFeaturedEvent"])
+    .index("by_showcase_order", ["showcaseOrder"]),
 
   categories: defineTable({
     tournamentId: v.id("tournaments"),
