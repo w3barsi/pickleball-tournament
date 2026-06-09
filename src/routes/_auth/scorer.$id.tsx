@@ -355,16 +355,16 @@ function ScorerPage() {
       {/* Top bar */}
       <div className="relative z-10 flex items-center justify-between px-4 py-4 md:px-8 md:py-6">
         <Link
-          to="/app/tournaments/$slug/categories/$categoryId/brackets/$bracketId"
+          to="/app/tournaments/$slug/categories/$categoryId/matches/$matchId"
           params={{
             slug: tournament?.slug ?? "",
             categoryId: category?._id ?? "",
-            bracketId: match.bracketId,
+            matchId,
           }}
           className="inline-flex items-center gap-1.5 text-sm text-white/40 transition-colors hover:text-white/70"
         >
           <ArrowLeftIcon className="size-4" />
-          <span className="hidden sm:inline">Brackets</span>
+          <span className="hidden sm:inline">Back to Match</span>
         </Link>
 
         <div className="flex flex-wrap items-center gap-2">
