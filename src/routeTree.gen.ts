@@ -19,6 +19,7 @@ import { Route as GuestSignupRouteImport } from './routes/_guest/signup'
 import { Route as GuestLoginRouteImport } from './routes/_guest/login'
 import { Route as AuthAppRouteRouteImport } from './routes/_auth/app/route'
 import { Route as AuthAdminRouteRouteImport } from './routes/_auth/admin/route'
+import { Route as PublicTournamentsIndexRouteImport } from './routes/_public/tournaments.index'
 import { Route as AuthAppIndexRouteImport } from './routes/_auth/app/index'
 import { Route as AuthAdminIndexRouteImport } from './routes/_auth/admin/index'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
@@ -80,6 +81,11 @@ const AuthAdminRouteRoute = AuthAdminRouteRouteImport.update({
   id: '/admin',
   path: '/admin',
   getParentRoute: () => AuthRouteRoute,
+} as any)
+const PublicTournamentsIndexRoute = PublicTournamentsIndexRouteImport.update({
+  id: '/tournaments/',
+  path: '/tournaments/',
+  getParentRoute: () => PublicRouteRoute,
 } as any)
 const AuthAppIndexRoute = AuthAppIndexRouteImport.update({
   id: '/',
@@ -176,6 +182,7 @@ export interface FileRoutesByFullPath {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/admin/': typeof AuthAdminIndexRoute
   '/app/': typeof AuthAppIndexRoute
+  '/tournaments/': typeof PublicTournamentsIndexRoute
   '/app/scorer/$id': typeof AuthAppScorerIdRoute
   '/app/tournaments/': typeof AuthAppTournamentsIndexRoute
   '/app/tournaments/$slug/': typeof AuthAppTournamentsSlugIndexRoute
@@ -197,6 +204,7 @@ export interface FileRoutesByTo {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/admin': typeof AuthAdminIndexRoute
   '/app': typeof AuthAppIndexRoute
+  '/tournaments': typeof PublicTournamentsIndexRoute
   '/app/scorer/$id': typeof AuthAppScorerIdRoute
   '/app/tournaments': typeof AuthAppTournamentsIndexRoute
   '/app/tournaments/$slug': typeof AuthAppTournamentsSlugIndexRoute
@@ -224,6 +232,7 @@ export interface FileRoutesById {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/_auth/admin/': typeof AuthAdminIndexRoute
   '/_auth/app/': typeof AuthAppIndexRoute
+  '/_public/tournaments/': typeof PublicTournamentsIndexRoute
   '/_auth/app/scorer/$id': typeof AuthAppScorerIdRoute
   '/_auth/app/tournaments/': typeof AuthAppTournamentsIndexRoute
   '/_auth/app/tournaments/$slug/': typeof AuthAppTournamentsSlugIndexRoute
@@ -249,6 +258,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/admin/'
     | '/app/'
+    | '/tournaments/'
     | '/app/scorer/$id'
     | '/app/tournaments/'
     | '/app/tournaments/$slug/'
@@ -270,6 +280,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/admin'
     | '/app'
+    | '/tournaments'
     | '/app/scorer/$id'
     | '/app/tournaments'
     | '/app/tournaments/$slug'
@@ -296,6 +307,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/_auth/admin/'
     | '/_auth/app/'
+    | '/_public/tournaments/'
     | '/_auth/app/scorer/$id'
     | '/_auth/app/tournaments/'
     | '/_auth/app/tournaments/$slug/'
@@ -384,6 +396,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin'
       preLoaderRoute: typeof AuthAdminRouteRouteImport
       parentRoute: typeof AuthRouteRoute
+    }
+    '/_public/tournaments/': {
+      id: '/_public/tournaments/'
+      path: '/tournaments'
+      fullPath: '/tournaments/'
+      preLoaderRoute: typeof PublicTournamentsIndexRouteImport
+      parentRoute: typeof PublicRouteRoute
     }
     '/_auth/app/': {
       id: '/_auth/app/'
@@ -564,11 +583,13 @@ const GuestRouteRouteWithChildren = GuestRouteRoute._addFileChildren(
 interface PublicRouteRouteChildren {
   PublicIndexRoute: typeof PublicIndexRoute
   PublicTournamentsSlugRoute: typeof PublicTournamentsSlugRoute
+  PublicTournamentsIndexRoute: typeof PublicTournamentsIndexRoute
 }
 
 const PublicRouteRouteChildren: PublicRouteRouteChildren = {
   PublicIndexRoute: PublicIndexRoute,
   PublicTournamentsSlugRoute: PublicTournamentsSlugRoute,
+  PublicTournamentsIndexRoute: PublicTournamentsIndexRoute,
 }
 
 const PublicRouteRouteWithChildren = PublicRouteRoute._addFileChildren(
