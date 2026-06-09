@@ -7,13 +7,15 @@ import { CalendarIcon, ChevronRightIcon, MapPinIcon, TrophyIcon, UsersIcon } fro
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
 export const Route = createFileRoute("/_public/")({
   component: HomePage,
   loader: async (ctx) => {
-    await ctx.context.queryClient.ensureQueryData(convexQuery(api.public.tournaments.list, {}));
+    await ctx.context.queryClient.ensureQueryData(convexQuery(api.public.tournaments.counts, {}));
+    await ctx.context.queryClient.ensureQueryData(
+      convexQuery(api.public.tournaments.showcaseList, {}),
+    );
   },
 });
 
@@ -69,14 +71,11 @@ function formatDateRange(start: number, end?: number | undefined) {
 }
 
 function HomePage() {
-  const { data: tournaments } = useQuery(convexQuery(api.public.tournaments.list, {}));
+  const { data: counts } = useQuery(convexQuery(api.public.tournaments.counts, {}));
+  const { data: showcase } = useQuery(convexQuery(api.public.tournaments.showcaseList, {}));
 
-  const upcoming = tournaments?.filter((t) => t.status === "upcoming") || [];
-  const inProgress = tournaments?.filter((t) => t.status === "inProgress") || [];
-  const completed = tournaments?.filter((t) => t.status === "completed") || [];
-
-  const featured = tournaments?.find((t) => t.isFeaturedEvent === true);
-  const remaining = tournaments?.filter((t) => t._id !== featured?._id) || [];
+  const featured = showcase?.featuredEvent;
+  const showcasedEvents = (showcase?.showcasedEvents ?? []).filter((t) => t._id !== featured?._id);
 
   return (
     <div className="flex flex-col">
@@ -161,15 +160,17 @@ function HomePage() {
             {/* Statsstrip */}
             <div className="flex gap-8">
               <div>
-                <div className="font-heading text-2xl font-black">{upcoming.length}</div>
+                <div className="font-heading text-2xl font-black">{counts?.upcomingCount ?? 0}</div>
                 <div className="text-xs tracking-wider text-white/50 uppercase">Upcoming</div>
               </div>
               <div>
-                <div className="font-heading text-2xl font-black">{inProgress.length}</div>
+                <div className="font-heading text-2xl font-black">{counts?.liveCount ?? 0}</div>
                 <div className="text-xs tracking-wider text-white/50 uppercase">Live Now</div>
               </div>
               <div>
-                <div className="font-heading text-2xl font-black">{completed.length}</div>
+                <div className="font-heading text-2xl font-black">
+                  {counts?.completedCount ?? 0}
+                </div>
                 <div className="text-xs tracking-wider text-white/50 uppercase">Completed</div>
               </div>
             </div>
@@ -242,11 +243,11 @@ function HomePage() {
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <TrophyIcon className="size-4" />
-              {tournaments?.length || 0} events found
+              {showcasedEvents.length} events found
             </div>
           </div>
 
-          {tournaments === undefined ? (
+          {showcase === undefined ? (
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {Array.from({ length: 6 }).map((_, i) => (
                 <div
@@ -256,7 +257,7 @@ function HomePage() {
                 />
               ))}
             </div>
-          ) : tournaments.length === 0 ? (
+          ) : showcasedEvents.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed py-24 text-center">
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
                 <TrophyIcon className="size-7 text-muted-foreground" />
@@ -268,7 +269,7 @@ function HomePage() {
             </div>
           ) : (
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-              {remaining.map((tournament) => (
+              {showcasedEvents.map((tournament) => (
                 <TournamentCard key={tournament._id} tournament={tournament} />
               ))}
             </div>

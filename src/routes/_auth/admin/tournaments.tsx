@@ -13,6 +13,13 @@ import { DeleteTournamentAlertDialog } from "@/components/tournaments/delete-tou
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Table,
   TableBody,
   TableCell,
@@ -28,15 +35,27 @@ export const Route = createFileRoute("/_auth/admin/tournaments")({
   },
 });
 
+const SHOWCASE_OPTIONS = [
+  { value: "0", label: "Not showcased" },
+  { value: "1", label: "1" },
+  { value: "2", label: "2" },
+  { value: "3", label: "3" },
+  { value: "4", label: "4" },
+  { value: "5", label: "5" },
+  { value: "6", label: "6" },
+];
+
 function TournamentsPage() {
   const { data: tournaments, isLoading } = useQuery(convexQuery(api.admin.tournaments.list, {}));
   const setFeatured = useMutation(api.admin.tournaments.setFeatured);
   const unsetFeatured = useMutation(api.admin.tournaments.unsetFeatured);
+  const setShowcaseOrder = useMutation(api.admin.tournaments.setShowcaseOrder);
   const remove = useMutation(api.admin.tournaments.remove);
 
   const [deletingTournament, setDeletingTournament] = useState<Doc<"tournaments"> | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [settingFeaturedId, setSettingFeaturedId] = useState<string | null>(null);
+  const [settingShowcaseId, setSettingShowcaseId] = useState<string | null>(null);
 
   const handleSetFeatured = async (tournamentId: string) => {
     setSettingFeaturedId(tournamentId);
@@ -59,6 +78,20 @@ function TournamentsPage() {
       toast.error(err instanceof Error ? err.message : "Failed to unfeature tournament");
     } finally {
       setSettingFeaturedId(null);
+    }
+  };
+
+  const handleSetShowcaseOrder = async (tournamentId: string, orderValue: string | null) => {
+    if (orderValue === null) return;
+    setSettingShowcaseId(tournamentId);
+    try {
+      const order = orderValue === "0" ? null : Number(orderValue);
+      await setShowcaseOrder({ tournamentId: tournamentId as any, order });
+      toast.success(order === null ? "Removed from showcase" : `Showcase order set to ${order}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to set showcase order");
+    } finally {
+      setSettingShowcaseId(null);
     }
   };
 
@@ -104,19 +137,20 @@ function TournamentsPage() {
               <TableHead>Status</TableHead>
               <TableHead>Public</TableHead>
               <TableHead>Featured</TableHead>
+              <TableHead>Showcase</TableHead>
               <TableHead className="w-24">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={7} className="h-24 text-center">
+                <TableCell colSpan={8} className="h-24 text-center">
                   <Loader2Icon className="mx-auto size-5 animate-spin text-muted-foreground" />
                 </TableCell>
               </TableRow>
             ) : !tournaments || tournaments.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
                   No tournaments found.
                 </TableCell>
               </TableRow>
@@ -149,6 +183,24 @@ function TournamentsPage() {
                     ) : (
                       <span className="text-muted-foreground">—</span>
                     )}
+                  </TableCell>
+                  <TableCell>
+                    <Select
+                      value={String(tournament.showcaseOrder ?? 0)}
+                      onValueChange={(value) => handleSetShowcaseOrder(tournament._id, value)}
+                      disabled={settingShowcaseId === tournament._id}
+                    >
+                      <SelectTrigger className="w-32 data-[size=sm]:h-7">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SHOWCASE_OPTIONS.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
