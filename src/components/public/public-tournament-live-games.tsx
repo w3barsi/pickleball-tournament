@@ -1,22 +1,21 @@
 import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@convex/_generated/api.js";
-import { Id } from "@convex/_generated/dataModel.js";
-import { useQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { ActivityIcon, ChevronRightIcon, MapPinIcon, TrophyIcon } from "lucide-react";
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 interface PublicTournamentLiveGamesProps {
-  tournamentId: Id<"tournaments">;
+  slug: string;
 }
 
-export function PublicTournamentLiveGames({ tournamentId }: PublicTournamentLiveGamesProps) {
-  const { data: liveGames } = useQuery(
-    convexQuery(api.public.games.getLiveGames, { tournamentId }),
+export function PublicTournamentLiveGames({ slug }: PublicTournamentLiveGamesProps) {
+  const { data: liveGames } = useSuspenseQuery(
+    convexQuery(api.public.games.getLiveGames, { slug }),
   );
 
-  if (!liveGames || liveGames.length === 0) {
+  if (liveGames.length === 0) {
     return null;
   }
 

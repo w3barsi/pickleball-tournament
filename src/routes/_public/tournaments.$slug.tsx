@@ -12,6 +12,7 @@ import {
   TrophyIcon,
   UsersIcon,
 } from "lucide-react";
+import { Suspense } from "react";
 
 import { PublicTournamentLiveGames } from "@/components/public/public-tournament-live-games";
 import { Badge } from "@/components/ui/badge";
@@ -21,13 +22,14 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 export const Route = createFileRoute("/_public/tournaments/$slug")({
   component: TournamentDetailPage,
   loader: async ({ params, context }) => {
-    const data = await context.queryClient.ensureQueryData(
-      convexQuery(api.public.tournaments.getDetails, { slug: params.slug }),
-    );
-
-    if (!data) throw notFound();
-
-    return data;
+    await Promise.all([
+      context.queryClient.ensureQueryData(
+        convexQuery(api.public.tournaments.getDetails, { slug: params.slug }),
+      ),
+      context.queryClient.prefetchQuery(
+        convexQuery(api.public.games.getLiveGames, { slug: params.slug }),
+      ),
+    ]);
   },
   notFoundComponent: () => <div>Tournament not found</div>,
 });
@@ -172,7 +174,9 @@ function TournamentMainContent() {
     <div className="mx-auto w-full max-w-7xl px-4 py-6 md:px-6 md:py-8">
       <div className="flex flex-col gap-8">
         {/* Live Games */}
-        <PublicTournamentLiveGames tournamentId={tournament._id} />
+        <Suspense fallback={<LiveGamesSkeleton />}>
+          <PublicTournamentLiveGames slug={slug} />
+        </Suspense>
 
         {/* Categories & Brackets */}
         <section className="flex flex-col gap-5">
@@ -635,4 +639,25 @@ function formatBracketFormat(format: string) {
     default:
       return format;
   }
+}
+
+/* ---------- Skeletons ---------- */
+
+function LiveGamesSkeleton() {
+  return (
+    <div className="flex flex-col gap-8">
+      <div>
+        <div className="flex items-center gap-2">
+          <div className="h-5 w-5 animate-pulse rounded-full bg-muted" />
+          <div className="h-6 w-32 animate-pulse rounded bg-muted" />
+        </div>
+        <div className="mt-1 h-4 w-48 animate-pulse rounded bg-muted" />
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-56 animate-pulse rounded-lg bg-muted" />
+        ))}
+      </div>
+    </div>
+  );
 }

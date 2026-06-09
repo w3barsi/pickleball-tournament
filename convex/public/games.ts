@@ -4,12 +4,21 @@ import { query } from "../_generated/server";
 
 export const getLiveGames = query({
   args: {
-    tournamentId: v.id("tournaments"),
+    slug: v.string(),
   },
   handler: async (ctx, args) => {
+    const tournament = await ctx.db
+      .query("tournaments")
+      .withIndex("by_slug", (q) => q.eq("slug", args.slug))
+      .unique();
+
+    if (!tournament) {
+      return [];
+    }
+
     const matches = await ctx.db
       .query("matches")
-      .withIndex("by_tournament", (q) => q.eq("tournamentId", args.tournamentId))
+      .withIndex("by_tournament", (q) => q.eq("tournamentId", tournament._id))
       .collect();
 
     const liveOrInProgress = matches.filter(
