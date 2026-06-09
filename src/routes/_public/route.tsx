@@ -24,7 +24,7 @@ function PublicLayout() {
             <Button
               variant="ghost"
               size="sm"
-              render={<Link to="/login">Sign In</Link>}
+              render={<Link to="/tournaments">Tournaments</Link>}
               nativeButton={false}
             />
           </div>

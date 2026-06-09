@@ -216,6 +216,7 @@ function HomePage() {
                 </div>
                 <Button
                   className="px-6"
+                  nativeButton={false}
                   render={<Link to="/tournaments/$slug" params={{ slug: featured.slug }} />}
                 >
                   View Tournament
