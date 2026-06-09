@@ -44,15 +44,17 @@ function PublicLayout() {
             <Link to="/" className="transition-colors hover:text-foreground">
               Tournaments
             </Link>
-            <Link
-              to="/signup"
-              className="inline-flex items-center rounded-full bg-lime-400 px-3 py-1 text-xs font-bold text-[#1a3a2a] transition-colors hover:bg-lime-300"
-            >
-              Host a Tournament
-            </Link>
             <Link to="/login" className="transition-colors hover:text-foreground">
               Sign In
             </Link>
+            <Button
+              size="sm"
+              variant="green"
+              render={<Link to="/signup" />}
+              className="rounded-full"
+            >
+              Host a Tournament
+            </Button>
           </div>
         </div>
       </footer>

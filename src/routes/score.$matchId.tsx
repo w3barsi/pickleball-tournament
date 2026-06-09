@@ -5,6 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowLeftIcon, MapPinIcon, TrophyIcon } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
+
 export const Route = createFileRoute("/score/$matchId")({
   component: ScorePage,
   loader: async ({ params, context }) => {
@@ -68,14 +70,15 @@ function ScorePage() {
     <div className="flex min-h-screen flex-col bg-[#1a3a2a] text-white">
       {/* Subtle top bar */}
       <div className="relative z-10 flex items-center justify-between px-4 py-4 md:px-8 md:py-6">
-        <Link
-          to="/tournaments/$slug"
-          params={{ slug: tournament.slug }}
-          className="inline-flex items-center gap-1.5 text-sm text-white/40 transition-colors hover:text-white/70"
+        <Button
+          variant="ghost-border"
+          className="border-0"
+          nativeButton={false}
+          render={<Link to="/tournaments/$slug" params={{ slug: tournament.slug }} />}
         >
-          <ArrowLeftIcon className="size-4" />
-          <span className="hidden sm:inline">Back to tournament</span>
-        </Link>
+          <ArrowLeftIcon />
+          Back to Tournament
+        </Button>
 
         <div className="flex items-center gap-3 text-sm text-white/40">
           {tournament.venueName && (

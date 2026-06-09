@@ -277,7 +277,7 @@ function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="border-t bg-muted/30 px-4 py-16 md:px-6 md:py-24">
+      <section className="border-t bg-muted/30 px-4 py-16 md:px-6 md:py-16">
         <div className="mx-auto max-w-7xl">
           <div className="relative overflow-hidden rounded-3xl bg-[#1a3a2a] px-6 py-16 text-center text-white md:px-12 md:py-24">
             <div className="pointer-events-none absolute inset-0">
@@ -297,29 +297,21 @@ function HomePage() {
 
             <div className="relative z-10 mx-auto max-w-2xl">
               <h2 className="font-heading text-3xl font-black tracking-tight md:text-5xl">
-                Find Your Next Tournament
+                Want to host your own tournament?
               </h2>
               <p className="mx-auto mt-4 max-w-lg text-white/70">
-                Discover upcoming pickleball events, follow live matches, and never miss a
-                championship moment.
+                Create and manage pickleball events with live scoring, brackets, and real-time
+                updates.
               </p>
               <div className="mt-8 flex flex-wrap justify-center gap-4">
                 <Button
                   variant="green"
                   nativeButton={false}
-                  render={<a href="#tournaments" />}
+                  render={<Link to="/signup" />}
                   size="xl"
                 >
-                  Browse Events
+                  Host a Tournament
                   <ChevronRightIcon className="size-4" />
-                </Button>
-                <Button
-                  variant="ghost-border"
-                  size="xl"
-                  nativeButton={false}
-                  render={<Link to="/login" />}
-                >
-                  Sign In
                 </Button>
               </div>
             </div>
