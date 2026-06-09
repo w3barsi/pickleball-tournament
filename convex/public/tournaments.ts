@@ -15,6 +15,50 @@ export const list = query({
   },
 });
 
+export const counts = query({
+  args: {},
+  handler: async (ctx) => {
+    const tournaments = await ctx.db
+      .query("tournaments")
+      .withIndex("by_deletedAt", (q) => q.eq("deletedAt", undefined))
+      .collect();
+
+    const publicTournaments = tournaments.filter(
+      (t) => t.isPublic === true && t.deletedAt === undefined,
+    );
+
+    return {
+      upcomingCount: publicTournaments.filter((t) => t.status === "upcoming").length,
+      liveCount: publicTournaments.filter((t) => t.status === "inProgress").length,
+      completedCount: publicTournaments.filter((t) => t.status === "completed").length,
+    };
+  },
+});
+
+export const showcaseList = query({
+  args: {},
+  handler: async (ctx) => {
+    const tournaments = await ctx.db
+      .query("tournaments")
+      .withIndex("by_deletedAt", (q) => q.eq("deletedAt", undefined))
+      .collect();
+
+    const publicTournaments = tournaments.filter(
+      (t) => t.isPublic === true && t.deletedAt === undefined,
+    );
+
+    const featured = publicTournaments.find((t) => t.isFeaturedEvent === true) ?? null;
+    const showcased = publicTournaments
+      .filter((t) => t.showcaseOrder !== undefined && t.showcaseOrder !== null)
+      .sort((a, b) => (a.showcaseOrder ?? 0) - (b.showcaseOrder ?? 0));
+
+    return {
+      featuredEvent: featured,
+      showcasedEvents: showcased,
+    };
+  },
+});
+
 export const getBySlug = query({
   args: {
     slug: v.string(),
