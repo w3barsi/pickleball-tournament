@@ -6,6 +6,7 @@ import {
   ArrowLeftIcon,
   CalendarIcon,
   CircleIcon,
+  HistoryIcon,
   MapPinIcon,
   ShieldIcon,
   SwordsIcon,
@@ -18,6 +19,7 @@ import { PublicTournamentLiveGames } from "@/components/public/public-tournament
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const Route = createFileRoute("/_public/tournaments/$slug")({
   component: TournamentDetailPage,
@@ -28,6 +30,9 @@ export const Route = createFileRoute("/_public/tournaments/$slug")({
       ),
       context.queryClient.prefetchQuery(
         convexQuery(api.public.games.getLiveGames, { slug: params.slug }),
+      ),
+      context.queryClient.prefetchQuery(
+        convexQuery(api.public.games.getRecentMatches, { slug: params.slug }),
       ),
     ]);
   },
@@ -205,9 +210,26 @@ function TournamentMainContent() {
           )}
         </section>
 
-        {/* Players — at the bottom */}
+        {/* Competitors & Recent Matches — tabbed */}
         <section className="flex flex-col gap-5">
-          <CompetitorsSection singlesPlayers={singlesPlayers} doublesPairs={doublesPairs} />
+          <Tabs defaultValue="recent-matches" className="flex flex-col gap-5">
+            <TabsList variant="line" className="w-full">
+              <TabsTrigger value="recent-matches">
+                <HistoryIcon className="size-4" />
+                Recent Matches
+              </TabsTrigger>
+              <TabsTrigger value="competitors">
+                <UsersIcon className="size-4" />
+                Competitors
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="recent-matches">
+              <RecentMatchesSection slug={slug} />
+            </TabsContent>
+            <TabsContent value="competitors">
+              <CompetitorsSection singlesPlayers={singlesPlayers} doublesPairs={doublesPairs} />
+            </TabsContent>
+          </Tabs>
         </section>
       </div>
     </div>
@@ -414,11 +436,6 @@ function CompetitorsSection({
 
   return (
     <div className="flex flex-col gap-8">
-      <div>
-        <h2 className="font-heading text-2xl font-bold tracking-tight">Competitors</h2>
-        <p className="mt-1 text-sm text-muted-foreground">{totalEntries} total entries</p>
-      </div>
-
       {/* Singles */}
       {singlesPlayers.length > 0 && (
         <div className="flex flex-col gap-4">
@@ -574,6 +591,160 @@ function MiniPlayer({
         )}
       </div>
     </div>
+  );
+}
+
+/* ---------- Recent Matches Section ---------- */
+
+function RecentMatchesSection({ slug }: { slug: string }) {
+  const { data } = useQuery(convexQuery(api.public.games.getRecentMatches, { slug }));
+
+  if (!data) {
+    return (
+      <div className="flex min-h-[20vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-tournament-blue border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (data.length === 0) {
+    return (
+      <Card>
+        <CardContent className="py-10 text-center text-sm text-muted-foreground">
+          No recent matches yet.
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      {data.map((entry) => (
+        <MatchCard key={entry.match._id} entry={entry} />
+      ))}
+    </div>
+  );
+}
+
+function MatchCard({
+  entry,
+}: {
+  entry: {
+    match: {
+      _id: string;
+      status: string;
+      courtNumber?: number;
+      completedAt?: number;
+    };
+    bracket: { name: string; label?: string } | null;
+    category: { name: string } | null;
+    participant1: {
+      player?: { fullName: string };
+      pair?: { teamName?: string };
+      playerOne?: { fullName: string };
+      playerTwo?: { fullName: string };
+    } | null;
+    participant2: {
+      player?: { fullName: string };
+      pair?: { teamName?: string };
+      playerOne?: { fullName: string };
+      playerTwo?: { fullName: string };
+    } | null;
+    categoryType: string;
+    completedSets: Array<{ team1Score: number; team2Score: number; winnerTeam?: number }>;
+    team1SetWins: number;
+    team2SetWins: number;
+    numberOfSets: number;
+  };
+}) {
+  const p1Name = getParticipantName(entry.participant1, entry.categoryType);
+  const p2Name = getParticipantName(entry.participant2, entry.categoryType);
+
+  const statusLabel =
+    entry.match.status === "completed"
+      ? "Completed"
+      : entry.match.status === "inProgress"
+        ? "In Progress"
+        : entry.match.status === "abandoned"
+          ? "Abandoned"
+          : entry.match.status;
+
+  return (
+    <Card className="overflow-hidden">
+      <CardContent className="p-4">
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              {entry.category && (
+                <span className="font-medium text-foreground">{entry.category.name}</span>
+              )}
+              {entry.bracket && (
+                <>
+                  <span className="text-border">·</span>
+                  <span>{entry.bracket.name}</span>
+                </>
+              )}
+              {entry.match.courtNumber && (
+                <>
+                  <span className="text-border">·</span>
+                  <span>Court {entry.match.courtNumber}</span>
+                </>
+              )}
+            </div>
+            <Badge variant="outline" className="text-xs">
+              {statusLabel}
+            </Badge>
+          </div>
+
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-1 flex-col items-start gap-1">
+              <span className="text-sm font-semibold">{p1Name}</span>
+              <span className="text-xs text-muted-foreground">{entry.team1SetWins} sets</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {entry.completedSets.map((set, i) => (
+                <div
+                  key={i}
+                  className="flex flex-col items-center gap-0.5 rounded-md bg-muted px-2 py-1"
+                >
+                  <span className="text-xs font-semibold tabular-nums">
+                    {set.team1Score}–{set.team2Score}
+                  </span>
+                </div>
+              ))}
+              {entry.completedSets.length === 0 && (
+                <span className="text-xs text-muted-foreground">vs</span>
+              )}
+            </div>
+
+            <div className="flex flex-1 flex-col items-end gap-1">
+              <span className="text-sm font-semibold">{p2Name}</span>
+              <span className="text-xs text-muted-foreground">{entry.team2SetWins} sets</span>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function getParticipantName(
+  participant: {
+    player?: { fullName: string };
+    pair?: { teamName?: string };
+    playerOne?: { fullName: string };
+    playerTwo?: { fullName: string };
+  } | null,
+  categoryType: string,
+) {
+  if (!participant) return "TBD";
+  if (categoryType === "singles") {
+    return participant.player?.fullName ?? "TBD";
+  }
+  return (
+    participant.pair?.teamName ??
+    `${participant.playerOne?.fullName ?? "TBD"} / ${participant.playerTwo?.fullName ?? "TBD"}`
   );
 }
 
