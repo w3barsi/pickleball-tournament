@@ -71,6 +71,78 @@ export const getLiveGames = query({
   },
 });
 
+export const getRecentMatches = query({
+  args: {
+    slug: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const tournament = await ctx.db
+      .query("tournaments")
+      .withIndex("by_slug", (q) => q.eq("slug", args.slug))
+      .unique();
+
+    if (!tournament) {
+      return [];
+    }
+
+    const matches = await ctx.db
+      .query("matches")
+      .withIndex("by_tournament", (q) => q.eq("tournamentId", tournament._id))
+      .order("desc")
+      .collect();
+
+    const recentMatches = matches
+      .filter(
+        (m) =>
+          m.deletedAt === undefined &&
+          (m.status === "completed" || m.status === "inProgress" || m.status === "abandoned"),
+      )
+      .slice(0, 20);
+
+    if (recentMatches.length === 0) {
+      return [];
+    }
+
+    const results = [];
+
+    for (const match of recentMatches) {
+      const bracket = await ctx.db.get(match.bracketId);
+      const category = bracket ? await ctx.db.get(bracket.categoryId) : null;
+
+      const categoryType = category?.type ?? "singles";
+
+      const participant1 = await resolveParticipant(ctx, match.participant1Id, categoryType);
+      const participant2 = await resolveParticipant(ctx, match.participant2Id, categoryType);
+
+      const allSets = await ctx.db
+        .query("matchSets")
+        .withIndex("by_match", (q) => q.eq("matchId", match._id))
+        .order("asc")
+        .collect();
+
+      const completedSets = allSets.filter((s) => s.status === "completed");
+
+      const team1SetWins = completedSets.filter((s) => s.winnerTeam === 1).length;
+      const team2SetWins = completedSets.filter((s) => s.winnerTeam === 2).length;
+
+      results.push({
+        match,
+        bracket,
+        category,
+        participant1,
+        participant2,
+        categoryType,
+        completedSets,
+        team1SetWins,
+        team2SetWins,
+        numberOfSets: bracket?.numberOfSets ?? 3,
+      });
+    }
+
+    return results;
+  },
+});
+
 export const getMatchDetails = query({
   args: {
     matchId: v.id("matches"),

@@ -727,12 +727,21 @@ export const cancelSet = authedMutation({
 
 export const setMatchLive = authedMutation({
   args: {
+    isLive: v.boolean(),
     matchId: v.id("matches"),
   },
   handler: async (ctx, args) => {
     const match = await ctx.db.get(args.matchId);
     if (!match) {
       throw new Error("Match not found");
+    }
+
+    if (args.isLive === false) {
+      await ctx.db.patch(args.matchId, {
+        isLive: false,
+        lastUpdatedAt: Date.now(),
+      });
+      return { success: true };
     }
 
     await requireManageTournament(ctx, match.tournamentId);
