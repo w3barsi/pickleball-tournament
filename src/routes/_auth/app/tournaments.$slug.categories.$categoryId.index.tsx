@@ -13,7 +13,6 @@ import { EditCategoryDialog } from "@/components/tournaments/edit-category-dialo
 import { ParticipantList } from "@/components/tournaments/participant-list";
 import { RegisterParticipantDialog } from "@/components/tournaments/register-participant-dialog";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 
 export const Route = createFileRoute("/_auth/app/tournaments/$slug/categories/$categoryId/")({
   component: CategoryDetailPage,
@@ -148,42 +147,50 @@ function CategoryDetailPage() {
       </HeaderCard>
 
       {/* Stats Bar */}
-      <div className="flex items-center justify-around rounded-xl border bg-muted/20 px-4 py-5">
-        <div className="flex w-full items-center justify-center gap-3">
-          <UsersIcon className="size-5 text-tournament-lime" />
-          <div>
-            <p className="text-2xl leading-none font-black">
-              {participants !== undefined
-                ? `${participants.length}${category.maxParticipants ? ` / ${category.maxParticipants}` : ""}`
-                : "—"}
-            </p>
-            <p className="mt-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-              Participants
-            </p>
+      <div className="relative overflow-hidden rounded-2xl border bg-foreground text-background shadow-sm">
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_49%,rgba(190,255,0,0.16)_50%,transparent_51%),linear-gradient(0deg,transparent_49%,rgba(255,255,255,0.08)_50%,transparent_51%)] bg-[size:64px_100%,100%_36px]" />
+        <div className="absolute inset-x-0 top-0 h-1 bg-tournament-lime" />
+        <div className="relative grid gap-px bg-white/10 p-px sm:grid-cols-3">
+          <div className="group flex items-center gap-4 bg-foreground/95 p-4 transition-colors hover:bg-foreground sm:p-5">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-full border border-tournament-lime/40 bg-tournament-lime/15 text-tournament-lime shadow-[0_0_24px_rgba(190,255,0,0.18)] transition-transform group-hover:scale-105">
+              <UsersIcon className="size-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="font-heading text-3xl leading-none font-black tracking-tight text-white tabular-nums">
+                {participants !== undefined
+                  ? `${participants.length}${category.maxParticipants ? ` / ${category.maxParticipants}` : ""}`
+                  : "—"}
+              </p>
+              <p className="mt-1 text-[0.68rem] font-bold tracking-[0.22em] text-white/55 uppercase">
+                Participants
+              </p>
+            </div>
           </div>
-        </div>
-        <Separator orientation="vertical" className="" />
-        <div className="flex w-full items-center justify-center gap-3">
-          <TrophyIcon className="size-5 text-tournament-lime" />
-          <div>
-            <p className="text-center text-2xl leading-none font-black">
-              {brackets !== undefined ? brackets.length : "—"}
-            </p>
-            <p className="mt-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-              Brackets
-            </p>
+          <div className="group flex items-center gap-4 bg-foreground/95 p-4 transition-colors hover:bg-foreground sm:p-5">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-full border border-tournament-lime/40 bg-tournament-lime/15 text-tournament-lime shadow-[0_0_24px_rgba(190,255,0,0.18)] transition-transform group-hover:scale-105">
+              <TrophyIcon className="size-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="font-heading text-3xl leading-none font-black tracking-tight text-white tabular-nums">
+                {brackets !== undefined ? brackets.length : "—"}
+              </p>
+              <p className="mt-1 text-[0.68rem] font-bold tracking-[0.22em] text-white/55 uppercase">
+                Brackets
+              </p>
+            </div>
           </div>
-        </div>
-        <Separator orientation="vertical" />
-        <div className="flex w-full items-center justify-center gap-3">
-          <SwordsIcon className="size-5 text-tournament-lime" />
-          <div>
-            <p className="text-center text-2xl leading-none font-black">
-              {brackets !== undefined ? totalMatches : "—"}
-            </p>
-            <p className="mt-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-              Matches
-            </p>
+          <div className="group flex items-center gap-4 bg-foreground/95 p-4 transition-colors hover:bg-foreground sm:p-5">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-full border border-tournament-lime/40 bg-tournament-lime/15 text-tournament-lime shadow-[0_0_24px_rgba(190,255,0,0.18)] transition-transform group-hover:scale-105">
+              <SwordsIcon className="size-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="font-heading text-3xl leading-none font-black tracking-tight text-white tabular-nums">
+                {brackets !== undefined ? totalMatches : "—"}
+              </p>
+              <p className="mt-1 text-[0.68rem] font-bold tracking-[0.22em] text-white/55 uppercase">
+                Matches
+              </p>
+            </div>
           </div>
         </div>
       </div>

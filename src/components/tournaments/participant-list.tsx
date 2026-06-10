@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -237,13 +238,15 @@ export function ParticipantList({ participants, categoryType, categoryId }: Part
                       value={p.status}
                       onValueChange={(value) => value && handleStatusChange(p._id, value)}
                     >
-                      <SelectTrigger className="">
+                      <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="eliminated">Eliminated</SelectItem>
-                        <SelectItem value="withdrawn">Withdrawn</SelectItem>
+                        <SelectGroup>
+                          <SelectItem value="active">Active</SelectItem>
+                          <SelectItem value="eliminated">Eliminated</SelectItem>
+                          <SelectItem value="withdrawn">Withdrawn</SelectItem>
+                        </SelectGroup>
                       </SelectContent>
                     </Select>
                   </TableCell>
