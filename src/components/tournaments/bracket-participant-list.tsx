@@ -1,8 +1,11 @@
 "use client";
 
+import { api } from "@convex/_generated/api.js";
 import { Id } from "@convex/_generated/dataModel";
+import { useMutation } from "convex/react";
 import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon, Trash2Icon } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 import {
   AlertDialog,
@@ -16,6 +19,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -81,6 +91,14 @@ export function BracketParticipantList({
     column: "record",
     direction: "desc",
   });
+
+  const updateStatus = useMutation(api.app.brackets.updateParticipantStatus);
+
+  const handleStatusChange = (bracketParticipantId: Id<"bracketParticipants">, status: string) => {
+    updateStatus({ bracketParticipantId, status: status as "active" | "eliminated" | "withdrawn" })
+      .then(() => toast.success("Status updated"))
+      .catch((err) => toast.error(err instanceof Error ? err.message : "Failed to update status"));
+  };
 
   const handleSort = (column: SortColumn) => {
     setSortConfig((current) => {
@@ -224,7 +242,21 @@ export function BracketParticipantList({
                         </div>
                       )}
                     </TableCell>
-                    <TableCell>{getStatusBadge(bp.status)}</TableCell>
+                    <TableCell>
+                      <Select
+                        value={bp.status}
+                        onValueChange={(value) => value && handleStatusChange(bp._id, value)}
+                      >
+                        <SelectTrigger className="h-7 w-32 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="active">Active</SelectItem>
+                          <SelectItem value="eliminated">Eliminated</SelectItem>
+                          <SelectItem value="withdrawn">Withdrawn</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
                     <TableCell>
                       {cp.wins} - {cp.losses}
                     </TableCell>

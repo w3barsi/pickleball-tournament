@@ -437,3 +437,35 @@ export const removeParticipant = authedMutation({
     return { success: true };
   },
 });
+
+export const updateParticipantStatus = authedMutation({
+  args: {
+    bracketParticipantId: v.id("bracketParticipants"),
+    status: v.union(v.literal("active"), v.literal("eliminated"), v.literal("withdrawn")),
+  },
+  handler: async (ctx, args) => {
+    const bp = await ctx.db.get(args.bracketParticipantId);
+    if (!bp) {
+      throw new Error("Bracket participant not found");
+    }
+
+    const bracket = await ctx.db.get(bp.bracketId);
+    if (!bracket) {
+      throw new Error("Bracket not found");
+    }
+
+    const tournamentId = await getCategoryTournamentId(ctx, bracket.categoryId);
+    if (!tournamentId) {
+      throw new Error("Category not found");
+    }
+
+    await requireManageTournament(ctx, tournamentId);
+
+    await ctx.db.patch(args.bracketParticipantId, { status: args.status });
+
+    // Sync status to the category participant
+    await ctx.db.patch(bp.categoryParticipantId, { status: args.status });
+
+    return { success: true };
+  },
+});

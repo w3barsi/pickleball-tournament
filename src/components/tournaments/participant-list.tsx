@@ -20,6 +20,13 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Table,
   TableBody,
   TableCell,
@@ -132,6 +139,17 @@ export function ParticipantList({ participants, categoryType, categoryId }: Part
     },
   );
 
+  const updateStatus = useMutation(api.app.categoryParticipants.updateStatus);
+
+  const handleStatusChange = (participantId: Id<"categoryParticipants">, status: string) => {
+    updateStatus({
+      categoryParticipantId: participantId,
+      status: status as "active" | "eliminated" | "withdrawn",
+    })
+      .then(() => toast.success("Status updated"))
+      .catch((err) => toast.error(err instanceof Error ? err.message : "Failed to update status"));
+  };
+
   const handleConfirmRemove = () => {
     if (removeTarget) {
       unregister({ categoryParticipantId: removeTarget })
@@ -214,7 +232,21 @@ export function ParticipantList({ participants, categoryType, categoryId }: Part
                       </div>
                     )}
                   </TableCell>
-                  <TableCell>{getStatusBadge(p.status)}</TableCell>
+                  <TableCell>
+                    <Select
+                      value={p.status}
+                      onValueChange={(value) => value && handleStatusChange(p._id, value)}
+                    >
+                      <SelectTrigger className="h-7 w-32 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="eliminated">Eliminated</SelectItem>
+                        <SelectItem value="withdrawn">Withdrawn</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
                   <TableCell>
                     {p.wins} - {p.losses}
                   </TableCell>

@@ -397,6 +397,42 @@ export const registerWithPlayers = authedMutation({
   },
 });
 
+export const updateStatus = authedMutation({
+  args: {
+    categoryParticipantId: v.id("categoryParticipants"),
+    status: v.union(v.literal("active"), v.literal("eliminated"), v.literal("withdrawn")),
+  },
+  handler: async (ctx, args) => {
+    const participant = await ctx.db.get(args.categoryParticipantId);
+    if (!participant) {
+      throw new Error("Participant not found");
+    }
+
+    const category = await ctx.db.get(participant.categoryId);
+    if (!category) {
+      throw new Error("Category not found");
+    }
+
+    await requireManageTournament(ctx, category.tournamentId);
+
+    await ctx.db.patch(args.categoryParticipantId, { status: args.status });
+
+    // Sync status to all bracket participants
+    const bracketParticipants = await ctx.db
+      .query("bracketParticipants")
+      .withIndex("by_category_participant", (q) =>
+        q.eq("categoryParticipantId", args.categoryParticipantId),
+      )
+      .collect();
+
+    for (const bp of bracketParticipants) {
+      await ctx.db.patch(bp._id, { status: args.status });
+    }
+
+    return { success: true };
+  },
+});
+
 export const unregister = authedMutation({
   args: {
     categoryParticipantId: v.id("categoryParticipants"),
