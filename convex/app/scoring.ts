@@ -77,10 +77,22 @@ function computeSetState(
 
 async function resolveParticipant(
   ctx: QueryCtx,
-  participantId: Id<"categoryParticipants">,
+  participantId: Id<"bracketParticipants"> | Id<"categoryParticipants"> | undefined,
   categoryType: "singles" | "doubles",
 ) {
-  const cp = await ctx.db.get(participantId);
+  if (!participantId) return null;
+
+  const doc = await ctx.db.get(participantId);
+  if (!doc) return null;
+
+  let cp: Doc<"categoryParticipants"> | null;
+
+  if ("categoryParticipantId" in doc) {
+    cp = await ctx.db.get(doc.categoryParticipantId);
+  } else {
+    cp = doc as Doc<"categoryParticipants">;
+  }
+
   if (!cp) return null;
 
   if (categoryType === "singles") {
@@ -111,20 +123,33 @@ function setsNeededToWin(numberOfSets: number) {
 
 async function updateParticipantRecords(
   ctx: MutationCtx,
-  winnerId: Id<"categoryParticipants">,
-  loserId: Id<"categoryParticipants">,
+  winnerId: Id<"bracketParticipants"> | Id<"categoryParticipants">,
+  loserId: Id<"bracketParticipants"> | Id<"categoryParticipants">,
   delta: number,
 ) {
-  const winner = await ctx.db.get(winnerId);
-  const loser = await ctx.db.get(loserId);
+  let winnerCategoryId = winnerId;
+  let loserCategoryId = loserId;
 
-  if (winner) {
-    await ctx.db.patch(winnerId, {
+  const winnerDoc = await ctx.db.get(winnerId);
+  const loserDoc = await ctx.db.get(loserId);
+
+  if (winnerDoc && "categoryParticipantId" in winnerDoc) {
+    winnerCategoryId = winnerDoc.categoryParticipantId;
+  }
+  if (loserDoc && "categoryParticipantId" in loserDoc) {
+    loserCategoryId = loserDoc.categoryParticipantId;
+  }
+
+  const winner = await ctx.db.get(winnerCategoryId);
+  const loser = await ctx.db.get(loserCategoryId);
+
+  if (winner && "wins" in winner) {
+    await ctx.db.patch(winnerCategoryId, {
       wins: Math.max(0, winner.wins + delta),
     });
   }
-  if (loser) {
-    await ctx.db.patch(loserId, {
+  if (loser && "losses" in loser) {
+    await ctx.db.patch(loserCategoryId, {
       losses: Math.max(0, loser.losses + delta),
     });
   }
@@ -470,7 +495,9 @@ export const confirmSetComplete = authedMutation({
         lastUpdatedAt: now,
       });
 
-      await updateParticipantRecords(ctx, winnerParticipantId, loserParticipantId, 1);
+      if (winnerParticipantId && loserParticipantId) {
+        await updateParticipantRecords(ctx, winnerParticipantId, loserParticipantId, 1);
+      }
     }
 
     await ctx.db.patch(args.matchId, {
@@ -548,7 +575,9 @@ export const undoLastPoint = authedMutation({
         match.winnerParticipantId === match.participant1Id
           ? match.participant2Id
           : match.participant1Id;
-      await updateParticipantRecords(ctx, match.winnerParticipantId, loserId, -1);
+      if (loserId) {
+        await updateParticipantRecords(ctx, match.winnerParticipantId, loserId, -1);
+      }
     }
 
     if (targetSet.status === "completed") {
@@ -659,7 +688,9 @@ export const forfeitMatch = authedMutation({
       lastUpdatedAt: Date.now(),
     });
 
-    await updateParticipantRecords(ctx, winnerParticipantId, loserParticipantId, 1);
+    if (winnerParticipantId && loserParticipantId) {
+      await updateParticipantRecords(ctx, winnerParticipantId, loserParticipantId, 1);
+    }
 
     return { success: true };
   },
@@ -748,7 +779,9 @@ export const setMatchLive = authedMutation({
 
     const liveMatches = await ctx.db
       .query("matches")
-      .withIndex("by_is_live", (q) => q.eq("isLive", true))
+      .withIndex("by_tournament_live", (q) =>
+        q.eq("tournamentId", match.tournamentId).eq("isLive", true),
+      )
       .collect();
 
     for (const liveMatch of liveMatches) {

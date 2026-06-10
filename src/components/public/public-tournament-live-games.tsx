@@ -63,7 +63,8 @@ function LiveGameCard({
       name: string;
       type: string;
       rating: string;
-      category: string;
+      category?: string;
+      gender?: string;
     } | null;
     participant1: {
       player?: { fullName: string } | null;

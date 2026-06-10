@@ -97,8 +97,8 @@ export function CreateMatchDialog({
       try {
         await createMatch({
           bracketId,
-          participant1Id: value.participant1Id as Id<"categoryParticipants">,
-          participant2Id: value.participant2Id as Id<"categoryParticipants">,
+          participant1Id: value.participant1Id as Id<"bracketParticipants">,
+          participant2Id: value.participant2Id as Id<"bracketParticipants">,
           courtNumber: value.courtNumber ? Number(value.courtNumber) : undefined,
           scheduledAt: value.scheduledAt ? new Date(value.scheduledAt).getTime() : undefined,
           refereeName: value.refereeName || undefined,
@@ -129,7 +129,7 @@ export function CreateMatchDialog({
   };
 
   const participantOptions = bracketParticipants.map((bp) => ({
-    value: bp.categoryParticipant._id,
+    value: bp._id,
     label: getParticipantName(bp, categoryType),
   }));
 

@@ -185,7 +185,7 @@ function formatMatchScore(match: {
     status: string;
   }[];
   status: string;
-  winnerParticipantId?: Id<"categoryParticipants"> | null;
+  winnerParticipantId?: string | null;
 }) {
   const completedSets = match.matchSets.filter((s) => s.status === "completed");
   const inProgressSet = match.matchSets.find((s) => s.status === "inProgress");

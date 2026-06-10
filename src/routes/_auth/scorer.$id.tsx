@@ -197,7 +197,6 @@ function ScorerPage() {
         pointWinner,
         sequenceNumber: current.currentSetPoints.length,
         timestamp: Date.now(),
-        deletedAt: undefined,
       };
 
       const newPoints = [...current.currentSetPoints, newPoint];

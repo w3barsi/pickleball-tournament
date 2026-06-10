@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/table";
 
 interface MatchParticipant {
-  _id: Id<"categoryParticipants">;
+  _id: string;
   seed?: number | null;
   player?: { fullName: string } | null;
   pair?: { teamName?: string } | null;
@@ -32,7 +32,7 @@ interface MatchItem {
   status: "scheduled" | "inProgress" | "completed" | "abandoned";
   participant1: MatchParticipant | null;
   participant2: MatchParticipant | null;
-  winnerParticipantId?: Id<"categoryParticipants"> | null;
+  winnerParticipantId?: string | null;
   courtNumber?: number | null;
   scheduledAt?: number | null;
   matchOrder?: number | null;

@@ -9,47 +9,54 @@ import {
   getCategoryTournamentId,
 } from "./lib";
 
+async function resolveMatchParticipant(
+  ctx: QueryCtx,
+  participantId: Id<"bracketParticipants"> | Id<"categoryParticipants"> | undefined,
+  categoryType: "singles" | "doubles",
+) {
+  if (!participantId) return null;
+
+  const doc = await ctx.db.get(participantId);
+  if (!doc) return null;
+
+  let cp: Doc<"categoryParticipants"> | null;
+  let seed: number | null = null;
+
+  if ("categoryParticipantId" in doc) {
+    const bp = doc as Doc<"bracketParticipants">;
+    cp = await ctx.db.get(bp.categoryParticipantId);
+    seed = bp.seed ?? null;
+  } else {
+    cp = doc as Doc<"categoryParticipants">;
+  }
+
+  if (!cp) return null;
+
+  if (categoryType === "singles") {
+    const player = cp.playerId ? await ctx.db.get(cp.playerId) : null;
+    return { ...cp, player, seed };
+  }
+
+  const pair = cp.pairId ? await ctx.db.get(cp.pairId) : null;
+  let playerOne = null;
+  let playerTwo = null;
+  if (pair) {
+    playerOne = await ctx.db.get(pair.playerOne);
+    playerTwo = await ctx.db.get(pair.playerTwo);
+  }
+  return { ...cp, pair, playerOne, playerTwo, seed };
+}
+
 async function hydrateMatch(ctx: QueryCtx, match: Doc<"matches">) {
   const bracket = await ctx.db.get(match.bracketId);
   const category = bracket ? await ctx.db.get(bracket.categoryId) : null;
 
-  const p1 = await ctx.db.get(match.participant1Id);
-  const p2 = await ctx.db.get(match.participant2Id);
-
-  let participant1 = null;
-  let participant2 = null;
-
-  if (p1 && category) {
-    if (category.type === "singles") {
-      const player = p1.playerId ? await ctx.db.get(p1.playerId) : null;
-      participant1 = { ...p1, player };
-    } else {
-      const pair = p1.pairId ? await ctx.db.get(p1.pairId) : null;
-      let playerOne = null;
-      let playerTwo = null;
-      if (pair) {
-        playerOne = await ctx.db.get(pair.playerOne);
-        playerTwo = await ctx.db.get(pair.playerTwo);
-      }
-      participant1 = { ...p1, pair, playerOne, playerTwo };
-    }
-  }
-
-  if (p2 && category) {
-    if (category.type === "singles") {
-      const player = p2.playerId ? await ctx.db.get(p2.playerId) : null;
-      participant2 = { ...p2, player };
-    } else {
-      const pair = p2.pairId ? await ctx.db.get(p2.pairId) : null;
-      let playerOne = null;
-      let playerTwo = null;
-      if (pair) {
-        playerOne = await ctx.db.get(pair.playerOne);
-        playerTwo = await ctx.db.get(pair.playerTwo);
-      }
-      participant2 = { ...p2, pair, playerOne, playerTwo };
-    }
-  }
+  const participant1 = category
+    ? await resolveMatchParticipant(ctx, match.participant1Id, category.type)
+    : null;
+  const participant2 = category
+    ? await resolveMatchParticipant(ctx, match.participant2Id, category.type)
+    : null;
 
   const matchSets = await ctx.db
     .query("matchSets")
@@ -88,66 +95,10 @@ export const listByBracket = authedQuery({
       .order("asc")
       .collect();
 
-    const bracketParticipants = await ctx.db
-      .query("bracketParticipants")
-      .withIndex("by_bracket", (q) => q.eq("bracketId", args.bracketId))
-      .collect();
-
-    const seedByCategoryParticipant = new Map(
-      bracketParticipants.map((bp) => [bp.categoryParticipantId, bp.seed ?? null]),
-    );
-
     const results = [];
     for (const match of matches) {
-      const p1 = await ctx.db.get(match.participant1Id);
-      const p2 = await ctx.db.get(match.participant2Id);
-
-      let participant1 = null;
-      let participant2 = null;
-
-      if (p1) {
-        if (category.type === "singles") {
-          const player = p1.playerId ? await ctx.db.get(p1.playerId) : null;
-          participant1 = { ...p1, player, seed: seedByCategoryParticipant.get(p1._id) ?? null };
-        } else {
-          const pair = p1.pairId ? await ctx.db.get(p1.pairId) : null;
-          let playerOne = null;
-          let playerTwo = null;
-          if (pair) {
-            playerOne = await ctx.db.get(pair.playerOne);
-            playerTwo = await ctx.db.get(pair.playerTwo);
-          }
-          participant1 = {
-            ...p1,
-            pair,
-            playerOne,
-            playerTwo,
-            seed: seedByCategoryParticipant.get(p1._id) ?? null,
-          };
-        }
-      }
-
-      if (p2) {
-        if (category.type === "singles") {
-          const player = p2.playerId ? await ctx.db.get(p2.playerId) : null;
-          participant2 = { ...p2, player, seed: seedByCategoryParticipant.get(p2._id) ?? null };
-        } else {
-          const pair = p2.pairId ? await ctx.db.get(p2.pairId) : null;
-          let playerOne = null;
-          let playerTwo = null;
-          if (pair) {
-            playerOne = await ctx.db.get(pair.playerOne);
-            playerTwo = await ctx.db.get(pair.playerTwo);
-          }
-          participant2 = {
-            ...p2,
-            pair,
-            playerOne,
-            playerTwo,
-            seed: seedByCategoryParticipant.get(p2._id) ?? null,
-          };
-        }
-      }
+      const participant1 = await resolveMatchParticipant(ctx, match.participant1Id, category.type);
+      const participant2 = await resolveMatchParticipant(ctx, match.participant2Id, category.type);
 
       const matchSets = await ctx.db
         .query("matchSets")
@@ -246,43 +197,12 @@ export const getWithDetails = authedQuery({
     const category = bracket ? await ctx.db.get(bracket.categoryId) : null;
     const tournament = category ? await ctx.db.get(category.tournamentId) : null;
 
-    const p1 = await ctx.db.get(match.participant1Id);
-    const p2 = await ctx.db.get(match.participant2Id);
-
-    let participant1 = null;
-    let participant2 = null;
-
-    if (p1 && category) {
-      if (category.type === "singles") {
-        const player = p1.playerId ? await ctx.db.get(p1.playerId) : null;
-        participant1 = { ...p1, player };
-      } else {
-        const pair = p1.pairId ? await ctx.db.get(p1.pairId) : null;
-        let playerOne = null;
-        let playerTwo = null;
-        if (pair) {
-          playerOne = await ctx.db.get(pair.playerOne);
-          playerTwo = await ctx.db.get(pair.playerTwo);
-        }
-        participant1 = { ...p1, pair, playerOne, playerTwo };
-      }
-    }
-
-    if (p2 && category) {
-      if (category.type === "singles") {
-        const player = p2.playerId ? await ctx.db.get(p2.playerId) : null;
-        participant2 = { ...p2, player };
-      } else {
-        const pair = p2.pairId ? await ctx.db.get(p2.pairId) : null;
-        let playerOne = null;
-        let playerTwo = null;
-        if (pair) {
-          playerOne = await ctx.db.get(pair.playerOne);
-          playerTwo = await ctx.db.get(pair.playerTwo);
-        }
-        participant2 = { ...p2, pair, playerOne, playerTwo };
-      }
-    }
+    const participant1 = category
+      ? await resolveMatchParticipant(ctx, match.participant1Id, category.type)
+      : null;
+    const participant2 = category
+      ? await resolveMatchParticipant(ctx, match.participant2Id, category.type)
+      : null;
 
     const matchSets = await ctx.db
       .query("matchSets")
@@ -305,8 +225,8 @@ export const getWithDetails = authedQuery({
 export const create = authedMutation({
   args: {
     bracketId: v.id("brackets"),
-    participant1Id: v.id("categoryParticipants"),
-    participant2Id: v.id("categoryParticipants"),
+    participant1Id: v.id("bracketParticipants"),
+    participant2Id: v.id("bracketParticipants"),
     courtNumber: v.optional(v.number()),
     scheduledAt: v.optional(v.number()),
     refereeName: v.optional(v.string()),
@@ -325,17 +245,8 @@ export const create = authedMutation({
 
     await requireManageTournament(ctx, tournamentId);
 
-    const bp1 = await ctx.db
-      .query("bracketParticipants")
-      .withIndex("by_bracket", (q) => q.eq("bracketId", args.bracketId))
-      .filter((q) => q.eq(q.field("categoryParticipantId"), args.participant1Id))
-      .unique();
-
-    const bp2 = await ctx.db
-      .query("bracketParticipants")
-      .withIndex("by_bracket", (q) => q.eq("bracketId", args.bracketId))
-      .filter((q) => q.eq(q.field("categoryParticipantId"), args.participant2Id))
-      .unique();
+    const bp1 = await ctx.db.get(args.participant1Id);
+    const bp2 = await ctx.db.get(args.participant2Id);
 
     if (!bp1 || bp1.bracketId !== args.bracketId) {
       throw new Error("Participant 1 is not in this bracket");
@@ -452,7 +363,7 @@ export const update = authedMutation({
 export const updateResult = authedMutation({
   args: {
     matchId: v.id("matches"),
-    winnerParticipantId: v.id("categoryParticipants"),
+    winnerParticipantId: v.id("bracketParticipants"),
     forfeitedBy: v.optional(v.union(v.literal(1), v.literal(2))),
   },
   handler: async (ctx, args) => {
@@ -478,25 +389,6 @@ export const updateResult = authedMutation({
       forfeitedBy: args.forfeitedBy,
     });
 
-    const loserId =
-      args.winnerParticipantId === match.participant1Id
-        ? match.participant2Id
-        : match.participant1Id;
-
-    const winner = await ctx.db.get(args.winnerParticipantId);
-    const loser = await ctx.db.get(loserId);
-
-    if (winner) {
-      await ctx.db.patch(args.winnerParticipantId, {
-        wins: winner.wins + 1,
-      });
-    }
-    if (loser) {
-      await ctx.db.patch(loserId, {
-        losses: loser.losses + 1,
-      });
-    }
-
     return { success: true };
   },
 });
@@ -512,27 +404,6 @@ export const reset = authedMutation({
     }
 
     await requireManageTournament(ctx, match.tournamentId);
-
-    if (match.status === "completed" && match.winnerParticipantId) {
-      const loserId =
-        match.winnerParticipantId === match.participant1Id
-          ? match.participant2Id
-          : match.participant1Id;
-
-      const winner = await ctx.db.get(match.winnerParticipantId);
-      const loser = await ctx.db.get(loserId);
-
-      if (winner && winner.wins > 0) {
-        await ctx.db.patch(match.winnerParticipantId, {
-          wins: winner.wins - 1,
-        });
-      }
-      if (loser && loser.losses > 0) {
-        await ctx.db.patch(loserId, {
-          losses: loser.losses - 1,
-        });
-      }
-    }
 
     const matchSets = await ctx.db
       .query("matchSets")
@@ -605,7 +476,7 @@ export const generateRoundRobin = authedMutation({
       .order("asc")
       .collect();
 
-    const participantIds = bracketParticipants.map((bp) => bp.categoryParticipantId);
+    const participantIds = bracketParticipants.map((bp) => bp._id);
 
     if (participantIds.length < 2) {
       throw new Error("Need at least 2 participants to generate round robin matches");
@@ -659,27 +530,6 @@ export const remove = authedMutation({
     }
 
     await requireManageTournament(ctx, match.tournamentId);
-
-    if (match.status === "completed" && match.winnerParticipantId) {
-      const loserId =
-        match.winnerParticipantId === match.participant1Id
-          ? match.participant2Id
-          : match.participant1Id;
-
-      const winner = await ctx.db.get(match.winnerParticipantId);
-      const loser = await ctx.db.get(loserId);
-
-      if (winner && winner.wins > 0) {
-        await ctx.db.patch(match.winnerParticipantId, {
-          wins: winner.wins - 1,
-        });
-      }
-      if (loser && loser.losses > 0) {
-        await ctx.db.patch(loserId, {
-          losses: loser.losses - 1,
-        });
-      }
-    }
 
     const matchSets = await ctx.db
       .query("matchSets")

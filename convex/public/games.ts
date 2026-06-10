@@ -193,7 +193,19 @@ async function resolveParticipant(
   participantId: any,
   categoryType: "singles" | "doubles",
 ) {
-  const cp = await ctx.db.get(participantId);
+  if (!participantId) return null;
+
+  const doc = await ctx.db.get(participantId);
+  if (!doc) return null;
+
+  let cp: any = null;
+
+  if ("categoryParticipantId" in doc) {
+    cp = await ctx.db.get(doc.categoryParticipantId);
+  } else {
+    cp = doc;
+  }
+
   if (!cp) return null;
 
   if (categoryType === "singles") {

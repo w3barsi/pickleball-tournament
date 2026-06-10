@@ -34,7 +34,7 @@ export function CategoriesSection({
     name: string;
     type: "singles" | "doubles";
     rating: "beginner" | "intermediate" | "advanced";
-    category: "womens" | "mens" | "mixed" | "open";
+    gender: "womens" | "mens" | "mixed" | "open";
     maxParticipants?: number;
   }) => {
     try {

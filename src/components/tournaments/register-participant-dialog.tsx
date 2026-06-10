@@ -44,7 +44,7 @@ function useDebouncedValue<T>(value: T, delay = 150) {
 type PlayerResult = {
   _id: Id<"player">;
   fullName: string;
-  nickname: string;
+  nickname?: string;
 };
 
 type Option =
