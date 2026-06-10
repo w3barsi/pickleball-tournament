@@ -192,32 +192,6 @@ function MatchDetailPage() {
           </HeaderCardDescription>
         </div>
 
-        {/* Quick metadata */}
-        <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs text-white/70">
-          {match.courtNumber && <span>Court {match.courtNumber}</span>}
-          {match.courtNumber && <span>·</span>}
-          <span>
-            {bracket?.numberOfSets ?? 3} {bracket?.numberOfSets === 1 ? "set" : "sets"}
-          </span>
-          <span>·</span>
-          <span>
-            {bracket?.pointsPerGame ?? 11} pts
-            {bracket?.winByTwo ? " (win by 2)" : ""}
-          </span>
-          {match.scheduledAt && (
-            <>
-              <span>·</span>
-              <span>
-                {new Date(match.scheduledAt).toLocaleDateString()}{" "}
-                {new Date(match.scheduledAt).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </span>
-            </>
-          )}
-        </div>
-
         <div className="flex items-center gap-2">{match && <EditMatchDialog match={match} />}</div>
       </HeaderCard>
 

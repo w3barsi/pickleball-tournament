@@ -4,9 +4,10 @@ import { Id } from "@convex/_generated/dataModel.js";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
-import { ChevronRightIcon, PlusIcon, TrophyIcon } from "lucide-react";
+import { ChevronRightIcon, PlusIcon, TrophyIcon, UsersIcon, SwordsIcon } from "lucide-react";
 import { Suspense, useState } from "react";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Item,
@@ -19,6 +20,21 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { CreateCategoryDialog } from "./create-category-dialog";
+
+function getGenderLabel(gender: string) {
+  switch (gender) {
+    case "womens":
+      return "Women's";
+    case "mens":
+      return "Men's";
+    case "mixed":
+      return "Mixed";
+    case "open":
+      return "Open";
+    default:
+      return gender;
+  }
+}
 
 export function CategoriesSection({
   slug,
@@ -87,8 +103,10 @@ export function CategoriesSectionInner({
     <>
       {categories.length === 0 ? (
         <div className="rounded-xl border border-dashed py-12 text-center">
-          <TrophyIcon className="mx-auto size-8 text-muted-foreground" />
-          <p className="mt-4 text-lg font-bold">No categories yet</p>
+          <div className="mx-auto flex size-12 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 text-blue-700">
+            <TrophyIcon className="size-6" />
+          </div>
+          <p className="mt-3 text-lg font-bold">No categories yet</p>
           <p className="text-sm text-muted-foreground">Create a category to get started</p>
           <Button className="mt-4" variant="secondary" onClick={onCreateOpen}>
             <PlusIcon className="size-4" />
@@ -107,6 +125,7 @@ export function CategoriesSectionInner({
               <Item
                 key={category._id}
                 variant="outline"
+                className="rounded-xl"
                 render={
                   <Link
                     to="/app/tournaments/$slug/categories/$categoryId"
@@ -114,18 +133,33 @@ export function CategoriesSectionInner({
                   />
                 }
               >
+                <div className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 text-blue-700">
+                  <TrophyIcon className="size-5" />
+                </div>
                 <ItemContent>
                   <ItemTitle>{category.name}</ItemTitle>
                   <ItemDescription>
-                    <span className="capitalize">{category.type}</span>
-                    {" \u00b7 "}
-                    <span className="capitalize">{category.rating}</span>
-                    {" \u00b7 "}
-                    {categoryBrackets.length}{" "}
-                    {categoryBrackets.length === 1 ? "bracket" : "brackets"}
-                    {" \u00b7 "}
-                    {categoryParticipantCount}{" "}
-                    {categoryParticipantCount === 1 ? "participant" : "participants"}
+                    <span className="inline-flex items-center gap-1">
+                      <UsersIcon className="size-3.5" />
+                      {categoryParticipantCount}{" "}
+                      {categoryParticipantCount === 1 ? "participant" : "participants"}
+                    </span>
+                    {" · "}
+                    <span className="inline-flex items-center gap-1">
+                      <SwordsIcon className="size-3.5" />
+                      {categoryBrackets.length}{" "}
+                      {categoryBrackets.length === 1 ? "bracket" : "brackets"}
+                    </span>
+                    {" · "}
+                    <Badge variant="secondary" className="text-xs">
+                      {getGenderLabel(category.gender ?? "")}
+                    </Badge>
+                    <Badge variant="outline" className="text-xs capitalize">
+                      {category.type}
+                    </Badge>
+                    <Badge variant="outline" className="text-xs capitalize">
+                      {category.rating}
+                    </Badge>
                   </ItemDescription>
                 </ItemContent>
                 <ItemActions>
@@ -142,9 +176,12 @@ export function CategoriesSectionInner({
 
 export function CategoriesFallback() {
   return (
-    <ItemGroup>
+    <ItemGroup className="gap-2">
       {Array.from({ length: 3 }).map((_, i) => (
-        <Item key={i} variant="outline">
+        <Item key={i} variant="outline" className="rounded-xl">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-muted bg-muted/50">
+            <Skeleton className="size-5" />
+          </div>
           <ItemContent>
             <ItemTitle>
               <Skeleton className="h-5 w-32" />
