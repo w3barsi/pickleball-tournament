@@ -85,7 +85,7 @@ export function ParticipantsSectionInner({ tournamentId }: { tournamentId: Id<"t
                     <TableRow key={p._id}>
                       <TableCell className="font-medium">{name}</TableCell>
                       <TableCell className="capitalize">
-                        {category.category}&nbsp;{category.type}
+                        {category.gender ?? category.category}&nbsp;{category.type}
                       </TableCell>
                       <TableCell>
                         <Badge variant="secondary" className="capitalize">

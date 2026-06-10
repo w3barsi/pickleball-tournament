@@ -88,8 +88,8 @@ function CategoryDetailPage() {
     }
   };
 
-  const getCategoryLabel = (category: string) => {
-    switch (category) {
+  const getCategoryLabel = (gender: string) => {
+    switch (gender) {
       case "womens":
         return "Women's";
       case "mens":
@@ -99,7 +99,7 @@ function CategoryDetailPage() {
       case "open":
         return "Open";
       default:
-        return category;
+        return gender;
     }
   };
 
@@ -123,7 +123,7 @@ function CategoryDetailPage() {
             {getRatingBadge(category.rating)}
           </div>
           <HeaderCardDescription>
-            {tournament.name} · {getCategoryLabel(category.category)} ·{" "}
+            {tournament.name} · {getCategoryLabel(category.gender ?? category.category ?? "")} ·{" "}
             {getTypeLabel(category.type)}
           </HeaderCardDescription>
           <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/70">

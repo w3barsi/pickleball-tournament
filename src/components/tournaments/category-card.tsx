@@ -115,7 +115,7 @@ export function CategoryCard({ category, slug }: CategoryCardProps) {
             </div>
             <div className="flex items-center gap-2.5">
               <LayoutGridIcon className="size-4 text-muted-foreground/70" />
-              <span>{getCategoryLabel(category.category)}</span>
+              <span>{getCategoryLabel(category.gender ?? category.category ?? "")}</span>
             </div>
             {category.maxParticipants && (
               <div className="flex items-center gap-2.5">

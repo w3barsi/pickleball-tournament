@@ -246,7 +246,8 @@ function CategorySection({
     name: string;
     type: string;
     rating: string;
-    category: string;
+    gender?: string;
+    category?: string;
     maxParticipants?: number;
   };
   brackets: Array<{
@@ -265,7 +266,9 @@ function CategorySection({
 }) {
   const typeLabel = category.type === "singles" ? "Singles" : "Doubles";
   const ratingLabel = category.rating.charAt(0).toUpperCase() + category.rating.slice(1);
-  const categoryLabel = category.category.charAt(0).toUpperCase() + category.category.slice(1);
+  const categoryLabel =
+    (category.gender ?? category.category ?? "").charAt(0).toUpperCase() +
+    (category.gender ?? category.category ?? "").slice(1);
 
   const stageGroups = brackets.reduce<Map<number, typeof brackets>>((acc, bracket) => {
     const group = acc.get(bracket.stage) ?? [];

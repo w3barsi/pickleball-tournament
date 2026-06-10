@@ -34,12 +34,7 @@ export const create = authedMutation({
     name: v.string(),
     type: v.union(v.literal("singles"), v.literal("doubles")),
     rating: v.union(v.literal("beginner"), v.literal("intermediate"), v.literal("advanced")),
-    category: v.union(
-      v.literal("womens"),
-      v.literal("mens"),
-      v.literal("mixed"),
-      v.literal("open"),
-    ),
+    gender: v.union(v.literal("womens"), v.literal("mens"), v.literal("mixed"), v.literal("open")),
     maxParticipants: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
@@ -50,7 +45,7 @@ export const create = authedMutation({
       name: args.name,
       type: args.type,
       rating: args.rating,
-      category: args.category,
+      gender: args.gender,
       maxParticipants: args.maxParticipants,
     });
 
@@ -66,7 +61,7 @@ export const update = authedMutation({
     rating: v.optional(
       v.union(v.literal("beginner"), v.literal("intermediate"), v.literal("advanced")),
     ),
-    category: v.optional(
+    gender: v.optional(
       v.union(v.literal("womens"), v.literal("mens"), v.literal("mixed"), v.literal("open")),
     ),
     maxParticipants: v.optional(v.number()),

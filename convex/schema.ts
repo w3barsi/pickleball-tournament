@@ -7,7 +7,7 @@ export default defineSchema({
   // ========== PLAYERS & PAIRS ==========
   player: defineTable({
     fullName: v.string(),
-    nickname: v.string(),
+    nickname: v.optional(v.string()),
     photoUrl: v.optional(v.string()),
     email: v.optional(v.string()),
     phone: v.optional(v.string()),
@@ -25,8 +25,8 @@ export default defineSchema({
     playerOne: v.id("player"),
     playerTwo: v.id("player"),
     pairKey: v.string(), // Sorted player IDs, e.g., "playerA:playerB" where A < B
-    wins: v.number(),
-    losses: v.number(),
+    wins: v.optional(v.number()),
+    losses: v.optional(v.number()),
     deletedAt: v.optional(v.number()),
   })
     .index("by_pair_key", ["pairKey"])
@@ -52,8 +52,8 @@ export default defineSchema({
     deletedAt: v.optional(v.number()),
   })
     .index("by_slug", ["slug"])
-    .index("by_createdBy", ["createdBy"])
     .index("by_deletedAt", ["deletedAt"])
+    .index("by_createdBy", ["createdBy"])
     .index("by_featured_event", ["isFeaturedEvent"])
     .index("by_showcase_order", ["showcaseOrder"]),
 
@@ -62,11 +62,11 @@ export default defineSchema({
     name: v.string(),
     type: v.union(v.literal("singles"), v.literal("doubles")),
     rating: v.union(v.literal("beginner"), v.literal("intermediate"), v.literal("advanced")),
-    category: v.union(
-      v.literal("womens"),
-      v.literal("mens"),
-      v.literal("mixed"),
-      v.literal("open"),
+    gender: v.optional(
+      v.union(v.literal("womens"), v.literal("mens"), v.literal("mixed"), v.literal("open")),
+    ),
+    category: v.optional(
+      v.union(v.literal("womens"), v.literal("mens"), v.literal("mixed"), v.literal("open")),
     ),
     maxParticipants: v.optional(v.number()),
     deletedAt: v.optional(v.number()),
@@ -86,11 +86,11 @@ export default defineSchema({
     deletedAt: v.optional(v.number()),
   })
     .index("by_category", ["categoryId"])
+    .index("by_deletedAt", ["deletedAt"])
     .index("by_player", ["playerId"])
     .index("by_pair", ["pairId"])
     .index("by_category_and_player", ["categoryId", "playerId"])
-    .index("by_category_and_pair", ["categoryId", "pairId"])
-    .index("by_deletedAt", ["deletedAt"]),
+    .index("by_category_and_pair", ["categoryId", "pairId"]),
 
   // Brackets = group stages within a category
   brackets: defineTable({
@@ -107,8 +107,8 @@ export default defineSchema({
     deletedAt: v.optional(v.number()),
   })
     .index("by_category", ["categoryId"])
-    .index("by_category_stage", ["categoryId", "stage"])
-    .index("by_deletedAt", ["deletedAt"]),
+    .index("by_deletedAt", ["deletedAt"])
+    .index("by_category_stage", ["categoryId", "stage"]),
 
   // Who advances to which bracket
   bracketParticipants: defineTable({
@@ -119,23 +119,25 @@ export default defineSchema({
     deletedAt: v.optional(v.number()),
   })
     .index("by_bracket", ["bracketId"])
-    .index("by_category_participant", ["categoryParticipantId"])
-    .index("by_deletedAt", ["deletedAt"]),
+    .index("by_deletedAt", ["deletedAt"])
+    .index("by_category_participant", ["categoryParticipantId"]),
 
   // ========== MATCHES ==========
   matches: defineTable({
     tournamentId: v.id("tournaments"),
     bracketId: v.id("brackets"),
     categoryId: v.id("categories"),
-    participant1Id: v.id("categoryParticipants"),
-    participant2Id: v.id("categoryParticipants"),
+    participant1Id: v.optional(v.union(v.id("bracketParticipants"), v.id("categoryParticipants"))),
+    participant2Id: v.optional(v.union(v.id("bracketParticipants"), v.id("categoryParticipants"))),
     status: v.union(
       v.literal("scheduled"),
       v.literal("inProgress"),
       v.literal("completed"),
       v.literal("abandoned"),
     ),
-    winnerParticipantId: v.optional(v.id("categoryParticipants")),
+    winnerParticipantId: v.optional(
+      v.union(v.id("bracketParticipants"), v.id("categoryParticipants")),
+    ),
     isLive: v.optional(v.boolean()),
     startedAt: v.optional(v.number()),
     completedAt: v.optional(v.number()),
@@ -149,19 +151,17 @@ export default defineSchema({
     // Bracket progression (to be implemented later)
     nextMatchId: v.optional(v.id("matches")),
     nextMatchPosition: v.optional(v.union(v.literal(1), v.literal(2))),
-    isBye: v.optional(v.boolean()),
     matchOrder: v.optional(v.number()),
     deletedAt: v.optional(v.number()),
   })
     .index("by_tournament", ["tournamentId"])
+    .index("by_deletedAt", ["deletedAt"])
     .index("by_tournament_live", ["tournamentId", "isLive"])
     .index("by_bracket", ["bracketId"])
     .index("by_category", ["categoryId"])
     .index("by_status", ["status"])
-    .index("by_is_live", ["isLive"])
     .index("by_participant", ["participant1Id"])
-    .index("by_participant2", ["participant2Id"])
-    .index("by_deletedAt", ["deletedAt"]),
+    .index("by_participant2", ["participant2Id"]),
 
   // ========== MATCH SETS ==========
   // A match can consist of multiple sets (games). This table tracks each set.
@@ -177,8 +177,8 @@ export default defineSchema({
     deletedAt: v.optional(v.number()),
   })
     .index("by_match", ["matchId"])
-    .index("by_match_and_set_number", ["matchId", "setNumber"])
-    .index("by_deletedAt", ["deletedAt"]),
+    .index("by_deletedAt", ["deletedAt"])
+    .index("by_match_and_set_number", ["matchId", "setNumber"]),
 
   // ========== POINTS ==========
   pickleballPoints: defineTable({
@@ -194,8 +194,8 @@ export default defineSchema({
     deletedAt: v.optional(v.number()),
   })
     .index("by_match_set", ["matchSetId"])
-    .index("by_match_set_and_sequence", ["matchSetId", "sequenceNumber"])
-    .index("by_deletedAt", ["deletedAt"]),
+    .index("by_deletedAt", ["deletedAt"])
+    .index("by_match_set_and_sequence", ["matchSetId", "sequenceNumber"]),
 
   // ========== DELETION REQUESTS ==========
   deletionRequest: defineTable({
@@ -205,10 +205,9 @@ export default defineSchema({
     requestedBy: v.string(),
     status: v.union(v.literal("pending"), v.literal("approved"), v.literal("rejected")),
     updatedAt: v.number(),
-
     deletedAt: v.optional(v.number()),
   })
     .index("by_target", ["targetType", "targetId"])
-    .index("by_status", ["status"])
-    .index("by_deletedAt", ["deletedAt"]),
+    .index("by_deletedAt", ["deletedAt"])
+    .index("by_status", ["status"]),
 });

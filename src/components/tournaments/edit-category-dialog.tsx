@@ -77,7 +77,7 @@ export function EditCategoryDialog({ category, tournamentSlug }: EditCategoryDia
       name: category.name,
       type: category.type,
       rating: category.rating,
-      category: category.category,
+      gender: category.gender ?? category.category ?? "open",
       maxParticipants: category.maxParticipants?.toString() ?? "",
     },
     onSubmit: async ({ value }) => {
@@ -88,7 +88,7 @@ export function EditCategoryDialog({ category, tournamentSlug }: EditCategoryDia
           name: value.name.trim(),
           type: value.type,
           rating: value.rating,
-          category: value.category,
+          gender: value.gender,
           maxParticipants: value.maxParticipants ? Number(value.maxParticipants) : undefined,
         });
         toast.success("Category updated");
@@ -239,7 +239,7 @@ export function EditCategoryDialog({ category, tournamentSlug }: EditCategoryDia
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <form.Field name="category">
+                <form.Field name="gender">
                   {(field) => (
                     <div className="space-y-2">
                       <Label>Gender Category</Label>

@@ -237,7 +237,7 @@ export function ParticipantList({ participants, categoryType, categoryId }: Part
                       value={p.status}
                       onValueChange={(value) => value && handleStatusChange(p._id, value)}
                     >
-                      <SelectTrigger className="h-7 w-32 text-xs">
+                      <SelectTrigger className="">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>

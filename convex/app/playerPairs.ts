@@ -56,8 +56,6 @@ export const create = authedMutation({
       playerOne: args.playerOne,
       playerTwo: args.playerTwo,
       pairKey,
-      wins: 0,
-      losses: 0,
     });
 
     return pairId;
@@ -83,7 +81,7 @@ export const createWithPlayers = authedMutation({
       if (existing.length > 0) {
         p1Id = existing[0]._id;
       } else {
-        p1Id = await ctx.db.insert("player", { fullName: args.playerOneName!, nickname: "" });
+        p1Id = await ctx.db.insert("player", { fullName: args.playerOneName! });
       }
     }
     if (!p1Id) {
@@ -100,7 +98,7 @@ export const createWithPlayers = authedMutation({
       if (existing.length > 0) {
         p2Id = existing[0]._id;
       } else {
-        p2Id = await ctx.db.insert("player", { fullName: args.playerTwoName!, nickname: "" });
+        p2Id = await ctx.db.insert("player", { fullName: args.playerTwoName! });
       }
     }
     if (!p2Id) {
@@ -128,8 +126,6 @@ export const createWithPlayers = authedMutation({
       playerOne: ids[0],
       playerTwo: ids[1],
       pairKey,
-      wins: 0,
-      losses: 0,
     });
 
     return pairId;

@@ -6,11 +6,7 @@ import { adminMutation, adminQuery } from "./lib";
 export const list = adminQuery({
   args: {},
   handler: async (ctx) => {
-    const tournaments = await ctx.db
-      .query("tournaments")
-      .withIndex("by_deletedAt", (q) => q.eq("deletedAt", undefined))
-      .order("desc")
-      .collect();
+    const tournaments = await ctx.db.query("tournaments").order("desc").collect();
 
     return tournaments;
   },
@@ -68,10 +64,7 @@ export const setShowcaseOrder = adminMutation({
     }
 
     // Get all currently showcased tournaments excluding the target
-    const allTournaments = await ctx.db
-      .query("tournaments")
-      .withIndex("by_deletedAt", (q) => q.eq("deletedAt", undefined))
-      .collect();
+    const allTournaments = await ctx.db.query("tournaments").collect();
 
     const showcased = allTournaments.filter(
       (t) =>

@@ -21,9 +21,7 @@ export const getLiveGames = query({
       .withIndex("by_tournament", (q) => q.eq("tournamentId", tournament._id))
       .collect();
 
-    const liveOrInProgress = matches.filter(
-      (m) => m.deletedAt === undefined && (m.status === "inProgress" || m.isLive === true),
-    );
+    const liveOrInProgress = matches.filter((m) => m.status === "inProgress" || m.isLive === true);
 
     if (liveOrInProgress.length === 0) {
       return [];
@@ -93,9 +91,7 @@ export const getRecentMatches = query({
 
     const recentMatches = matches
       .filter(
-        (m) =>
-          m.deletedAt === undefined &&
-          (m.status === "completed" || m.status === "inProgress" || m.status === "abandoned"),
+        (m) => m.status === "completed" || m.status === "inProgress" || m.status === "abandoned",
       )
       .slice(0, 20);
 
@@ -149,7 +145,7 @@ export const getMatchDetails = query({
   },
   handler: async (ctx, args) => {
     const match = await ctx.db.get(args.matchId);
-    if (!match || match.deletedAt !== undefined) return null;
+    if (!match) return null;
 
     const bracket = await ctx.db.get(match.bracketId);
     const category = bracket ? await ctx.db.get(bracket.categoryId) : null;

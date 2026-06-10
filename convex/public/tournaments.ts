@@ -5,27 +5,18 @@ import { query } from "../_generated/server";
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    const tournaments = await ctx.db
-      .query("tournaments")
-      .withIndex("by_deletedAt", (q) => q.eq("deletedAt", undefined))
-      .order("desc")
-      .collect();
+    const tournaments = await ctx.db.query("tournaments").order("desc").collect();
 
-    return tournaments.filter((t) => t.isPublic === true && t.deletedAt === undefined);
+    return tournaments.filter((t) => t.isPublic === true);
   },
 });
 
 export const counts = query({
   args: {},
   handler: async (ctx) => {
-    const tournaments = await ctx.db
-      .query("tournaments")
-      .withIndex("by_deletedAt", (q) => q.eq("deletedAt", undefined))
-      .collect();
+    const tournaments = await ctx.db.query("tournaments").collect();
 
-    const publicTournaments = tournaments.filter(
-      (t) => t.isPublic === true && t.deletedAt === undefined,
-    );
+    const publicTournaments = tournaments.filter((t) => t.isPublic === true);
 
     return {
       upcomingCount: publicTournaments.filter((t) => t.status === "upcoming").length,
@@ -38,14 +29,9 @@ export const counts = query({
 export const showcaseList = query({
   args: {},
   handler: async (ctx) => {
-    const tournaments = await ctx.db
-      .query("tournaments")
-      .withIndex("by_deletedAt", (q) => q.eq("deletedAt", undefined))
-      .collect();
+    const tournaments = await ctx.db.query("tournaments").collect();
 
-    const publicTournaments = tournaments.filter(
-      (t) => t.isPublic === true && t.deletedAt === undefined,
-    );
+    const publicTournaments = tournaments.filter((t) => t.isPublic === true);
 
     const featured = publicTournaments.find((t) => t.isFeaturedEvent === true) ?? null;
     const showcased = publicTournaments
@@ -69,7 +55,7 @@ export const getBySlug = query({
       .withIndex("by_slug", (q) => q.eq("slug", args.slug))
       .unique();
 
-    if (!tournament || tournament.isPublic !== true || tournament.deletedAt !== undefined) {
+    if (!tournament || tournament.isPublic !== true) {
       return null;
     }
 
@@ -87,7 +73,7 @@ export const getDetails = query({
       .withIndex("by_slug", (q) => q.eq("slug", args.slug))
       .unique();
 
-    if (!tournament || tournament.isPublic !== true || tournament.deletedAt !== undefined) {
+    if (!tournament || tournament.isPublic !== true) {
       return null;
     }
 
@@ -149,7 +135,7 @@ export const getDetails = query({
         for (const p of participants) {
           if (p.playerId) {
             const player = await ctx.db.get(p.playerId);
-            if (player && player.deletedAt === undefined) {
+            if (player) {
               singlesPlayersMap.set(player._id, player);
               allIndividualPlayersMap.set(player._id, player);
             }
@@ -159,10 +145,10 @@ export const getDetails = query({
         for (const p of participants) {
           if (p.pairId) {
             const pair = await ctx.db.get(p.pairId);
-            if (pair && pair.deletedAt === undefined) {
+            if (pair) {
               const p1 = await ctx.db.get(pair.playerOne);
               const p2 = await ctx.db.get(pair.playerTwo);
-              if (p1 && p2 && p1.deletedAt === undefined && p2.deletedAt === undefined) {
+              if (p1 && p2) {
                 doublesPairsMap.set(pair._id, {
                   pair,
                   playerOne: p1,

@@ -30,7 +30,7 @@ interface CreateCategoryDialogProps {
     name: string;
     type: "singles" | "doubles";
     rating: "beginner" | "intermediate" | "advanced";
-    category: "womens" | "mens" | "mixed" | "open";
+    gender: "womens" | "mens" | "mixed" | "open";
     maxParticipants?: number;
   }) => Promise<{ error?: string } | void>;
 }
@@ -61,7 +61,7 @@ export function CreateCategoryDialog({ open, onOpenChange, onCreate }: CreateCat
       name: "",
       type: "singles" as "singles" | "doubles",
       rating: "beginner" as "beginner" | "intermediate" | "advanced",
-      category: "open" as "womens" | "mens" | "mixed" | "open",
+      gender: "open" as "womens" | "mens" | "mixed" | "open",
       maxParticipants: "",
     },
     onSubmit: async ({ value }) => {
@@ -70,7 +70,7 @@ export function CreateCategoryDialog({ open, onOpenChange, onCreate }: CreateCat
         name: value.name.trim(),
         type: value.type,
         rating: value.rating,
-        category: value.category,
+        gender: value.gender,
         maxParticipants: value.maxParticipants ? Number(value.maxParticipants) : undefined,
       });
       if (result?.error) {
@@ -198,7 +198,7 @@ export function CreateCategoryDialog({ open, onOpenChange, onCreate }: CreateCat
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <form.Field name="category">
+              <form.Field name="gender">
                 {(field) => (
                   <div className="space-y-2">
                     <Label>Gender Category</Label>
