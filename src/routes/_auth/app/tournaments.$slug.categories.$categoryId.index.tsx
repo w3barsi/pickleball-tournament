@@ -147,47 +147,45 @@ function CategoryDetailPage() {
       </HeaderCard>
 
       {/* Stats Bar */}
-      <div className="relative overflow-hidden rounded-2xl border bg-foreground text-background shadow-sm">
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_49%,rgba(190,255,0,0.16)_50%,transparent_51%),linear-gradient(0deg,transparent_49%,rgba(255,255,255,0.08)_50%,transparent_51%)] bg-[size:64px_100%,100%_36px]" />
-        <div className="absolute inset-x-0 top-0 h-1 bg-tournament-lime" />
-        <div className="relative grid gap-px bg-white/10 p-px sm:grid-cols-3">
-          <div className="group flex items-center gap-4 bg-foreground/95 p-4 transition-colors hover:bg-foreground sm:p-5">
-            <div className="flex size-11 shrink-0 items-center justify-center rounded-full border border-tournament-lime/40 bg-tournament-lime/15 text-tournament-lime shadow-[0_0_24px_rgba(190,255,0,0.18)] transition-transform group-hover:scale-105">
+      <div className="relative overflow-hidden rounded-xl border border-border bg-card">
+        <div className="relative grid grid-cols-1 divide-y divide-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+          <div className="flex items-center gap-4 px-5 py-5">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 text-blue-700">
               <UsersIcon className="size-5" />
             </div>
             <div className="min-w-0">
-              <p className="font-heading text-3xl leading-none font-black tracking-tight text-white tabular-nums">
+              <p className="font-heading text-3xl leading-none font-black tracking-tight text-foreground tabular-nums">
                 {participants !== undefined
                   ? `${participants.length}${category.maxParticipants ? ` / ${category.maxParticipants}` : ""}`
                   : "—"}
               </p>
-              <p className="mt-1 text-[0.68rem] font-bold tracking-[0.22em] text-white/55 uppercase">
+              <p className="mt-1 text-[0.7rem] font-semibold tracking-wide text-muted-foreground uppercase">
                 Participants
               </p>
             </div>
           </div>
-          <div className="group flex items-center gap-4 bg-foreground/95 p-4 transition-colors hover:bg-foreground sm:p-5">
-            <div className="flex size-11 shrink-0 items-center justify-center rounded-full border border-tournament-lime/40 bg-tournament-lime/15 text-tournament-lime shadow-[0_0_24px_rgba(190,255,0,0.18)] transition-transform group-hover:scale-105">
+          <div className="flex items-center gap-4 px-5 py-5">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 text-blue-700">
               <TrophyIcon className="size-5" />
             </div>
             <div className="min-w-0">
-              <p className="font-heading text-3xl leading-none font-black tracking-tight text-white tabular-nums">
+              <p className="font-heading text-3xl leading-none font-black tracking-tight text-foreground tabular-nums">
                 {brackets !== undefined ? brackets.length : "—"}
               </p>
-              <p className="mt-1 text-[0.68rem] font-bold tracking-[0.22em] text-white/55 uppercase">
+              <p className="mt-1 text-[0.7rem] font-semibold tracking-wide text-muted-foreground uppercase">
                 Brackets
               </p>
             </div>
           </div>
-          <div className="group flex items-center gap-4 bg-foreground/95 p-4 transition-colors hover:bg-foreground sm:p-5">
-            <div className="flex size-11 shrink-0 items-center justify-center rounded-full border border-tournament-lime/40 bg-tournament-lime/15 text-tournament-lime shadow-[0_0_24px_rgba(190,255,0,0.18)] transition-transform group-hover:scale-105">
+          <div className="flex items-center gap-4 px-5 py-5">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 text-blue-700">
               <SwordsIcon className="size-5" />
             </div>
             <div className="min-w-0">
-              <p className="font-heading text-3xl leading-none font-black tracking-tight text-white tabular-nums">
+              <p className="font-heading text-3xl leading-none font-black tracking-tight text-foreground tabular-nums">
                 {brackets !== undefined ? totalMatches : "—"}
               </p>
-              <p className="mt-1 text-[0.68rem] font-bold tracking-[0.22em] text-white/55 uppercase">
+              <p className="mt-1 text-[0.7rem] font-semibold tracking-wide text-muted-foreground uppercase">
                 Matches
               </p>
             </div>

@@ -3,7 +3,13 @@
 import { api } from "@convex/_generated/api.js";
 import { Id } from "@convex/_generated/dataModel";
 import { useMutation } from "convex/react";
-import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon, Trash2Icon } from "lucide-react";
+import {
+  ArrowDownIcon,
+  ArrowUpDownIcon,
+  ArrowUpIcon,
+  CircleCheckIcon,
+  Trash2Icon,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -69,6 +75,19 @@ type SortDirection = "asc" | "desc";
 interface SortConfig {
   column: SortColumn;
   direction: SortDirection;
+}
+
+function getStatusLabel(status: string) {
+  switch (status) {
+    case "active":
+      return "Active";
+    case "eliminated":
+      return "Eliminated";
+    case "withdrawn":
+      return "Withdrawn";
+    default:
+      return status;
+  }
 }
 
 function getStatusBadge(status: string) {
@@ -140,21 +159,39 @@ export function ParticipantList({ participants, categoryType, categoryId }: Part
     },
   );
 
-  const updateStatus = useMutation(api.app.categoryParticipants.updateStatus);
+  const updateStatus = useMutation(api.app.categoryParticipants.updateStatus).withOptimisticUpdate(
+    (localStore, args) => {
+      const current = localStore.getQuery(api.app.categoryParticipants.listByCategory, {
+        categoryId,
+      });
+      if (!current) return;
+
+      const updated = current.map((p) =>
+        p._id === args.categoryParticipantId ? { ...p, status: args.status } : p,
+      ) as typeof current;
+      localStore.setQuery(api.app.categoryParticipants.listByCategory, { categoryId }, updated);
+    },
+  );
 
   const handleStatusChange = (participantId: Id<"categoryParticipants">, status: string) => {
     updateStatus({
       categoryParticipantId: participantId,
       status: status as "active" | "eliminated" | "withdrawn",
     })
-      .then(() => toast.success("Status updated"))
+      .then(() =>
+        toast("Status updated", { icon: <CircleCheckIcon className="size-4 text-green-600" /> }),
+      )
       .catch((err) => toast.error(err instanceof Error ? err.message : "Failed to update status"));
   };
 
   const handleConfirmRemove = () => {
     if (removeTarget) {
       unregister({ categoryParticipantId: removeTarget })
-        .then(() => toast.success("Participant removed"))
+        .then(() =>
+          toast("Participant removed", {
+            icon: <CircleCheckIcon className="size-4 text-green-600" />,
+          }),
+        )
         .catch((err) =>
           toast.error(err instanceof Error ? err.message : "Failed to remove participant"),
         );
@@ -238,8 +275,8 @@ export function ParticipantList({ participants, categoryType, categoryId }: Part
                       value={p.status}
                       onValueChange={(value) => value && handleStatusChange(p._id, value)}
                     >
-                      <SelectTrigger>
-                        <SelectValue />
+                      <SelectTrigger className="w-32">
+                        <SelectValue>{getStatusLabel(p.status)}</SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>

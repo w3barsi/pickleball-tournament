@@ -13,7 +13,6 @@ import {
   ItemContent,
   ItemDescription,
   ItemGroup,
-  ItemMedia,
   ItemTitle,
 } from "@/components/ui/item";
 
@@ -62,8 +61,10 @@ export function BracketList({ brackets, slug, categoryId, renderStageAction }: B
   if (brackets.length === 0) {
     return (
       <div className="rounded-xl border border-dashed py-12 text-center">
-        <TrophyIcon className="mx-auto size-8 text-muted-foreground" />
-        <p className="mt-4 text-lg font-bold">No brackets yet</p>
+        <div className="mx-auto flex size-12 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 text-blue-700">
+          <TrophyIcon className="size-6" />
+        </div>
+        <p className="mt-3 text-lg font-bold">No brackets yet</p>
         <p className="text-sm text-muted-foreground">
           Create a bracket to start organizing matches
         </p>
@@ -93,10 +94,8 @@ export function BracketList({ brackets, slug, categoryId, renderStageAction }: B
           <ItemGroup className="gap-2">
             {stageBrackets.map((bracket) => (
               <Item key={bracket._id} variant="outline" className="rounded-xl">
-                <div>
-                  <ItemMedia variant="icon">
-                    <TrophyIcon className="size-5 text-tournament-lime" />
-                  </ItemMedia>
+                <div className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 text-blue-700">
+                  <TrophyIcon className="size-5" />
                 </div>
                 <ItemContent>
                   <div className="flex flex-wrap items-center gap-2">
