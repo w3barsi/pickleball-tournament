@@ -2,7 +2,14 @@ import { api } from "@convex/_generated/api";
 import { Doc, Id } from "@convex/_generated/dataModel";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
-import { CircleAlertIcon, Loader2Icon, PencilIcon, RotateCcwIcon } from "lucide-react";
+import {
+  CircleAlertIcon,
+  Loader2Icon,
+  PencilIcon,
+  RotateCcwIcon,
+  Settings2Icon,
+  SettingsIcon,
+} from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -162,9 +169,8 @@ export function EditMatchDialog({ match }: EditMatchDialogProps) {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger
         render={
-          <Button variant="outline">
-            <PencilIcon className="size-4" />
-            Edit Match
+          <Button variant="secondary" size="icon">
+            <SettingsIcon />
           </Button>
         }
       />

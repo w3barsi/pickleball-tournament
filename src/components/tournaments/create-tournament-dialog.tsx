@@ -136,9 +136,9 @@ export function CreateTournamentDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger
         render={
-          <Button size="lg" variant="outline">
-            <PlusIcon className="size-6 transition-transform group-hover:rotate-90" />
-            NEW TOURNAMENT
+          <Button variant="secondary">
+            <PlusIcon className="transition-transform group-hover:rotate-90" />
+            New Tournament
           </Button>
         }
       />
