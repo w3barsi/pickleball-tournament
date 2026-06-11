@@ -18,7 +18,7 @@ import { Suspense } from "react";
 import { PublicTournamentLiveGames } from "@/components/public/public-tournament-live-games";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const Route = createFileRoute("/_public/tournaments/$slug")({
@@ -139,17 +139,23 @@ function TournamentStatsBar() {
         <div className="hidden h-8 w-px bg-border md:block" />
         <div className="flex items-center gap-6 text-sm">
           <div className="flex items-center gap-2">
-            <SwordsIcon className="size-4 text-muted-foreground" />
+            <span className="flex size-8 items-center justify-center rounded-md border border-blue-200 bg-blue-50 text-blue-700">
+              <SwordsIcon className="size-4" />
+            </span>
             <span className="font-semibold">{categories.length}</span>
             <span className="text-muted-foreground">Categories</span>
           </div>
           <div className="flex items-center gap-2">
-            <TrophyIcon className="size-4 text-muted-foreground" />
+            <span className="flex size-8 items-center justify-center rounded-md border border-blue-200 bg-blue-50 text-blue-700">
+              <TrophyIcon className="size-4" />
+            </span>
             <span className="font-semibold">{totalBrackets}</span>
             <span className="text-muted-foreground">Brackets</span>
           </div>
           <div className="flex items-center gap-2">
-            <UsersIcon className="size-4 text-muted-foreground" />
+            <span className="flex size-8 items-center justify-center rounded-md border border-blue-200 bg-blue-50 text-blue-700">
+              <UsersIcon className="size-4" />
+            </span>
             <span className="font-semibold">{totalIndividualPlayers}</span>
             <span className="text-muted-foreground">Players</span>
           </div>
@@ -280,99 +286,123 @@ function CategorySection({
   const sortedStages = Array.from(stageGroups.entries()).sort((a, b) => a[0] - b[0]);
 
   return (
-    <Card className="overflow-hidden">
-      <CardHeader className="pb-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="font-heading text-lg font-bold">{category.name}</h3>
-              {category.maxParticipants && (
-                <Badge variant="outline" className="text-xs">
-                  Max {category.maxParticipants}
-                </Badge>
-              )}
-            </div>
-            <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-              <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 font-medium">
-                {typeLabel}
-              </span>
-              <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 font-medium">
-                {ratingLabel}
-              </span>
-              <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 font-medium">
-                {categoryLabel}
-              </span>
-            </div>
+    <div className="overflow-hidden rounded-xl border bg-card">
+      {/* Category Header */}
+      <div className="px-5 py-4">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="font-heading text-lg font-bold">{category.name}</h3>
+            {category.maxParticipants && (
+              <Badge variant="outline" className="text-xs">
+                Max {category.maxParticipants}
+              </Badge>
+            )}
           </div>
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1.5">
-              <UsersIcon className="size-3.5" />
-              {brackets.reduce((s, b) => s + b.participantCount, 0)} entrants
-            </span>
+          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <UsersIcon className="size-3.5" />
+            {brackets.reduce((s, b) => s + b.participantCount, 0)} entrants
           </div>
         </div>
-      </CardHeader>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium">
+            {typeLabel}
+          </span>
+          <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium">
+            {ratingLabel}
+          </span>
+          <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium">
+            {categoryLabel}
+          </span>
+        </div>
+      </div>
 
-      <CardContent className="space-y-3">
+      {/* Brackets */}
+      <div className="flex flex-col">
         {brackets.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No brackets in this category yet.</p>
+          <div className="px-5 py-6 text-sm text-muted-foreground">
+            No brackets in this category yet.
+          </div>
         ) : (
           sortedStages.map(([stage, stageBrackets]) => (
-            <div key={stage} className="space-y-3">
+            <div key={stage}>
               {sortedStages.length > 1 && (
-                <h4 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-                  Stage {stage}
-                </h4>
-              )}
-              {stageBrackets.map((bracket) => (
-                <div
-                  key={bracket.name + bracket.format}
-                  className="group flex flex-col gap-3 rounded-md border bg-muted/30 p-4 transition-colors hover:bg-muted/60 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div className="flex flex-col gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className="font-heading text-sm font-semibold">{bracket.name}</span>
-                      {bracket.label && (
-                        <span className="text-xs text-muted-foreground">{bracket.label}</span>
-                      )}
-                      <BracketStatusDot status={bracket.status} />
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <SpecPill icon={<SwordsIcon className="size-3" />}>
-                        {formatBracketFormat(bracket.format)}
-                      </SpecPill>
-                      <SpecPill icon={<TrophyIcon className="size-3" />}>
-                        {bracket.numberOfSets} sets
-                      </SpecPill>
-                      <SpecPill icon={<CircleIcon className="size-3" />}>
-                        Race to {bracket.pointsPerGame}
-                      </SpecPill>
-                      {bracket.winByTwo && (
-                        <SpecPill icon={<ShieldIcon className="size-3" />}>Win by 2</SpecPill>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground sm:text-right">
-                    <div>
-                      <div className="font-semibold text-foreground">
-                        {bracket.participantCount}
-                      </div>
-                      <div>Players</div>
-                    </div>
-                    <div className="h-8 w-px bg-border" />
-                    <div>
-                      <div className="font-semibold text-foreground">{bracket.matchCount}</div>
-                      <div>Matches</div>
-                    </div>
-                  </div>
+                <div className="flex items-center gap-3 bg-muted/30 px-5 py-2">
+                  <span className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                    Stage {stage}
+                  </span>
+                  <div className="h-px flex-1 bg-border" />
                 </div>
-              ))}
+              )}
+              <div className="flex flex-col">
+                {stageBrackets.map((bracket, index) => (
+                  <div key={bracket.name + bracket.format}>
+                    {index > 0 && (
+                      <div className="mx-8 h-px border-t border-dashed border-border" />
+                    )}
+                    <div className="group flex flex-col gap-3 px-5 py-4 transition-colors hover:bg-muted/20 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex min-w-0 flex-col gap-3">
+                        <div className="flex flex-col items-start gap-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-heading text-sm font-semibold">
+                              {bracket.name}
+                            </span>
+                            {bracket.label && (
+                              <span className="text-xs text-muted-foreground">{bracket.label}</span>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                            <span className="inline-flex items-center gap-1.5">
+                              <span className="flex size-6 items-center justify-center rounded-md border border-green-200 bg-green-50 text-green-700">
+                                <SwordsIcon className="size-3" />
+                              </span>
+                              {formatBracketFormat(bracket.format)}
+                            </span>
+                            <span className="inline-flex items-center gap-1.5">
+                              <span className="flex size-6 items-center justify-center rounded-md border border-green-200 bg-green-50 text-green-700">
+                                <TrophyIcon className="size-3" />
+                              </span>
+                              {bracket.numberOfSets} sets
+                            </span>
+                            <span className="inline-flex items-center gap-1.5">
+                              <span className="flex size-6 items-center justify-center rounded-md border border-green-200 bg-green-50 text-green-700">
+                                <CircleIcon className="size-3" />
+                              </span>
+                              Race to {bracket.pointsPerGame}
+                            </span>
+                            {bracket.winByTwo && (
+                              <span className="inline-flex items-center gap-1.5">
+                                <span className="flex size-6 items-center justify-center rounded-md border border-green-200 bg-green-50 text-green-700">
+                                  <ShieldIcon className="size-3" />
+                                </span>
+                                Win by 2
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                        <div className="text-right">
+                          <div className="font-semibold text-foreground">
+                            {bracket.participantCount}
+                          </div>
+                          <div>Players</div>
+                        </div>
+                        <div className="h-8 w-px bg-border" />
+                        <div className="text-right">
+                          <div className="font-semibold text-foreground">{bracket.matchCount}</div>
+                          <div>Matches</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           ))
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
@@ -384,15 +414,6 @@ function BracketStatusDot({ status }: { status: string }) {
         ? "bg-amber-400"
         : "bg-emerald-400";
   return <span className={`inline-block h-2 w-2 rounded-full ${color}`} title={status} />;
-}
-
-function SpecPill({ children, icon }: { children: React.ReactNode; icon: React.ReactNode }) {
-  return (
-    <span className="inline-flex items-center gap-1 rounded-full border bg-background px-2.5 py-1 text-xs font-medium text-foreground">
-      {icon}
-      {children}
-    </span>
-  );
 }
 
 /* ---------- Competitors Section ---------- */
