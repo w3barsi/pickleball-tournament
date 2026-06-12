@@ -51,6 +51,7 @@ function PublicLayout() {
               size="sm"
               variant="green"
               render={<Link to="/signup" />}
+              nativeButton={false}
               className="rounded-full"
             >
               Host a Tournament

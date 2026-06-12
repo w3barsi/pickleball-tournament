@@ -673,6 +673,7 @@ function ScorerPage() {
                 className="mt-4 border-white/10 bg-white/5 text-white hover:border-white/20 hover:bg-white/10"
                 variant="outline"
                 render={<Link to="/app/tournaments">Back to Tournaments</Link>}
+                nativeButton={false}
               />
             </div>
           )}
